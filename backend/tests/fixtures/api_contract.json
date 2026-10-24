@@ -1,0 +1,1331 @@
+{
+  "/api/health": {
+    "get": {}
+  },
+  "/api/auth/login": {
+    "post": {
+      "requestBody": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "additionalProperties": true,
+              "type": "object",
+              "title": "Data"
+            }
+          }
+        },
+        "required": true
+      }
+    }
+  },
+  "/api/auth/logout": {
+    "post": {}
+  },
+  "/api/me": {
+    "get": {}
+  },
+  "/api/me/password": {
+    "post": {
+      "requestBody": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "additionalProperties": true,
+              "type": "object",
+              "title": "Data"
+            }
+          }
+        },
+        "required": true
+      }
+    }
+  },
+  "/api/admin/users": {
+    "get": {},
+    "post": {
+      "requestBody": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "additionalProperties": true,
+              "type": "object",
+              "title": "Data"
+            }
+          }
+        },
+        "required": true
+      }
+    }
+  },
+  "/api/admin/users/{user_id}": {
+    "put": {
+      "parameters": [
+        {
+          "name": "user_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer",
+            "title": "User Id"
+          }
+        }
+      ],
+      "requestBody": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "additionalProperties": true,
+              "title": "Data"
+            }
+          }
+        }
+      }
+    }
+  },
+  "/api/admin/users/{user_id}/reset-password": {
+    "post": {
+      "parameters": [
+        {
+          "name": "user_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer",
+            "title": "User Id"
+          }
+        }
+      ]
+    }
+  },
+  "/api/catalog": {
+    "get": {}
+  },
+  "/api/catalog/import": {
+    "post": {
+      "requestBody": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "additionalProperties": true,
+              "type": "object",
+              "title": "Data"
+            }
+          }
+        },
+        "required": true
+      }
+    }
+  },
+  "/api/catalog/report-types": {
+    "post": {
+      "requestBody": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "additionalProperties": true,
+              "type": "object",
+              "title": "Data"
+            }
+          }
+        },
+        "required": true
+      }
+    }
+  },
+  "/api/catalog/report-types/{row_id}": {
+    "put": {
+      "parameters": [
+        {
+          "name": "row_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer",
+            "title": "Row Id"
+          }
+        }
+      ],
+      "requestBody": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "additionalProperties": true,
+              "title": "Data"
+            }
+          }
+        }
+      }
+    },
+    "delete": {
+      "parameters": [
+        {
+          "name": "row_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer",
+            "title": "Row Id"
+          }
+        }
+      ]
+    }
+  },
+  "/api/catalog/projects": {
+    "post": {
+      "requestBody": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "additionalProperties": true,
+              "type": "object",
+              "title": "Data"
+            }
+          }
+        },
+        "required": true
+      }
+    }
+  },
+  "/api/catalog/projects/{row_id}": {
+    "put": {
+      "parameters": [
+        {
+          "name": "row_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer",
+            "title": "Row Id"
+          }
+        }
+      ],
+      "requestBody": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "additionalProperties": true,
+              "title": "Data"
+            }
+          }
+        }
+      }
+    },
+    "delete": {
+      "parameters": [
+        {
+          "name": "row_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer",
+            "title": "Row Id"
+          }
+        }
+      ]
+    }
+  },
+  "/api/catalog/projects/{project_id}/stories": {
+    "post": {
+      "parameters": [
+        {
+          "name": "project_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer",
+            "title": "Project Id"
+          }
+        }
+      ],
+      "requestBody": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "additionalProperties": true,
+              "title": "Data"
+            }
+          }
+        }
+      }
+    }
+  },
+  "/api/catalog/stories/{row_id}": {
+    "put": {
+      "parameters": [
+        {
+          "name": "row_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer",
+            "title": "Row Id"
+          }
+        }
+      ],
+      "requestBody": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "additionalProperties": true,
+              "title": "Data"
+            }
+          }
+        }
+      }
+    },
+    "delete": {
+      "parameters": [
+        {
+          "name": "row_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer",
+            "title": "Row Id"
+          }
+        }
+      ]
+    }
+  },
+  "/api/tags": {
+    "get": {
+      "parameters": [
+        {
+          "name": "usage",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Usage"
+          }
+        }
+      ]
+    },
+    "post": {
+      "requestBody": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "additionalProperties": true,
+              "title": "Data"
+            }
+          }
+        }
+      }
+    }
+  },
+  "/api/tags/{tag_id}/budget": {
+    "put": {
+      "parameters": [
+        {
+          "name": "tag_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer",
+            "title": "Tag Id"
+          }
+        }
+      ],
+      "requestBody": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "additionalProperties": true,
+              "title": "Data"
+            }
+          }
+        }
+      }
+    }
+  },
+  "/api/tags/{tag_id}": {
+    "put": {
+      "parameters": [
+        {
+          "name": "tag_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer",
+            "title": "Tag Id"
+          }
+        }
+      ],
+      "requestBody": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "additionalProperties": true,
+              "title": "Data"
+            }
+          }
+        }
+      }
+    },
+    "delete": {
+      "parameters": [
+        {
+          "name": "tag_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer",
+            "title": "Tag Id"
+          }
+        }
+      ]
+    }
+  },
+  "/api/tags/{tag_id}/merge": {
+    "post": {
+      "parameters": [
+        {
+          "name": "tag_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer",
+            "title": "Tag Id"
+          }
+        }
+      ],
+      "requestBody": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "additionalProperties": true,
+              "title": "Data"
+            }
+          }
+        }
+      }
+    }
+  },
+  "/api/tags/{tag_id}/company": {
+    "put": {
+      "parameters": [
+        {
+          "name": "tag_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer",
+            "title": "Tag Id"
+          }
+        }
+      ],
+      "requestBody": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "additionalProperties": true,
+              "title": "Data"
+            }
+          }
+        }
+      }
+    }
+  },
+  "/api/company-catalog": {
+    "get": {}
+  },
+  "/api/today": {
+    "get": {}
+  },
+  "/api/month-days": {
+    "get": {
+      "parameters": [
+        {
+          "name": "year",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Year"
+          }
+        },
+        {
+          "name": "month",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Month"
+          }
+        }
+      ]
+    }
+  },
+  "/api/shift-date": {
+    "get": {
+      "parameters": [
+        {
+          "name": "year",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Year"
+          }
+        },
+        {
+          "name": "month",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Month"
+          }
+        },
+        {
+          "name": "day",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Day"
+          }
+        },
+        {
+          "name": "delta",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "integer",
+            "default": 0,
+            "title": "Delta"
+          }
+        }
+      ]
+    }
+  },
+  "/api/yesterday-titles": {
+    "get": {}
+  },
+  "/api/tasks": {
+    "get": {
+      "parameters": [
+        {
+          "name": "year",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Year"
+          }
+        },
+        {
+          "name": "month",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Month"
+          }
+        },
+        {
+          "name": "day",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Day"
+          }
+        }
+      ]
+    },
+    "post": {
+      "requestBody": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "additionalProperties": true,
+              "title": "Data"
+            }
+          }
+        }
+      }
+    }
+  },
+  "/api/tasks/paused": {
+    "get": {}
+  },
+  "/api/tasks/{task_id}/pause": {
+    "post": {
+      "parameters": [
+        {
+          "name": "task_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer",
+            "title": "Task Id"
+          }
+        }
+      ]
+    }
+  },
+  "/api/tasks/{task_id}/resume": {
+    "post": {
+      "parameters": [
+        {
+          "name": "task_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer",
+            "title": "Task Id"
+          }
+        }
+      ]
+    }
+  },
+  "/api/tasks/{task_id}/stop": {
+    "post": {
+      "parameters": [
+        {
+          "name": "task_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer",
+            "title": "Task Id"
+          }
+        }
+      ]
+    }
+  },
+  "/api/tasks/{task_id}/reopen": {
+    "post": {
+      "parameters": [
+        {
+          "name": "task_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer",
+            "title": "Task Id"
+          }
+        }
+      ]
+    }
+  },
+  "/api/tasks/{task_id}/segments": {
+    "get": {
+      "parameters": [
+        {
+          "name": "task_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer",
+            "title": "Task Id"
+          }
+        }
+      ]
+    }
+  },
+  "/api/tasks/{task_id}/entered": {
+    "post": {
+      "parameters": [
+        {
+          "name": "task_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer",
+            "title": "Task Id"
+          }
+        }
+      ],
+      "requestBody": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "additionalProperties": true,
+              "title": "Data"
+            }
+          }
+        }
+      }
+    }
+  },
+  "/api/tasks/{task_id}/company": {
+    "post": {
+      "parameters": [
+        {
+          "name": "task_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer",
+            "title": "Task Id"
+          }
+        }
+      ],
+      "requestBody": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "additionalProperties": true,
+              "title": "Data"
+            }
+          }
+        }
+      }
+    }
+  },
+  "/api/tasks/{task_id}": {
+    "put": {
+      "parameters": [
+        {
+          "name": "task_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer",
+            "title": "Task Id"
+          }
+        }
+      ],
+      "requestBody": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "additionalProperties": true,
+              "title": "Data"
+            }
+          }
+        }
+      }
+    },
+    "delete": {
+      "parameters": [
+        {
+          "name": "task_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer",
+            "title": "Task Id"
+          }
+        }
+      ]
+    }
+  },
+  "/api/planned": {
+    "get": {
+      "parameters": [
+        {
+          "name": "year",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Year"
+          }
+        },
+        {
+          "name": "month",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Month"
+          }
+        },
+        {
+          "name": "day",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Day"
+          }
+        }
+      ]
+    },
+    "post": {
+      "requestBody": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "additionalProperties": true,
+              "title": "Data"
+            }
+          }
+        }
+      }
+    }
+  },
+  "/api/planned/{planned_id}": {
+    "put": {
+      "parameters": [
+        {
+          "name": "planned_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer",
+            "title": "Planned Id"
+          }
+        }
+      ],
+      "requestBody": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "additionalProperties": true,
+              "title": "Data"
+            }
+          }
+        }
+      }
+    },
+    "delete": {
+      "parameters": [
+        {
+          "name": "planned_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer",
+            "title": "Planned Id"
+          }
+        }
+      ]
+    }
+  },
+  "/api/planned/{planned_id}/start": {
+    "post": {
+      "parameters": [
+        {
+          "name": "planned_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer",
+            "title": "Planned Id"
+          }
+        }
+      ]
+    }
+  },
+  "/api/presence": {
+    "get": {},
+    "post": {
+      "requestBody": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "additionalProperties": true,
+              "type": "object",
+              "title": "Data"
+            }
+          }
+        },
+        "required": true
+      }
+    }
+  },
+  "/api/presence/history": {
+    "get": {
+      "parameters": [
+        {
+          "name": "days",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "integer",
+            "default": 31,
+            "title": "Days"
+          }
+        }
+      ]
+    }
+  },
+  "/api/presence/start": {
+    "post": {}
+  },
+  "/api/presence/pause": {
+    "post": {
+      "requestBody": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "anyOf": [
+                {
+                  "additionalProperties": true,
+                  "type": "object"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Data"
+            }
+          }
+        }
+      }
+    }
+  },
+  "/api/presence/finish": {
+    "post": {}
+  },
+  "/api/presence/{seg_id}": {
+    "put": {
+      "parameters": [
+        {
+          "name": "seg_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer",
+            "title": "Seg Id"
+          }
+        }
+      ],
+      "requestBody": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "additionalProperties": true,
+              "title": "Data"
+            }
+          }
+        }
+      }
+    },
+    "delete": {
+      "parameters": [
+        {
+          "name": "seg_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer",
+            "title": "Seg Id"
+          }
+        }
+      ]
+    }
+  },
+  "/api/fill-suggestion": {
+    "get": {
+      "parameters": [
+        {
+          "name": "date",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Date"
+          }
+        },
+        {
+          "name": "percent",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Percent"
+          }
+        }
+      ]
+    }
+  },
+  "/api/fill": {
+    "post": {
+      "requestBody": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "additionalProperties": true,
+              "type": "object",
+              "title": "Data"
+            }
+          }
+        },
+        "required": true
+      }
+    }
+  },
+  "/api/fill/rollback": {
+    "post": {
+      "requestBody": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "additionalProperties": true,
+              "type": "object",
+              "title": "Data"
+            }
+          }
+        },
+        "required": true
+      }
+    }
+  },
+  "/api/timesheet": {
+    "get": {
+      "parameters": [
+        {
+          "name": "date",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Date"
+          }
+        }
+      ]
+    }
+  },
+  "/api/dashboard": {
+    "get": {
+      "parameters": [
+        {
+          "name": "year",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Year"
+          }
+        },
+        {
+          "name": "month",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Month"
+          }
+        }
+      ]
+    }
+  },
+  "/api/tag-summary": {
+    "get": {
+      "parameters": [
+        {
+          "name": "tag",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "type": "string",
+            "default": "",
+            "title": "Tag"
+          }
+        },
+        {
+          "name": "year",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Year"
+          }
+        },
+        {
+          "name": "month",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Month"
+          }
+        }
+      ]
+    }
+  },
+  "/api/calendar": {
+    "get": {
+      "parameters": [
+        {
+          "name": "year",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Year"
+          }
+        },
+        {
+          "name": "month",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Month"
+          }
+        }
+      ]
+    }
+  },
+  "/api/entry-report": {
+    "get": {
+      "parameters": [
+        {
+          "name": "year",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Year"
+          }
+        },
+        {
+          "name": "month",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Month"
+          }
+        }
+      ]
+    }
+  },
+  "/api/export": {
+    "get": {
+      "parameters": [
+        {
+          "name": "year",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Year"
+          }
+        }
+      ]
+    }
+  },
+  "/api/settings": {
+    "get": {},
+    "post": {
+      "requestBody": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "additionalProperties": true,
+              "type": "object",
+              "title": "Data"
+            }
+          }
+        },
+        "required": true
+      }
+    }
+  },
+  "/api/goal-progress": {
+    "get": {}
+  },
+  "/api/me/backup": {
+    "get": {}
+  }
+}

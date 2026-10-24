@@ -10,11 +10,11 @@ import getpass
 import json
 import sys
 
-from .auth import hash_password
-from .catalog import import_catalog
-from .common import ApiError
-from .db import Db, SessionLocal
-from .importer import ImportError_, run as run_import
+from .core.security import hash_password
+from .services.catalog_helpers import import_catalog
+from .core.errors import ApiError
+from .db.session import Db, SessionLocal
+from .services.importer import ImportError_, run as run_import
 
 
 def ask_password():

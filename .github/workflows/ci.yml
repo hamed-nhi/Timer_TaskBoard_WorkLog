@@ -14,7 +14,11 @@ jobs:
       - uses: actions/setup-python@v5
         with: { python-version: "3.13" }
       - run: pip install -r backend/requirements-dev.txt
-      - run: pytest -q
+      - name: Unit and architecture tests
+        run: pytest -q tests/unit
+        working-directory: backend
+      - name: PostgreSQL integration tests
+        run: pytest -q tests/integration
         working-directory: backend
   frontend:
     runs-on: ubuntu-latest
