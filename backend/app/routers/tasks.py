@@ -27,6 +27,7 @@ def api_today(user: UserDep):
         "jalali_day": today_j.day,
         "month_name": JALALI_MONTHS[today_j.month - 1],
         "time": now.strftime("%H:%M"),
+        "server_time": now.isoformat(timespec="seconds"),    # lets a browser in another time zone tick correctly
     }
 
 
