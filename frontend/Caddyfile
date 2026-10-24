@@ -1,0 +1,17 @@
+# SITE_ADDRESS: ":80" for plain http (behind another proxy / testing) or a domain name for automatic https
+{$SITE_ADDRESS::80} {
+	encode gzip
+	handle /api/* {
+		reverse_proxy api:8000
+	}
+	handle {
+		root * /srv
+		try_files {path} {path}/index.html
+		file_server
+	}
+	header {
+		X-Content-Type-Options nosniff
+		Referrer-Policy same-origin
+		X-Frame-Options DENY
+	}
+}
