@@ -1,0 +1,14 @@
+.env
+*.db
+*.dump
+*.dump.gpg
+backups/
+venv/
+.venv/
+__pycache__/
+.pytest_cache/
+node_modules/
+.next/
+out/
+*.log
+.DS_Store

@@ -1,0 +1,168 @@
+"""Schema. Every row of a user's own data carries user_id; the shared company catalog does not."""
+from datetime import date, datetime
+
+from sqlalchemy import (Boolean, CheckConstraint, Date, DateTime, Float, ForeignKey, Index, Integer,
+                        PrimaryKeyConstraint, String, Text, UniqueConstraint, func, text)
+from sqlalchemy.dialects.postgresql import INET, JSONB
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+
+
+class Base(DeclarativeBase):
+    pass
+
+
+class User(Base):
+    __tablename__ = "users"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    username: Mapped[str] = mapped_column(String(64), unique=True)          # stored lowercase
+    password_hash: Mapped[str] = mapped_column(Text)
+    display_name: Mapped[str] = mapped_column(String(100), default="", server_default="")
+    is_admin: Mapped[bool] = mapped_column(Boolean, default=False, server_default=text("false"))
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True, server_default=text("true"))
+    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
+
+
+class Session(Base):
+    __tablename__ = "sessions"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    token_hash: Mapped[str] = mapped_column(String(64), unique=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime)
+    expires_at: Mapped[datetime] = mapped_column(DateTime)
+    last_seen_at: Mapped[datetime] = mapped_column(DateTime)
+    user_agent: Mapped[str | None] = mapped_column(String(300))
+
+
+class LoginAttempt(Base):
+    __tablename__ = "login_attempts"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    username: Mapped[str] = mapped_column(String(64))
+    ip: Mapped[str | None] = mapped_column(INET)
+    success: Mapped[bool] = mapped_column(Boolean)
+    at: Mapped[datetime] = mapped_column(DateTime)
+    __table_args__ = (Index("ix_login_attempts_username_at", "username", "at"),
+                      Index("ix_login_attempts_ip_at", "ip", "at"))
+
+
+# ---- shared company catalog (admin edits) ----
+
+class ReportType(Base):
+    __tablename__ = "report_types"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(String(150), unique=True)
+    sort: Mapped[int] = mapped_column(Integer, default=0, server_default=text("0"))
+
+
+class Project(Base):
+    __tablename__ = "projects"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(String(150), unique=True)
+    sort: Mapped[int] = mapped_column(Integer, default=0, server_default=text("0"))
+
+
+class Story(Base):
+    __tablename__ = "stories"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    project_id: Mapped[int] = mapped_column(ForeignKey("projects.id", ondelete="CASCADE"))
+    name: Mapped[str] = mapped_column(String(150))
+    sort: Mapped[int] = mapped_column(Integer, default=0, server_default=text("0"))
+    __table_args__ = (UniqueConstraint("project_id", "name"),)
+
+
+# ---- per-user data ----
+
+class Tag(Base):
+    __tablename__ = "tags"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
+    name: Mapped[str] = mapped_column(String(60))
+    budget_minutes: Mapped[float | None] = mapped_column(Float)
+    budget_since: Mapped[date | None] = mapped_column(Date)
+    report_type_id: Mapped[int | None] = mapped_column(ForeignKey("report_types.id", ondelete="SET NULL"))
+    story_id: Mapped[int | None] = mapped_column(ForeignKey("stories.id", ondelete="SET NULL"))
+    fill_weight: Mapped[float | None] = mapped_column(Float)
+    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
+    __table_args__ = (UniqueConstraint("user_id", "name"),)
+
+
+class Task(Base):
+    __tablename__ = "tasks"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
+    jalali_year: Mapped[int] = mapped_column(Integer)
+    jalali_month: Mapped[int] = mapped_column(Integer)
+    jalali_day: Mapped[int] = mapped_column(Integer)
+    gregorian_date: Mapped[date] = mapped_column(Date)
+    title: Mapped[str] = mapped_column(Text)
+    start_time: Mapped[str | None] = mapped_column(String(5))      # "HH:MM"
+    end_time: Mapped[str | None] = mapped_column(String(5))
+    duration_minutes: Mapped[float | None] = mapped_column(Float)
+    status: Mapped[str] = mapped_column(String(10), default="running", server_default="running")
+    accumulated_minutes: Mapped[float] = mapped_column(Float, default=0, server_default=text("0"))
+    segment_started_at: Mapped[datetime | None] = mapped_column(DateTime)
+    tag_id: Mapped[int | None] = mapped_column(ForeignKey("tags.id"))
+    entered_main_system: Mapped[bool] = mapped_column(Boolean, default=False, server_default=text("false"))
+    meeting_with: Mapped[str | None] = mapped_column(Text)
+    meeting_minutes: Mapped[float | None] = mapped_column(Float)
+    adjust_minutes: Mapped[float] = mapped_column(Float, default=0, server_default=text("0"))
+    report_type_id: Mapped[int | None] = mapped_column(ForeignKey("report_types.id", ondelete="SET NULL"))
+    outside_company: Mapped[bool] = mapped_column(Boolean, default=False, server_default=text("false"))
+    planned_flag: Mapped[bool] = mapped_column(Boolean, default=False, server_default=text("false"))
+    fill_minutes: Mapped[float] = mapped_column(Float, default=0, server_default=text("0"))
+    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
+    __table_args__ = (
+        CheckConstraint("status in ('running','paused','done')", name="ck_tasks_status"),
+        Index("ix_tasks_user_gdate", "user_id", "gregorian_date"),
+        Index("ix_tasks_user_status", "user_id", "status"),
+        Index("ix_tasks_user_jalali", "user_id", "jalali_year", "jalali_month", "jalali_day"),
+    )
+
+
+class TaskSegment(Base):
+    __tablename__ = "task_segments"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    task_id: Mapped[int] = mapped_column(ForeignKey("tasks.id", ondelete="CASCADE"), index=True)
+    started_at: Mapped[datetime] = mapped_column(DateTime)
+    ended_at: Mapped[datetime | None] = mapped_column(DateTime)
+
+
+class PlannedTask(Base):
+    __tablename__ = "planned_tasks"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
+    jalali_year: Mapped[int] = mapped_column(Integer)
+    jalali_month: Mapped[int] = mapped_column(Integer)
+    jalali_day: Mapped[int] = mapped_column(Integer)
+    title: Mapped[str] = mapped_column(Text)
+    tag_id: Mapped[int | None] = mapped_column(ForeignKey("tags.id"))
+    created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
+    __table_args__ = (Index("ix_planned_user_date", "user_id", "jalali_year", "jalali_month", "jalali_day"),)
+
+
+class PresenceSegment(Base):
+    __tablename__ = "presence_segments"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
+    started_at: Mapped[datetime] = mapped_column(DateTime)
+    ended_at: Mapped[datetime | None] = mapped_column(DateTime)
+    note: Mapped[str | None] = mapped_column(Text)
+    kind: Mapped[str | None] = mapped_column(String(10))
+    __table_args__ = (Index("ix_presence_user_started", "user_id", "started_at"),)
+
+
+class UserSetting(Base):
+    __tablename__ = "user_settings"
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"))
+    key: Mapped[str] = mapped_column(String(64))
+    value: Mapped[str] = mapped_column(Text)
+    __table_args__ = (PrimaryKeyConstraint("user_id", "key"),)
+
+
+class AuditLog(Base):
+    """task_deleted / fill_rollback / tag_merge - what the desktop kept in deleted_tasks and settings logs."""
+    __tablename__ = "audit_log"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    kind: Mapped[str] = mapped_column(String(30))
+    payload: Mapped[dict] = mapped_column(JSONB)
+    at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
