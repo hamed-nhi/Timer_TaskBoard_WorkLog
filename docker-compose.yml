@@ -21,7 +21,7 @@ services:
     restart: unless-stopped
     environment:
       DATABASE_URL: postgresql+psycopg://timelog:${DB_PASSWORD}@db:5432/timelog
-      COOKIE_SECURE: ${COOKIE_SECURE:-true}
+      COOKIE_SECURE: ${COOKIE_SECURE:-}
     depends_on:
       db:
         condition: service_healthy

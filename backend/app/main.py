@@ -3,6 +3,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
+from .auth import set_session_cookie
 from .common import CSRF_HEADER, CSRF_VALUE, ApiError
 from .routers import admin, auth, catalog, fill, planned, presence, reports, settings_me, tags, tasks
 
@@ -30,7 +31,11 @@ async def csrf_guard(request: Request, call_next):
     state-changing call must carry it (together with SameSite=Lax cookies this stops CSRF)."""
     if request.method not in ("GET", "HEAD", "OPTIONS") and request.headers.get(CSRF_HEADER) != CSRF_VALUE:
         return JSONResponse({"error": "forbidden"}, status_code=403)
-    return await call_next(request)
+    response = await call_next(request)
+    token = getattr(request.state, "renew_session_token", None)
+    if token and response.status_code < 400:
+        set_session_cookie(response, request, token)
+    return response
 
 
 @app.get("/api/health")

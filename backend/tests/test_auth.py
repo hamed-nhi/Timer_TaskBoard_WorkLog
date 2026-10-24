@@ -146,3 +146,78 @@ def test_admin_cannot_lock_themselves_out(admin):
     me = admin.get("/api/me").get_json()["id"]
     assert admin.put(f"/api/admin/users/{me}", json={"is_active": False}).status_code == 400
     assert admin.put(f"/api/admin/users/{me}", json={"is_admin": False}).status_code == 400
+
+
+def test_sign_in_survives_a_new_client_without_password(alice):
+    """A persisted cookie alone restores identity after reopening the browser."""
+    token = alice.http.cookies.get("tl_session")
+    reopened = Client()
+    reopened.http.cookies.set("tl_session", token)
+    assert reopened.get("/api/me").get_json()["username"] == "alice"
+
+
+def test_session_is_renewed_after_activity_and_survives_original_expiry(alice, monkeypatch):
+    original = sql("SELECT expires_at FROM sessions")[0]["expires_at"]
+    later = now_local() + timedelta(days=20)
+    monkeypatch.setattr(auth, "now_local", lambda: later)
+    response = alice.get("/api/me")
+    assert response.status_code == 200
+    cookie = response.headers["set-cookie"].lower()
+    assert "max-age=7776000" in cookie and "expires=" in cookie and "httponly" in cookie
+    renewed = sql("SELECT expires_at FROM sessions")[0]["expires_at"]
+    assert renewed == later + timedelta(days=90) and renewed > original
+    monkeypatch.setattr(auth, "now_local", lambda: original + timedelta(days=1))
+    assert alice.get("/api/me").status_code == 200
+
+
+def test_renewal_cookie_is_attached_to_explicit_json_response(alice):
+    sql("UPDATE sessions SET last_seen_at = last_seen_at - interval '2 hours'")
+    response = alice.post("/api/tasks", json={"title": "renew sign in"})
+    assert response.status_code == 201
+    assert "tl_session=" in response.headers["set-cookie"]
+
+
+def test_recent_session_does_not_need_a_write_or_renew_cookie(alice):
+    before = sql("SELECT expires_at, last_seen_at FROM sessions")[0]
+    response = alice.get("/api/me")
+    assert response.status_code == 200 and "set-cookie" not in response.headers
+    assert sql("SELECT expires_at, last_seen_at FROM sessions")[0] == before
+
+
+def test_expired_or_revoked_cookie_cannot_renew_itself(alice):
+    token = alice.http.cookies.get("tl_session")
+    alice.post("/api/auth/logout")
+    stale = Client()
+    stale.http.cookies.set("tl_session", token)
+    response = stale.get("/api/me")
+    assert response.status_code == 401 and "set-cookie" not in response.headers
+    assert sql("SELECT count(*) c FROM sessions")[0]["c"] == 0
+
+
+def test_automatic_cookie_security_matches_http_and_https(monkeypatch):
+    from fastapi.testclient import TestClient
+    from app.main import app
+    from app.config import settings
+    monkeypatch.setattr(settings, "cookie_secure", None)
+    make_user("alice")
+    for scheme in ("http", "https"):
+        with TestClient(app, base_url=f"{scheme}://testserver", client=("127.0.0.1", 1)) as client:
+            response = client.post("/api/auth/login", json={"username": "alice", "password": "password123"},
+                                   headers={"X-Requested-With": "timelog"})
+            cookie = response.headers["set-cookie"].lower()
+            assert "max-age=7776000" in cookie and "expires=" in cookie
+            assert ("; secure" in cookie) == (scheme == "https")
+            assert client.get("/api/me").status_code == 200
+
+
+def test_explicit_secure_cookie_override_is_respected(monkeypatch):
+    from fastapi.testclient import TestClient
+    from app.main import app
+    from app.config import settings
+    monkeypatch.setattr(settings, "cookie_secure", True)
+    make_user("alice")
+    with TestClient(app, base_url="https://testserver", client=("127.0.0.1", 1)) as client:
+        response = client.post("/api/auth/login", json={"username": "alice", "password": "password123"},
+                               headers={"X-Requested-With": "timelog"})
+        assert "; secure" in response.headers["set-cookie"].lower()
+        assert client.get("/api/me").status_code == 200

@@ -32,9 +32,9 @@ Run backend commands from backend/, frontend commands from frontend/:
 Root deployment: docker compose up -d --build. Commands were inspected, not executed.
 
 ### 5) Environment and Config
-backend/app/config.py reads environment and a working-directory .env. Defaults include APP_TZ=Asia/Tehran, 30-day sessions, 3 username failures / 20 minutes and 10 IP failures.
+backend/app/config.py reads environment and a working-directory .env. Defaults include APP_TZ=Asia/Tehran, 90-day rolling sessions, 3 username failures / 20 minutes and 10 IP failures.
 Root .env.example configures DB_PASSWORD, SITE_ADDRESS, COOKIE_SECURE, HTTP_PORT, registry mirrors and BACKUP_PASSPHRASE.
-Default SITE_ADDRESS=:80 combined with COOKIE_SECURE=true requires adjustment for HTTP use.
+COOKIE_SECURE defaults to automatic request-scheme detection; a blank Compose/environment value is ignored. Explicit true/false overrides automatic handling.
 Production has no Node server. PLAN.md says Python 3.12; current Docker/CI select 3.13.
 
 ### 6) Evidence

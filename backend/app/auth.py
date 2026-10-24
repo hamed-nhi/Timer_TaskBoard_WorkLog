@@ -36,6 +36,13 @@ def token_digest(token: str) -> str:
     return hashlib.sha256(token.encode()).hexdigest()
 
 
+def set_session_cookie(response, request: Request, token: str):
+    lifetime = settings.session_days * 86400
+    secure = settings.cookie_secure if settings.cookie_secure is not None else request.url.scheme == "https"
+    response.set_cookie(COOKIE_NAME, token, max_age=lifetime, expires=lifetime, httponly=True,
+                        secure=secure, samesite="lax", path="/")
+
+
 def create_session(db: Db, user_id: int, user_agent: str | None) -> str:
     token = secrets.token_urlsafe(32)
     now = now_local()
@@ -60,14 +67,19 @@ def current_user(request: Request, db: Db = Depends(get_db)) -> dict:
         raise ApiError("ابتدا وارد شوید", 401)
     now = now_local()
     row = db.execute(
-        "SELECT s.id sid, s.last_seen_at, u.id, u.username, u.display_name, u.is_admin "
+        "SELECT s.id sid, s.last_seen_at, s.expires_at, u.id, u.username, u.display_name, u.is_admin "
         "FROM sessions s JOIN users u ON u.id = s.user_id "
         "WHERE s.token_hash = ? AND s.expires_at > ? AND u.is_active", (token_digest(token), now)).fetchone()
     if not row:
         raise ApiError("ابتدا وارد شوید", 401)
     if now - row["last_seen_at"] > timedelta(hours=1):
-        db.execute("UPDATE sessions SET last_seen_at = ? WHERE id = ?", (now, row["sid"]))
+        # Renew only an existing, unexpired session; a revoked token must never be recreated.
+        updated = db.execute("UPDATE sessions SET last_seen_at = ?, expires_at = ? WHERE id = ? AND expires_at > ?",
+                             (now, now + timedelta(days=settings.session_days), row["sid"], now))
+        if not updated.rowcount:
+            raise ApiError("ابتدا وارد شوید", 401)
         db.commit()
+        request.state.renew_session_token = token
     return {k: row[k] for k in ("id", "username", "display_name", "is_admin")}
 
 

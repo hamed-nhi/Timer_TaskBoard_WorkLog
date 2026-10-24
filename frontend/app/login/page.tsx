@@ -1,9 +1,12 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useMe } from "@/lib/data";
 import { BrandMark } from "@/components/brand";
 import { api, errorText } from "@/lib/api";
 
 export default function LoginPage() {
+  const { data: me, isLoading } = useMe();
+  useEffect(() => { if (me) window.location.replace("/"); }, [me]);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -15,12 +18,14 @@ export default function LoginPage() {
     setBusy(true);
     try {
       await api("/api/auth/login", "POST", { username, password });
-      window.location.href = "/";
+      window.location.replace("/");
     } catch (err) {
       setError(errorText(err));
       setBusy(false);
     }
   }
+
+  if (isLoading || me) return <div className="login-wrap" role="status">در حال بررسی ورود...</div>;
 
   return (
     <div className="login-wrap">

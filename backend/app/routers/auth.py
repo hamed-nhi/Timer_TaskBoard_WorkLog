@@ -3,9 +3,8 @@ import ipaddress
 from fastapi import APIRouter, Body, Depends, Request, Response
 
 from ..auth import (COOKIE_NAME, check_login_allowed, create_session, current_user, drop_sessions, hash_password,
-                    record_login, token_digest, verify_password)
+                    record_login, set_session_cookie, token_digest, verify_password)
 from ..common import ApiError
-from ..config import settings
 from ..db import Db, get_db
 
 router = APIRouter(prefix="/api")
@@ -35,8 +34,7 @@ def login(request: Request, response: Response, data: dict = Body(...), db: Db =
     record_login(db, username, ip, True)
     token = create_session(db, user["id"], request.headers.get("user-agent"))
     db.commit()
-    response.set_cookie(COOKIE_NAME, token, max_age=settings.session_days * 86400, httponly=True,
-                        secure=settings.cookie_secure, samesite="lax", path="/")
+    set_session_cookie(response, request, token)
     return me_payload(db, user["id"])
 
 

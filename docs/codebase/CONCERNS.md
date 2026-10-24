@@ -31,7 +31,7 @@ Source review at 2707511 on 2026-10-24. Findings below are static observations; 
 |---|---|---|
 | Wrong DB in test environment | conftest.py reads arbitrary TEST_DATABASE_URL | Dedicated default exists, explicit target guard absent |
 | Passphrase visibility | backup.sh/restore_test.sh use --passphrase argument | Encrypted output, but passphrase-file approach from PLAN absent |
-| HTTP cookie setup mismatch | .env.example defaults :80 and secure=true | Comment explains required override; setup must apply it |
+| HTTP cookie setup | Resolved in persistent-login update: COOKIE_SECURE defaults to scheme detection | Explicit overrides still require correct deployment configuration |
 | Concurrent login attempts | auth.py checks and records failures in separate steps | DB-based lockout exists; concurrent threshold behavior unverified |
 
 Tenant isolation uses user filters and ownership validation; no claim of a complete security audit is made. Existing CSRF header, SameSite cookie, password hashing, token digests and admin dependencies are visible in source.
