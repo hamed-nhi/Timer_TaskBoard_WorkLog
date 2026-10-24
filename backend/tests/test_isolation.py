@@ -105,7 +105,8 @@ def test_settings_are_per_user(alice, bob):
     assert alice.get("/api/settings").get_json()["daily_goal_minutes"] == 300
 
 
-def test_catalog_is_shared(alice, bob, admin):
-    assert admin.post("/api/admin/report-types", json={"name": "گزارش فنی"}).get_json()["id"]
-    for c in (alice, bob):
-        assert [x["name"] for x in c.get("/api/company-catalog").get_json()["types"] if x["id"]] == ["گزارش فنی"]
+def test_catalog_is_private(alice, bob, admin):
+    assert alice.post("/api/catalog/report-types", json={"name": "گزارش فنی"}).get_json()["id"]
+    assert [x["name"] for x in alice.get("/api/company-catalog").get_json()["types"] if x["id"]] == ["گزارش فنی"]
+    for c in (bob, admin):
+        assert [x["name"] for x in c.get("/api/company-catalog").get_json()["types"] if x["id"]] == []

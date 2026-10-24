@@ -144,8 +144,17 @@ def test_other_users_data_untouched(desktop_copy):
     make_user("hamed")
     c = login_as("friend")
     c.post("/api/tasks", json={"title": "کار دوست", "start_time": "09:00", "end_time": "09:30"})
+    # Same catalog names in another account must not be reused by the importer.
+    c.post("/api/catalog/import", json={"types": ["گزارش فنی", "جلسات"],
+                                      "projects": {"پروژه": ["استوری الف"]}})
+    before = c.get("/api/catalog").get_json()
     run(desktop_copy, "hamed")
     assert [t["title"] for t in c.get("/api/tasks").get_json()] == ["کار دوست"]
+    assert c.get("/api/catalog").get_json() == before
+    owner = sql("SELECT rt.user_id type_owner, s.user_id story_owner, tg.user_id FROM tags tg "
+                "JOIN report_types rt ON rt.id=tg.report_type_id JOIN stories s ON s.id=tg.story_id "
+                "JOIN users u ON u.id=tg.user_id WHERE u.username='hamed'")[0]
+    assert owner["type_owner"] == owner["story_owner"] == owner["user_id"]
 
 
 def test_a_mismatch_rolls_everything_back(desktop_copy, monkeypatch):

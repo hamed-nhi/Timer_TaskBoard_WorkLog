@@ -13,6 +13,7 @@ import pytest                                    # noqa: E402
 from alembic import command                      # noqa: E402
 from alembic.config import Config                # noqa: E402
 from fastapi.testclient import TestClient        # noqa: E402
+from sqlalchemy.engine import make_url
 from sqlalchemy import text                      # noqa: E402
 
 from app.auth import hash_password               # noqa: E402
@@ -26,6 +27,9 @@ HEADERS = {"X-Requested-With": "timelog"}
 @pytest.fixture(scope="session", autouse=True)
 def schema():
     """Build the schema with the real migrations, so they are what gets tested."""
+    database = make_url(settings.database_url).database or ""
+    if not database.endswith("_test"):
+        raise RuntimeError("Refusing destructive test setup: database name must end with _test")
     with engine.begin() as conn:
         conn.execute(text("DROP SCHEMA public CASCADE"))
         conn.execute(text("CREATE SCHEMA public"))

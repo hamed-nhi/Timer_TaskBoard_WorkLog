@@ -1,10 +1,9 @@
 "use client";
-import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import useSWR, { mutate } from "swr";
 import { del, errorText, fetcher, post, put } from "@/lib/api";
 import { fa } from "@/lib/fa";
-import { useMe } from "@/lib/data";
+import { refreshAll, useMe } from "@/lib/data";
 import { AdminUser } from "@/lib/types";
 import { useUi } from "@/components/ui";
 
@@ -14,13 +13,11 @@ interface AdminCatalog {
 }
 
 export default function AdminPage() {
-  const router = useRouter();
   const { data: me } = useMe();
-  useEffect(() => { if (me && !me.is_admin) router.replace("/"); }, [me]);
-  if (!me?.is_admin) return null;
+  if (!me) return null;
   return (
     <>
-      <Users />
+      {me.is_admin && <Users />}
       <Catalog />
     </>
   );
@@ -97,13 +94,13 @@ function Users() {
 
 function Catalog() {
   const { toast, confirm } = useUi();
-  const { data, mutate: reload } = useSWR<AdminCatalog>("/api/admin/catalog", fetcher);
+  const { data, mutate: reload } = useSWR<AdminCatalog>("/api/catalog", fetcher);
   const [newType, setNewType] = useState("");
   const [newProject, setNewProject] = useState("");
   const [newStory, setNewStory] = useState<Record<number, string>>({});
   if (!data) return null;
 
-  const done = async () => { await reload(); await mutate("/api/company-catalog"); };
+  const done = async () => { await reload(); await mutate("/api/company-catalog"); await refreshAll(); };
   const run = async (fn: () => Promise<unknown>) => { try { await fn(); await done(); } catch (e) { toast(errorText(e)); } };
   const rename = async (url: string, current: string) => {
     const name = window.prompt("نام جدید:", current);
@@ -115,20 +112,20 @@ function Catalog() {
 
   return (
     <div className="card">
-      <h2>کاتالوگ سامانه‌ی اصلی (برای همه‌ی کاربران مشترک است)</h2>
-      <div className="hint" style={{ marginBottom: 10 }}>نوع گزارش‌ها، پروژه‌ها و استوری‌ها اینجا تعریف می‌شوند؛ هر کاربر در «ویرایش تگ‌ها» برای تگ‌هایش از همین فهرست انتخاب می‌کند. موردی که روی تگ یا تسکی استفاده شده حذف نمی‌شود.</div>
+      <h2>نوع گزارش، پروژه و استوری‌های من</h2>
+      <div className="hint" style={{ marginBottom: 10 }}>این فهرست فقط متعلق به حساب شماست. نوع گزارش، پروژه و استوری جدید بسازید و در «ویرایش تگ‌ها» انتخاب کنید. دیگران به این موارد دسترسی ندارند. مورد استفاده‌شده روی تگ یا تسک حذف نمی‌شود.</div>
 
       <div className="tag-sub-title">نوع گزارش</div>
       {data.types.map((t) => (
         <div className="catalog-item" key={t.id}>
           <span style={{ flex: 1 }}>{t.name}</span>
-          <button className="btn btn-outline btn-sm" onClick={() => rename(`/api/admin/report-types/${t.id}`, t.name)}>تغییر نام</button>
-          <button className="btn btn-danger btn-sm" onClick={() => remove(`/api/admin/report-types/${t.id}`, t.name)}>حذف</button>
+          <button className="btn btn-outline btn-sm" onClick={() => rename(`/api/catalog/report-types/${t.id}`, t.name)}>تغییر نام</button>
+          <button className="btn btn-danger btn-sm" onClick={() => remove(`/api/catalog/report-types/${t.id}`, t.name)}>حذف</button>
         </div>
       ))}
       <div className="tags-add">
         <input type="text" placeholder="نوع گزارش جدید..." value={newType} onChange={(e) => setNewType(e.target.value)} />
-        <button className="btn btn-primary" onClick={() => newType.trim() && run(async () => { await post("/api/admin/report-types", { name: newType.trim() }); setNewType(""); })}>افزودن</button>
+        <button className="btn btn-primary" onClick={() => newType.trim() && run(async () => { await post("/api/catalog/report-types", { name: newType.trim() }); setNewType(""); })}>افزودن</button>
       </div>
 
       <div className="tag-sub-title">پروژه‌ها و استوری‌ها</div>
@@ -136,20 +133,20 @@ function Catalog() {
         <div key={p.id} style={{ marginBottom: 12 }}>
           <div className="catalog-item">
             <b style={{ flex: 1 }}>{p.name} <span className="hint">({fa(p.stories.length)} استوری)</span></b>
-            <button className="btn btn-outline btn-sm" onClick={() => rename(`/api/admin/projects/${p.id}`, p.name)}>تغییر نام</button>
-            <button className="btn btn-danger btn-sm" onClick={() => remove(`/api/admin/projects/${p.id}`, p.name)}>حذف</button>
+            <button className="btn btn-outline btn-sm" onClick={() => rename(`/api/catalog/projects/${p.id}`, p.name)}>تغییر نام</button>
+            <button className="btn btn-danger btn-sm" onClick={() => remove(`/api/catalog/projects/${p.id}`, p.name)}>حذف</button>
           </div>
           {p.stories.map((s) => (
             <div className="catalog-item catalog-story" key={s.id}>
               <span style={{ flex: 1 }}>{s.name}</span>
-              <button className="btn btn-outline btn-sm" onClick={() => rename(`/api/admin/stories/${s.id}`, s.name)}>تغییر نام</button>
-              <button className="btn btn-danger btn-sm" onClick={() => remove(`/api/admin/stories/${s.id}`, s.name)}>حذف</button>
+              <button className="btn btn-outline btn-sm" onClick={() => rename(`/api/catalog/stories/${s.id}`, s.name)}>تغییر نام</button>
+              <button className="btn btn-danger btn-sm" onClick={() => remove(`/api/catalog/stories/${s.id}`, s.name)}>حذف</button>
             </div>
           ))}
           <div className="tags-add catalog-story" style={{ borderTop: 0, paddingTop: 4 }}>
             <input type="text" placeholder="استوری جدید برای این پروژه..." value={newStory[p.id] || ""} onChange={(e) => setNewStory({ ...newStory, [p.id]: e.target.value })} />
             <button className="btn btn-outline" onClick={() => (newStory[p.id] || "").trim() && run(async () => {
-              await post(`/api/admin/projects/${p.id}/stories`, { name: newStory[p.id].trim() });
+              await post(`/api/catalog/projects/${p.id}/stories`, { name: newStory[p.id].trim() });
               setNewStory({ ...newStory, [p.id]: "" });
             })}>افزودن</button>
           </div>
@@ -157,7 +154,7 @@ function Catalog() {
       ))}
       <div className="tags-add">
         <input type="text" placeholder="پروژه‌ی جدید..." value={newProject} onChange={(e) => setNewProject(e.target.value)} />
-        <button className="btn btn-primary" onClick={() => newProject.trim() && run(async () => { await post("/api/admin/projects", { name: newProject.trim() }); setNewProject(""); })}>افزودن پروژه</button>
+        <button className="btn btn-primary" onClick={() => newProject.trim() && run(async () => { await post("/api/catalog/projects", { name: newProject.trim() }); setNewProject(""); })}>افزودن پروژه</button>
       </div>
     </div>
   );

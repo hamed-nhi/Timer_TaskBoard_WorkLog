@@ -46,6 +46,7 @@ def _import(db, src, username, dry_run):
     if not user:
         raise ImportError_(f"کاربر «{username}» وجود ندارد؛ اول آن را بسازید (create-user)")
     uid = user["id"]
+    db.lock_user(uid)
     for table in ("tasks", "tags", "planned_tasks", "presence_segments"):
         if db.execute(f"SELECT COUNT(*) c FROM {table} WHERE user_id = ?", (uid,)).fetchone()["c"]:
             raise ImportError_("حساب مقصد خالی نیست؛ انتقال فقط یک بار و روی حساب خالی انجام می‌شود")
@@ -53,7 +54,7 @@ def _import(db, src, username, dry_run):
     q = lambda sql: src.execute(sql).fetchall()      # noqa: E731
     warnings = []
 
-    # ---- shared catalog: the saved list plus whatever the tags and tasks use ----
+    # ---- personal catalog: the saved list plus whatever the tags and tasks use ----
     settings = {r["key"]: r["value"] for r in q("SELECT key, value FROM settings")}
     try:
         saved = json.loads(settings.get("company_catalog") or "{}")
@@ -71,10 +72,11 @@ def _import(db, src, username, dry_run):
     for t in q("SELECT DISTINCT report_type FROM tasks WHERE report_type IS NOT NULL AND report_type <> ''"):
         if t["report_type"] not in catalog["types"]:
             catalog["types"].append(t["report_type"])
-    import_catalog(db, catalog)
-    type_id = {r["name"]: r["id"] for r in db.execute("SELECT id, name FROM report_types").fetchall()}
+    import_catalog(db, uid, catalog)
+    type_id = {r["name"]: r["id"] for r in db.execute("SELECT id, name FROM report_types WHERE user_id = ?", (uid,)).fetchall()}
     story_id = {(r["project"], r["name"]): r["id"] for r in db.execute(
-        "SELECT s.id, s.name, p.name AS project FROM stories s JOIN projects p ON p.id = s.project_id").fetchall()}
+        "SELECT s.id, s.name, p.name AS project FROM stories s JOIN projects p ON p.id = s.project_id "
+        "WHERE s.user_id = ? AND p.user_id = ?", (uid, uid)).fetchall()}
 
     # ---- tags ----
     tag_map = {}

@@ -4,7 +4,7 @@ from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from .common import CSRF_HEADER, CSRF_VALUE, ApiError
-from .routers import admin, auth, fill, planned, presence, reports, settings_me, tags, tasks
+from .routers import admin, auth, catalog, fill, planned, presence, reports, settings_me, tags, tasks
 
 app = FastAPI(title="TimeLog", docs_url=None, redoc_url=None, openapi_url=None)
 
@@ -38,5 +38,5 @@ def health():
     return {"ok": True}
 
 
-for module in (auth, admin, tags, tasks, planned, presence, fill, reports, settings_me):
+for module in (auth, admin, catalog, tags, tasks, planned, presence, fill, reports, settings_me):
     app.include_router(module.router)

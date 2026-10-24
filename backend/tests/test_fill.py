@@ -25,10 +25,10 @@ def add_presence(start, end):
 def catalog(admin, types=("گزارش فنی", "جلسات"), project="پروژه‌ی هوش مصنوعی", stories=("اکانت‌ها", "تحقیق")):
     ids = {"types": {}, "stories": {}}
     for t in types:
-        ids["types"][t] = admin.post("/api/admin/report-types", json={"name": t}).get_json()["id"]
-    pid = admin.post("/api/admin/projects", json={"name": project}).get_json()["id"]
+        ids["types"][t] = admin.post("/api/catalog/report-types", json={"name": t}).get_json()["id"]
+    pid = admin.post("/api/catalog/projects", json={"name": project}).get_json()["id"]
     for s in stories:
-        ids["stories"][s] = admin.post(f"/api/admin/projects/{pid}/stories", json={"name": s}).get_json()["id"]
+        ids["stories"][s] = admin.post(f"/api/catalog/projects/{pid}/stories", json={"name": s}).get_json()["id"]
     return ids
 
 
@@ -45,7 +45,7 @@ def fill_for(client):
 
 
 def test_tag_carries_type_project_story_to_its_tasks(client, admin):
-    ids = catalog(admin)
+    ids = catalog(client)
     tag = new_tag(client, "اکانت", report_type_id=ids["types"]["گزارش فنی"], story_id=ids["stories"]["اکانت‌ها"])
     t = today_task(client, "خرید اکانت", "09:00", "10:00", tag_id=tag["id"])
     assert (t["company_type"], t["company_project"], t["company_story"]) == ("گزارش فنی", "پروژه‌ی هوش مصنوعی", "اکانت‌ها")
@@ -57,13 +57,13 @@ def test_tag_carries_type_project_story_to_its_tasks(client, admin):
 
 def test_unknown_catalog_ids_are_refused(client):
     tag = new_tag(client, "تگ")
-    assert client.put(f"/api/tags/{tag['id']}/company", json={"report_type_id": 999}).status_code == 400
-    assert client.put(f"/api/tags/{tag['id']}/company", json={"story_id": 999}).status_code == 400
+    assert client.put(f"/api/tags/{tag['id']}/company", json={"report_type_id": 999}).status_code == 404
+    assert client.put(f"/api/tags/{tag['id']}/company", json={"story_id": 999}).status_code == 404
     assert client.put(f"/api/tags/{tag['id']}/company", json={"fill_weight": 11}).status_code == 400
 
 
 def test_task_type_override_and_ticks_never_touch_time(client, admin):
-    ids = catalog(admin)
+    ids = catalog(client)
     tag = new_tag(client, "تیکتینگ", report_type_id=ids["types"]["گزارش فنی"])
     t = today_task(client, "تیکت", "09:00", "10:30", tag_id=tag["id"])
     d = client.post(f"/api/tasks/{t['id']}/company", json={"report_type_id": ids["types"]["جلسات"],
@@ -74,7 +74,7 @@ def test_task_type_override_and_ticks_never_touch_time(client, admin):
 
 
 def test_task_marked_as_meeting_gets_no_fill(client, admin):
-    ids = catalog(admin)
+    ids = catalog(client)
     add_presence("08:00", "12:00")
     tag = new_tag(client, "چت بات", report_type_id=ids["types"]["گزارش فنی"])
     t = today_task(client, "جلسه پیشرفت", "08:00", "10:00", tag_id=tag["id"])
@@ -84,19 +84,19 @@ def test_task_marked_as_meeting_gets_no_fill(client, admin):
 
 
 def test_catalog_in_use_cannot_be_deleted(client, admin):
-    ids = catalog(admin)
+    ids = catalog(client)
     new_tag(client, "تگ", report_type_id=ids["types"]["گزارش فنی"], story_id=ids["stories"]["تحقیق"])
-    assert admin.delete(f"/api/admin/report-types/{ids['types']['گزارش فنی']}").status_code == 409
-    assert admin.delete(f"/api/admin/stories/{ids['stories']['تحقیق']}").status_code == 409
-    assert admin.delete(f"/api/admin/stories/{ids['stories']['اکانت‌ها']}").status_code == 200
-    assert admin.post("/api/admin/report-types", json={"name": "گزارش فنی"}).status_code == 409      # duplicate
+    assert client.delete(f"/api/catalog/report-types/{ids['types']['گزارش فنی']}").status_code == 409
+    assert client.delete(f"/api/catalog/stories/{ids['stories']['تحقیق']}").status_code == 409
+    assert client.delete(f"/api/catalog/stories/{ids['stories']['اکانت‌ها']}").status_code == 200
+    assert client.post("/api/catalog/report-types", json={"name": "گزارش فنی"}).status_code == 409      # duplicate
 
 
 def test_catalog_import_is_idempotent(admin):
     data = {"types": ["الف", "ب"], "projects": {"پ۱": ["س۱", "س۲"]}}
     for _ in range(2):
-        assert admin.post("/api/admin/catalog/import", json=data).status_code == 200
-    cat = admin.get("/api/admin/catalog").get_json()
+        assert admin.post("/api/catalog/import", json=data).status_code == 200
+    cat = admin.get("/api/catalog").get_json()
     assert [t["name"] for t in cat["types"]] == ["الف", "ب"]
     assert [s["name"] for s in cat["projects"][0]["stories"]] == ["س۱", "س۲"]
 
@@ -133,7 +133,7 @@ def test_fill_suggestion_reaches_target_by_weight_and_keeps_real_time(client):
 
 
 def test_fill_caps_each_task_and_skips_meetings_and_zero_weight(client, admin):
-    ids = catalog(admin)
+    ids = catalog(client)
     add_presence("08:00", "17:00")
     never = new_tag(client, "هرگز", fill_weight=0)
     meet = new_tag(client, "جلسه‌ها", report_type_id=ids["types"]["جلسات"])

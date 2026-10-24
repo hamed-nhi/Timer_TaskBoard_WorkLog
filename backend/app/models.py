@@ -1,7 +1,7 @@
-"""Schema. Every row of a user's own data carries user_id; the shared company catalog does not."""
+"""Schema. User data and personal catalogs carry user_id; ownerless catalog rows retain legacy data."""
 from datetime import date, datetime
 
-from sqlalchemy import (Boolean, CheckConstraint, Date, DateTime, Float, ForeignKey, Index, Integer,
+from sqlalchemy import (Boolean, CheckConstraint, Date, DateTime, Float, ForeignKey, ForeignKeyConstraint, Index, Integer,
                         PrimaryKeyConstraint, String, Text, UniqueConstraint, func, text)
 from sqlalchemy.dialects.postgresql import INET, JSONB
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
@@ -44,29 +44,43 @@ class LoginAttempt(Base):
                       Index("ix_login_attempts_ip_at", "ip", "at"))
 
 
-# ---- shared company catalog (admin edits) ----
+# ---- private company catalog; ownerless rows preserve legacy shared data ----
 
 class ReportType(Base):
     __tablename__ = "report_types"
+    user_id: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
     id: Mapped[int] = mapped_column(primary_key=True)
-    name: Mapped[str] = mapped_column(String(150), unique=True)
+    name: Mapped[str] = mapped_column(String(150))
     sort: Mapped[int] = mapped_column(Integer, default=0, server_default=text("0"))
+
+    __table_args__ = (UniqueConstraint("user_id", "name", name="uq_report_types_user_name"),
+                      UniqueConstraint("id", "user_id", name="uq_report_types_id_user"))
 
 
 class Project(Base):
     __tablename__ = "projects"
+    user_id: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
     id: Mapped[int] = mapped_column(primary_key=True)
-    name: Mapped[str] = mapped_column(String(150), unique=True)
+    name: Mapped[str] = mapped_column(String(150))
     sort: Mapped[int] = mapped_column(Integer, default=0, server_default=text("0"))
+
+    __table_args__ = (UniqueConstraint("user_id", "name", name="uq_projects_user_name"),
+                      UniqueConstraint("id", "user_id", name="uq_projects_id_user"))
 
 
 class Story(Base):
     __tablename__ = "stories"
+    user_id: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
     id: Mapped[int] = mapped_column(primary_key=True)
     project_id: Mapped[int] = mapped_column(ForeignKey("projects.id", ondelete="CASCADE"))
     name: Mapped[str] = mapped_column(String(150))
     sort: Mapped[int] = mapped_column(Integer, default=0, server_default=text("0"))
-    __table_args__ = (UniqueConstraint("project_id", "name"),)
+    __table_args__ = (
+        UniqueConstraint("project_id", "name"),
+        UniqueConstraint("id", "user_id", name="uq_stories_id_user"),
+        ForeignKeyConstraint(["project_id", "user_id"], ["projects.id", "projects.user_id"],
+                             name="fk_stories_project_owner"),
+    )
 
 
 # ---- per-user data ----
@@ -82,7 +96,14 @@ class Tag(Base):
     story_id: Mapped[int | None] = mapped_column(ForeignKey("stories.id", ondelete="SET NULL"))
     fill_weight: Mapped[float | None] = mapped_column(Float)
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
-    __table_args__ = (UniqueConstraint("user_id", "name"),)
+    __table_args__ = (
+        UniqueConstraint("user_id", "name"),
+        UniqueConstraint("id", "user_id", name="uq_tags_id_user"),
+        ForeignKeyConstraint(["report_type_id", "user_id"], ["report_types.id", "report_types.user_id"],
+                             name="fk_tags_report_type_owner"),
+        ForeignKeyConstraint(["story_id", "user_id"], ["stories.id", "stories.user_id"],
+                             name="fk_tags_story_owner"),
+    )
 
 
 class Task(Base):
@@ -111,6 +132,9 @@ class Task(Base):
     fill_minutes: Mapped[float] = mapped_column(Float, default=0, server_default=text("0"))
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
     __table_args__ = (
+        ForeignKeyConstraint(["report_type_id", "user_id"], ["report_types.id", "report_types.user_id"],
+                             name="fk_tasks_report_type_owner"),
+        ForeignKeyConstraint(["tag_id", "user_id"], ["tags.id", "tags.user_id"], name="fk_tasks_tag_owner"),
         CheckConstraint("status in ('running','paused','done')", name="ck_tasks_status"),
         Index("ix_tasks_user_gdate", "user_id", "gregorian_date"),
         Index("ix_tasks_user_status", "user_id", "status"),
@@ -136,7 +160,10 @@ class PlannedTask(Base):
     title: Mapped[str] = mapped_column(Text)
     tag_id: Mapped[int | None] = mapped_column(ForeignKey("tags.id"))
     created_at: Mapped[datetime] = mapped_column(DateTime, server_default=func.now())
-    __table_args__ = (Index("ix_planned_user_date", "user_id", "jalali_year", "jalali_month", "jalali_day"),)
+    __table_args__ = (
+        Index("ix_planned_user_date", "user_id", "jalali_year", "jalali_month", "jalali_day"),
+        ForeignKeyConstraint(["tag_id", "user_id"], ["tags.id", "tags.user_id"], name="fk_planned_tag_owner"),
+    )
 
 
 class PresenceSegment(Base):

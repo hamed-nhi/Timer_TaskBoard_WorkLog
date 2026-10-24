@@ -119,7 +119,7 @@ def test_csrf_header_required_for_writes(alice):
 
 def test_admin_only_routes(alice, admin):
     assert alice.get("/api/admin/users").status_code == 403
-    assert alice.post("/api/admin/report-types", json={"name": "x"}).status_code == 403
+    assert alice.post("/api/admin/users", json={"username": "friend"}).status_code == 403
     assert admin.get("/api/admin/users").status_code == 200
 
 

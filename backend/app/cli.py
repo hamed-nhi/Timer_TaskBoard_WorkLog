@@ -2,7 +2,7 @@
 
   create-user USERNAME [--admin] [--display-name NAME]   password is asked (not passed as an argument)
   reset-password USERNAME
-  import-catalog FILE.json                                shared company catalog (desktop format)
+  import-catalog FILE.json --user USERNAME                personal company catalog (desktop format)
   import-desktop COPY.db --user USERNAME [--dry-run]      one-off import of a desktop database copy
 """
 import argparse
@@ -55,7 +55,10 @@ def cmd_import_catalog(args):
         data = json.load(f)
     with SessionLocal() as session:
         db = Db(session)
-        import_catalog(db, data)
+        user = db.execute("SELECT id FROM users WHERE username = ?", (args.user.strip().lower(),)).fetchone()
+        if not user:
+            sys.exit("No such user")
+        import_catalog(db, user["id"], data)
         db.commit()
     print("Catalog imported")
 
@@ -83,6 +86,7 @@ def main(argv=None):
     p.set_defaults(func=cmd_reset_password)
     p = sub.add_parser("import-catalog")
     p.add_argument("file")
+    p.add_argument("--user", required=True)
     p.set_defaults(func=cmd_import_catalog)
     p = sub.add_parser("import-desktop")
     p.add_argument("db")

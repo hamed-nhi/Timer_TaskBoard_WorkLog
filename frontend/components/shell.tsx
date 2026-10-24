@@ -26,7 +26,7 @@ const MORE: NavItem[] = [
   { href: "/tasks/", label: "همه تسک‌ها", icon: "📋" },
   { href: "/daylog/", label: "گزارش روزانه", icon: "🧾" },
   { href: "/settings/", label: "تنظیمات", icon: "⚙" },
-  { href: "/admin/", label: "مدیریت", icon: "👤", admin: true },
+  { href: "/admin/", label: "مدیریت", icon: "👤" },
 ];
 const PHONE: NavItem[] = [PRIMARY[0], PRIMARY[1], MORE[3], PRIMARY[2]];
 

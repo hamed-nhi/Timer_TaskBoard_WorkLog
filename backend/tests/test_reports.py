@@ -244,9 +244,9 @@ def test_export_running_task_has_blank_end_and_duration(client):
 
 
 def test_export_has_company_columns(client, admin):
-    t_id = admin.post("/api/admin/report-types", json={"name": "گزارش فنی"}).get_json()["id"]
-    pid = admin.post("/api/admin/projects", json={"name": "پروژه"}).get_json()["id"]
-    sid = admin.post(f"/api/admin/projects/{pid}/stories", json={"name": "استوری"}).get_json()["id"]
+    t_id = client.post("/api/catalog/report-types", json={"name": "گزارش فنی"}).get_json()["id"]
+    pid = client.post("/api/catalog/projects", json={"name": "پروژه"}).get_json()["id"]
+    sid = client.post(f"/api/catalog/projects/{pid}/stories", json={"name": "استوری"}).get_json()["id"]
     tag = client.post("/api/tags", json={"name": "تگ"}).get_json()
     client.put(f"/api/tags/{tag['id']}/company", json={"report_type_id": t_id, "story_id": sid})
     t = done(client, 60, 1405, 7, 3, tag_id=tag["id"])

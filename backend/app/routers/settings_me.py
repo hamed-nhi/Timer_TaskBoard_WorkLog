@@ -4,6 +4,7 @@ import json
 from fastapi import APIRouter, Body
 from fastapi.responses import Response
 
+from ..catalog import catalog_payload
 from ..common import ApiError
 from ..deps import DbDep, UserDep
 from ..timecalc import effective_minutes
@@ -75,6 +76,7 @@ def my_backup(db: DbDep, user: UserDep):
     data = {
         "exported_at": now_local().isoformat(timespec="seconds"),
         "user": {"username": user["username"], "display_name": user["display_name"]},
+        "catalog": catalog_payload(db, uid),
         "tags": q("SELECT * FROM tags WHERE user_id = ? ORDER BY id"),
         "tasks": q("SELECT * FROM tasks WHERE user_id = ? ORDER BY id"),
         "task_segments": q("SELECT s.* FROM task_segments s JOIN tasks t ON t.id = s.task_id "

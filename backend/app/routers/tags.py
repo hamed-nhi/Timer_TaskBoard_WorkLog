@@ -4,6 +4,7 @@ from fastapi import APIRouter, Body, Query
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
 
+from ..catalog import catalog_payload
 from ..common import (MEETING_REPORT_TYPE, ApiError, clean_tag_name, not_found, tag_key)
 from ..deps import DbDep, UserDep
 from ..timeutil import now_local, today_local
@@ -189,7 +190,7 @@ def merge_tag(tag_id: int, db: DbDep, user: UserDep, data: dict = Body(...)):
             "target": entry["target"]}
 
 
-def opt_id(db, table, value, label):
+def opt_id(db, uid, table, value, label):
     """Optional catalog id (None = cleared); it must exist."""
     if value in (None, "", 0):
         return None
@@ -197,14 +198,14 @@ def opt_id(db, table, value, label):
         value = int(value)
     except (TypeError, ValueError):
         raise ApiError(f"{label} نامعتبر است")
-    if not db.execute(f"SELECT 1 FROM {table} WHERE id = ?", (value,)).fetchone():
-        raise ApiError(f"{label} نامعتبر است")
+    if not db.execute(f"SELECT 1 FROM {table} WHERE id = ? AND user_id = ?", (value, uid)).fetchone():
+        not_found()
     return value
 
 
 @router.put("/tags/{tag_id}/company")
 def set_tag_company(tag_id: int, db: DbDep, user: UserDep, data: dict = Body(...)):
-    """Report type / story of the company's main system for a tag (from the shared catalog), and its
+    """Report type / story of the company's main system for a tag (from the user's private catalog), and its
     gap-fill weight. Only these tag columns change; tasks are never touched."""
     uid = user["id"]
     db.lock_user(uid)
@@ -220,23 +221,18 @@ def set_tag_company(tag_id: int, db: DbDep, user: UserDep, data: dict = Body(...
         if not 0 <= weight <= 10:
             raise ApiError("وزن باید بین ۰ و ۱۰ باشد")
     db.execute("UPDATE tags SET report_type_id = ?, story_id = ?, fill_weight = ? WHERE id = ?",
-               (opt_id(db, "report_types", data.get("report_type_id"), "نوع گزارش"),
-                opt_id(db, "stories", data.get("story_id"), "استوری"), weight, tag_id))
+               (opt_id(db, uid, "report_types", data.get("report_type_id"), "نوع گزارش"),
+                opt_id(db, uid, "stories", data.get("story_id"), "استوری"), weight, tag_id))
     db.commit()
     return tag_json(db, uid, get_tag(db, uid, tag_id))
 
 
 @router.get("/company-catalog")
 def company_catalog(db: DbDep, user: UserDep):
-    """Choices for the company fields, shared by every user."""
-    types = db.execute("SELECT id, name FROM report_types ORDER BY sort, id").fetchall()
-    if not any(t["name"] == MEETING_REPORT_TYPE for t in types):
-        types.append({"id": None, "name": MEETING_REPORT_TYPE})
-    projects = db.execute("SELECT id, name FROM projects ORDER BY sort, id").fetchall()
-    stories = db.execute("SELECT id, project_id, name FROM stories ORDER BY sort, id").fetchall()
-    for p in projects:
-        p["stories"] = [{"id": s["id"], "name": s["name"]} for s in stories if s["project_id"] == p["id"]]
-    return {"types": types, "projects": projects}
+    payload = catalog_payload(db, user["id"])
+    if not any(t["name"] == MEETING_REPORT_TYPE for t in payload["types"]):
+        payload["types"].append({"id": None, "name": MEETING_REPORT_TYPE})
+    return payload
 
 
 @router.post("/tags")
@@ -250,8 +246,8 @@ def create_tag(db: DbDep, user: UserDep, data: dict = Body(...)):
     budget = parse_budget_hours(data.get("budget_hours"))     # optional: a new tag can start with an hour budget
     tag_id = db.insert("INSERT INTO tags (user_id, name, budget_minutes) VALUES (?, ?, ?)",
                        (uid, name, round(budget * 60, 2) if budget else None))
-    story_id = opt_id(db, "stories", data.get("story_id"), "استوری") if data.get("story_id") else None
-    type_id = opt_id(db, "report_types", data.get("report_type_id"), "نوع گزارش") if data.get("report_type_id") else None
+    story_id = opt_id(db, uid, "stories", data.get("story_id"), "استوری") if data.get("story_id") else None
+    type_id = opt_id(db, uid, "report_types", data.get("report_type_id"), "نوع گزارش") if data.get("report_type_id") else None
     if story_id or type_id:
         db.execute("UPDATE tags SET story_id = ?, report_type_id = ? WHERE id = ?", (story_id, type_id, tag_id))
     db.commit()

@@ -277,8 +277,8 @@ def set_task_company(task_id: int, db: DbDep, user: UserDep, data: dict = Body(.
                 value = int(value)
             except (TypeError, ValueError):
                 raise ApiError("نوع گزارش نامعتبر است")
-            if not db.execute("SELECT 1 FROM report_types WHERE id = ?", (value,)).fetchone():
-                raise ApiError("نوع گزارش نامعتبر است")
+            if not db.execute("SELECT 1 FROM report_types WHERE id = ? AND user_id = ?", (value, uid)).fetchone():
+                raise ApiError("not found", 404)
         db.execute("UPDATE tasks SET report_type_id = ? WHERE id = ?", (value, task_id))
     for key in ("outside_company", "planned_flag"):
         if key in data:
