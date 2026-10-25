@@ -9,7 +9,7 @@ import { Presence, PresenceSegment } from "@/lib/types";
 import { Modal, TimeInput, useUi } from "@/shared/ui";
 import { useFill } from "@/features/fill/components";
 
-const LEAVE_REASONS = ["ناهار", "نماز / استراحت", "کار بیرون از شرکت", "کار شخصی"];
+const LEAVE_REASONS = ["ناهار", "استراحت", "کار بیرون از شرکت", "کار شخصی"];
 
 /** Presence data plus the moment it was fetched, so totals can tick between refreshes. */
 export function useLivePresence() {
