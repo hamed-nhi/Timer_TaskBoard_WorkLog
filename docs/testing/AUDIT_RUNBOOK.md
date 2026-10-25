@@ -158,3 +158,6 @@ The current ordinary-load default is 30 seconds at one request per worker per se
 Reviewed Markdown under docs is maintained in English. Legacy .fa.md filenames are retained to preserve existing links. Report generators write newly generated localized Markdown into ignored artifacts/testing or artifacts/audit, alongside their HTML/evidence, rather than overwriting reviewed repository snapshots. Scenario descriptions in scenarios.json are English; IDs and evidence selectors remain unchanged.
 
 Local coding instructions may exist in AGENTS.md, but that file is intentionally untracked and is not required for builds, CI or deployment. Public architecture/contribution boundaries remain in docs/ARCHITECTURE.md and docs/HANDOFF.md.
+
+
+Password visibility: run `node tests/e2e/password-visibility.cjs` from frontend against the default audit URL on 18082, or set QA_BASE_URL=http://localhost:18083 for the separate production-Compose smoke environment. Six viewport/theme cases verify hidden-by-default input, show/hide and keyboard activation, no accidental submit, unchanged value, hiding on submission and no password persistence in browser storage. Login responses are intercepted for these presentation checks; real account access is verified separately without logging credentials.

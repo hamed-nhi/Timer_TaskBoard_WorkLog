@@ -743,3 +743,7 @@ input::placeholder, textarea::placeholder { color: var(--muted); opacity: .8; }
 
 .backup-setup { width: 100%; max-width: 850px; margin-inline: auto; }
 .backup-setup li { margin-block: 10px; }
+
+.login-password-label { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
+.login-password-label .lbl { margin: 0; }
+.login-password-label button { min-height: 44px; }

@@ -38,6 +38,8 @@ jobs:
         working-directory: frontend
       - run: node tests/e2e/login-security.cjs
         working-directory: frontend
+      - run: node tests/e2e/password-visibility.cjs
+        working-directory: frontend
       - run: python tools/audit_http_security.py
       - run: python tools/audit_load.py --seconds 30 --name release-legitimate-30s
       - run: python tools/audit_load.py --seconds 900 --name soak-release-15min

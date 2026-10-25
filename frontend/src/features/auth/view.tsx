@@ -10,6 +10,7 @@ export default function LoginPage() {
   useEffect(() => { if (me) window.location.replace("/"); }, [me]);
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const [config, setConfig] = useState<{ captcha_provider: "none" | "arcaptcha"; site_key: string } | null>(null);
@@ -29,6 +30,7 @@ export default function LoginPage() {
     if (!config || (config.captcha_provider === "arcaptcha" && !captchaToken)) return;
     setError("");
     setBusy(true);
+    setShowPassword(false);
     try {
       await api("/api/auth/login", "POST", { username, password, captcha_token: captchaToken });
       window.location.replace("/");
@@ -56,8 +58,12 @@ export default function LoginPage() {
               value={username} onChange={(e) => setUsername(e.target.value)} />
           </div>
           <div>
-            <label className="lbl" htmlFor="p">رمز عبور</label>
-            <input id="p" type="password" dir="ltr" autoComplete="current-password" required value={password} onChange={(e) => setPassword(e.target.value)} />
+            <div className="login-password-label">
+              <label className="lbl" htmlFor="p">رمز عبور</label>
+              <button className="btn btn-outline btn-sm" type="button" aria-controls="p" aria-pressed={showPassword}
+                disabled={busy} onClick={() => setShowPassword(value => !value)}>{showPassword ? "پنهان‌کردن رمز" : "نمایش رمز"}</button>
+            </div>
+            <input id="p" type={showPassword ? "text" : "password"} dir="ltr" autoComplete="current-password" required value={password} onChange={(e) => setPassword(e.target.value)} />
           </div>
           {config?.captcha_provider === "arcaptcha" && <>
             <Captcha key={captchaNonce} siteKey={config.site_key} onToken={setCaptchaToken} />
