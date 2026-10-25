@@ -169,7 +169,7 @@ async function checkRowStatus(context, title, status) {
       await admin.page.getByRole("heading", { name: "کاربران", exact: true }).waitFor();
       await admin.page.getByPlaceholder("نام کاربری (حروف لاتین کوچک)").fill("qa_invited");
       await mutation(admin.page, "/api/admin/users",
-        () => admin.page.getByRole("button", { name: "ساخت کاربر (رمز موقت ساخته می‌شود)" }).click());
+        () => admin.page.getByRole("button", { name: "ساخت کاربر", exact: true }).click());
       await admin.page.getByRole("button", { name: "بستن", exact: true }).click();
       assert.equal((await data(admin.context, "/api/catalog")).projects.length, 0);
     });

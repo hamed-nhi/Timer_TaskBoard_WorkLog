@@ -11,6 +11,8 @@ async function login(browser,username,password,mobile=false){
  const page=await ctx.newPage();page.on('pageerror',e=>errors.push(e.message));await page.goto(BASE+'/login/');
  await page.getByLabel('نام کاربری',{exact:true}).fill(username);await page.getByLabel('رمز عبور',{exact:true}).fill(password);
  await page.getByRole('button',{name:'ورود',exact:true}).click();await page.waitForURL(BASE+'/');await page.getByRole('heading',{name:'TIME LOG',exact:true}).waitFor();
+ await page.waitForLoadState('networkidle');
+ if(await page.getByRole('button',{name:'فعلاً بدون شیت ادامه می‌دهم',exact:true}).isVisible())await page.getByRole('button',{name:'فعلاً بدون شیت ادامه می‌دهم',exact:true}).click();
  return {ctx,page};
 }
 (async()=>{const browser=await chromium.launch({channel:process.env.QA_BROWSER_CHANNEL||'chrome',headless:true});

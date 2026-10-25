@@ -44,6 +44,7 @@ def test_lockout_after_three_failures_even_with_the_right_password(monkeypatch):
     # 21 minutes later it works again
     later = now_local() + timedelta(minutes=21)
     monkeypatch.setattr(auth, "now_local", lambda: later)
+    monkeypatch.setattr(auth.protection, "now_local", lambda: later)
     assert c.post("/api/auth/login", json={"username": "alice", "password": "password123"}).status_code == 200
 
 
@@ -70,6 +71,7 @@ def test_ip_lockout_after_ten_failures():
     make_user("alice")
     c = Client()
     for i in range(10):
+        make_user(f"user{i}")
         c.post("/api/auth/login", json={"username": f"user{i}", "password": "bad-password"})
     r = c.post("/api/auth/login", json={"username": "alice", "password": "password123"})
     assert r.status_code == 429
@@ -88,16 +90,16 @@ def test_inactive_user_cannot_log_in_or_keep_a_session(alice):
 
 def test_change_password_drops_other_sessions(alice):
     other = login_as("alice")
-    r = alice.post("/api/me/password", json={"old": "password123", "new": "another-pass-1"})
+    r = alice.post("/api/me/password", json={"old": "password123", "new": "Another-pass-1!"})
     assert r.status_code == 200
     assert other.get("/api/me").status_code == 401           # other device logged out
     assert alice.get("/api/me").status_code == 200           # this one stays
     assert Client().post("/api/auth/login", json={"username": "alice", "password": "password123"}).status_code == 401
-    assert login_as("alice", "another-pass-1")
+    assert login_as("alice", "Another-pass-1!")
 
 
 def test_change_password_checks_old_and_length(alice):
-    assert alice.post("/api/me/password", json={"old": "nope-nope-1", "new": "another-pass-1"}).status_code == 400
+    assert alice.post("/api/me/password", json={"old": "nope-nope-1", "new": "Another-pass-1!"}).status_code == 400
     assert alice.post("/api/me/password", json={"old": "password123", "new": "short"}).status_code == 400
 
 
@@ -160,6 +162,7 @@ def test_session_is_renewed_after_activity_and_survives_original_expiry(alice, m
     original = sql("SELECT expires_at FROM sessions")[0]["expires_at"]
     later = now_local() + timedelta(days=20)
     monkeypatch.setattr(auth, "now_local", lambda: later)
+    monkeypatch.setattr(auth.protection, "now_local", lambda: later)
     response = alice.get("/api/me")
     assert response.status_code == 200
     cookie = response.headers["set-cookie"].lower()

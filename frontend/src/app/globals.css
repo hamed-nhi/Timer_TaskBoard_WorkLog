@@ -738,3 +738,8 @@ input::placeholder, textarea::placeholder { color: var(--muted); opacity: .8; }
 .import-review > button { margin-top: 12px; }
 
 .cal-day-button { appearance: none; border: 0; padding: 0; background: transparent; color: inherit; font-family: inherit; cursor: pointer; min-width: 24px; min-height: 24px; }
+
+.captcha-wrap { max-width: 100%; overflow-x: auto; }
+
+.backup-setup { width: 100%; max-width: 850px; margin-inline: auto; }
+.backup-setup li { margin-block: 10px; }

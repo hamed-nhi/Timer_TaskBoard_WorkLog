@@ -11,4 +11,4 @@ def test_alembic_cli_resolves_app_from_an_unrelated_directory(tmp_path):
         [sys.executable, "-m", "alembic", "-c", str(backend / "alembic.ini"), "current"],
         cwd=tmp_path, env=os.environ.copy(), capture_output=True, text=True, timeout=20)
     assert result.returncode == 0, result.stderr
-    assert "0002" in result.stdout
+    assert "0004 (head)" in result.stdout

@@ -140,6 +140,8 @@ export interface Settings {
   weekly_goal_minutes: number;
   fill_target_percent: number;
   google_sheet_url: string;
+  backup_setup_done: boolean;
+  backup_service_email: string;
 }
 
 export interface GoalProgress {

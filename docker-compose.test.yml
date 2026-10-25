@@ -64,7 +64,8 @@ services:
       API_UPSTREAM: audit-api:8000
     ports: ["127.0.0.1:18082:80"]
     networks: [audit]
-    depends_on: [audit-api]
+    depends_on:
+      audit-api: {condition: service_healthy}
 
 volumes:
   audit_pgdata:

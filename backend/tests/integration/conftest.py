@@ -32,7 +32,7 @@ def schema():
 def clean_db():
     yield
     with engine.begin() as conn:
-        conn.execute(text("TRUNCATE users, report_types, projects, login_attempts RESTART IDENTITY CASCADE"))
+        conn.execute(text("TRUNCATE users, report_types, projects, login_attempts, captcha_redemptions, login_bans, login_protection_settings RESTART IDENTITY CASCADE"))
 
 @pytest.fixture()
 def alice():
@@ -69,3 +69,10 @@ def no_day_off(monkeypatch):
     """Fill tests must not depend on the weekday they run on (Friday blocks suggestions)."""
     from app.services import fill
     monkeypatch.setattr(fill, "FILL_DAY_OFF", None)
+
+
+@pytest.fixture(autouse=True)
+def fresh_request_gate(monkeypatch):
+    from app.api import middleware
+    from app.core.request_gate import RequestGate
+    monkeypatch.setattr(middleware, "request_gate", RequestGate())

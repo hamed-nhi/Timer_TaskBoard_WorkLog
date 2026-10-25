@@ -1,6 +1,12 @@
 # SITE_ADDRESS: ":80" for plain http (behind another proxy / testing) or a domain name for automatic https
 {$SITE_ADDRESS::80} {
 	encode gzip
+	handle /api/auth/login {
+		request_body {
+			max_size 16KB
+		}
+		reverse_proxy {$API_UPSTREAM:api:8000}
+	}
 	handle /api/* {
 		request_body {
 			max_size 8MB

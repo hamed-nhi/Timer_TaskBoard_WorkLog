@@ -41,7 +41,33 @@ class LoginAttempt(Base):
     success: Mapped[bool] = mapped_column(Boolean)
     at: Mapped[datetime] = mapped_column(DateTime)
     __table_args__ = (Index("ix_login_attempts_username_at", "username", "at"),
-                      Index("ix_login_attempts_ip_at", "ip", "at"))
+                      Index("ix_login_attempts_ip_at", "ip", "at"),
+                      Index("ix_login_attempts_at", "at"))
+
+
+class CaptchaRedemption(Base):
+    __tablename__ = "captcha_redemptions"
+    token_hash: Mapped[str] = mapped_column(String(64), primary_key=True)
+    expires_at: Mapped[datetime] = mapped_column(DateTime, index=True)
+
+
+class LoginProtectionSetting(Base):
+    __tablename__ = "login_protection_settings"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    policy: Mapped[dict] = mapped_column(JSONB)
+
+
+class LoginBan(Base):
+    __tablename__ = "login_bans"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    ip: Mapped[str] = mapped_column(INET)
+    username: Mapped[str] = mapped_column(String(64))
+    failures: Mapped[int] = mapped_column(Integer)
+    stage: Mapped[int] = mapped_column(Integer)
+    banned_until: Mapped[datetime | None] = mapped_column(DateTime)
+    updated_at: Mapped[datetime] = mapped_column(DateTime)
+    reason: Mapped[str] = mapped_column(String(32))
+    __table_args__ = (UniqueConstraint("ip", "username", name="uq_login_bans_identity"),)
 
 
 # ---- private company catalog; ownerless rows preserve legacy shared data ----

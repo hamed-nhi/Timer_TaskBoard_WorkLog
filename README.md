@@ -12,10 +12,14 @@ A self-hosted, multi-user work-time tracker with a Persian RTL interface and Jal
 - View daily, monthly and weekly reports, a Jalali calendar and Excel exports.
 - Use a responsive interface with light, dark and device-based themes.
 - Stay signed in across browser restarts using renewable, HttpOnly sessions. Use the same account on multiple devices.
+- Protect login with backend-enforced escalating bans, persistent counters, bounded flood admission and optional Iranian ARCaptcha. Administrators can configure/release bans and manage accounts without deleting their data.
+- Guide each user through private backup setup on first use, with personal Excel download and optional daily Google Sheets delivery after server configuration.
 - Preview and import completed task history from Excel (`.xlsx`) or CSV. Download templates and conversion instructions from **Settings**.
 - Download personal JSON backups. Optional backup jobs retain immutable versions and synchronize source changes to a private Google Sheet.
 
 TIME LOG requires a network connection. Its installable web manifest does not provide offline storage or background synchronization.
+
+For a server handoff, follow [DEPLOY.md](DEPLOY.md), including account creation, login protection, emergency unlock and verified backups.
 
 ## Quick start with Docker
 
@@ -46,7 +50,7 @@ docker compose up -d --build
 docker compose exec api python -m app.cli create-user admin --admin
 ```
 
-The command prompts for a password; there is **no default administrator password**. Open `http://localhost` for local use, or your configured HTTPS domain. For automatic HTTPS, point the domain at the server and make ports 80 and 443 reachable.
+New passwords require at least 8 characters with uppercase, lowercase, a digit and a symbol. The command prompts for a password; there is **no default administrator password**. Open `http://localhost` for local use, or your configured HTTPS domain. For automatic HTTPS, point the domain at the server and make ports 80 and 443 reachable.
 
 The administrator can create accounts in **Management**. Every signed-in user has a separate Management section for their own report types, projects and stories.
 
@@ -110,7 +114,13 @@ docker compose --profile backup build personal-backup
 docker compose --profile backup run --rm personal-backup
 ```
 
-Schedule this job externally if daily runs are required; Compose does not install a scheduler. It writes private per-user JSON/Excel snapshots under `backups/personal`. Unchanged source data creates no new snapshot; changed source data creates a new version and preserves the previous one.
+For automatic daily runs, start the persistent scheduler:
+
+```sh
+docker compose --profile backup up -d --build backup-scheduler
+```
+
+It runs initially and then at 03:00 Asia/Tehran, records successful runs on the backup volume and retries failures after 15 minutes. See [DEPLOY.md](DEPLOY.md) for credentials, permissions and recovery. It writes private per-user JSON/Excel snapshots under `backups/personal`. Unchanged source data creates no new snapshot; changed source data creates a new version and preserves the previous one.
 
 Google Sheets sync is optional. Create a separate sheet for each account, share it with the service account as an editor, mount its credentials read-only under `secrets/`, set `GOOGLE_APPLICATION_CREDENTIALS=/run/secrets/google-sheets.json`, and save the personal sheet URL in Settings. The job updates only source-changed tasks; unchanged source records do not overwrite manual sheet edits. Source deletions are marked while retaining the old backup row. Do not share one destination between accounts.
 

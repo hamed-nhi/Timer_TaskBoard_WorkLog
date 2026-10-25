@@ -11,7 +11,7 @@ import json
 import os
 import sys
 
-from .core.security import hash_password
+from .core.security import hash_password, validate_password
 from .services.catalog_helpers import import_catalog
 from .core.errors import ApiError
 from .db.session import Db, SessionLocal
@@ -22,6 +22,7 @@ def ask_password():
     first = getpass.getpass("Password: ")
     if first != getpass.getpass("Repeat: "):
         sys.exit("The two passwords differ")
+    validate_password(first)
     return first
 
 
@@ -118,6 +119,26 @@ def cmd_backup_users(args):
         sys.exit(1)
 
 
+def cmd_login_security(args):
+    import ipaddress
+    from .services import login_protection as protection
+    with SessionLocal() as session:
+        db = Db(session)
+        if args.command == "login-security":
+            print(json.dumps(protection.overview(db), default=str, ensure_ascii=False, indent=2))
+            return
+        ip = str(ipaddress.ip_address(args.ip))
+        query = "SELECT id FROM login_bans WHERE ip = ?"
+        params = [ip]
+        if args.username is not None:
+            query += " AND username = ?"
+            params.append(args.username.strip().lower())
+        rows = db.execute(query, params).fetchall()
+        for row in rows:
+            protection.unblock(db, None, row["id"], args.reset)
+        print(f"Released {len(rows)} login state(s); personal data and passwords unchanged")
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(prog="python -m app.cli", description=__doc__,
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -144,6 +165,13 @@ def main(argv=None):
     p.add_argument("--user")
     p.add_argument("--sheets-credentials", default=os.environ.get("GOOGLE_APPLICATION_CREDENTIALS") or None)
     p.set_defaults(func=cmd_backup_users)
+    p = sub.add_parser("login-security", help="Inspect persistent login policy and latest bans locally")
+    p.set_defaults(func=cmd_login_security)
+    p = sub.add_parser("unblock-login", help="Emergency release from the server console; no web login required")
+    p.add_argument("--ip", required=True)
+    p.add_argument("--username", help="Omit to release all login states for this IP")
+    p.add_argument("--reset", action="store_true", help="Also clear escalation history")
+    p.set_defaults(func=cmd_login_security)
     args = parser.parse_args(argv)
     try:
         args.func(args)

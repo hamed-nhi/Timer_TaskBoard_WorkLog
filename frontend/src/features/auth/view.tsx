@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { useMe } from "@/lib/data";
 import { BrandMark } from "@/shared/brand";
+import { Captcha } from "./captcha";
 import { api, errorText } from "@/lib/api";
 
 export default function LoginPage() {
@@ -11,17 +12,31 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  const [config, setConfig] = useState<{ captcha_provider: "none" | "arcaptcha"; site_key: string } | null>(null);
+  const [configError, setConfigError] = useState(false);
+  const [captchaToken, setCaptchaToken] = useState("");
+  const [captchaNonce, setCaptchaNonce] = useState(0);
+  async function loadConfig() {
+    setConfigError(false);
+    try { setConfig(await api("/api/auth/config")); }
+    catch { setConfigError(true); }
+  }
+  useEffect(() => { void loadConfig(); }, []);
+
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
+    if (!config || (config.captcha_provider === "arcaptcha" && !captchaToken)) return;
     setError("");
     setBusy(true);
     try {
-      await api("/api/auth/login", "POST", { username, password });
+      await api("/api/auth/login", "POST", { username, password, captcha_token: captchaToken });
       window.location.replace("/");
     } catch (err) {
       setError(errorText(err));
       setBusy(false);
+      setCaptchaToken("");
+      setCaptchaNonce(n => n + 1);
     }
   }
 
@@ -44,9 +59,14 @@ export default function LoginPage() {
             <label className="lbl" htmlFor="p">رمز عبور</label>
             <input id="p" type="password" dir="ltr" autoComplete="current-password" required value={password} onChange={(e) => setPassword(e.target.value)} />
           </div>
+          {config?.captcha_provider === "arcaptcha" && <>
+            <Captcha key={captchaNonce} siteKey={config.site_key} onToken={setCaptchaToken} />
+            <button className="btn btn-outline" type="button" disabled={busy} onClick={() => { setCaptchaToken(""); setCaptchaNonce(n => n + 1); }}>دریافت دوباره کپچا</button>
+          </>}
+          {configError && <div role="alert">تنظیمات ورود دریافت نشد. <button type="button" className="btn btn-outline" onClick={loadConfig}>تلاش دوباره</button></div>}
           <div className="form-error" role="alert">{error}</div>
-          <button className="btn btn-primary" type="submit" disabled={busy}>{busy ? "..." : "ورود"}</button>
-          <div className="hint">حساب کاربری را مدیر سیستم برای شما می‌سازد. بعد از ۳ بار رمز اشتباه، ۲۰ دقیقه امکان تلاش مجدد نیست.</div>
+          <button className="btn btn-primary" type="submit" disabled={busy || !config || (config.captcha_provider === "arcaptcha" && !captchaToken)}>{busy ? "..." : "ورود"}</button>
+          <div className="hint">حساب کاربری را مدیر سیستم برای شما می‌سازد. تلاش‌های ورود در سرور محدود می‌شوند؛ در صورت خطا، زمان انتظار نمایش داده می‌شود.</div>
         </div>
       </form>
     </div>

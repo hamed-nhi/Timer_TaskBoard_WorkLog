@@ -64,6 +64,7 @@ export default function SettingsPage() {
 
       <div className="card data-card">
         <h2>داده‌های من</h2>
+        <button className="btn btn-outline btn-sm" onClick={async () => { await post("/api/settings", { backup_setup_done: false }); await refreshAll(); }}>راهنمای راه‌اندازی پشتیبان</button>
         <div className="hint" style={{ marginBottom: 10 }}>این خروجی‌ها فقط شامل داده‌های حساب شما هستند. نام فایل با تغییر داده‌های اصلی عوض می‌شود؛ نسخه‌های قبلی پشتیبان خودکار حفظ می‌شوند و دادهٔ بدون تغییر دوباره ذخیره نمی‌شود.</div>
         <div className="shortcuts">
           <a className="btn btn-outline" href="/api/export" style={{ textDecoration: "none", textAlign: "center" }}>دانلود همه‌ی تسک‌ها (اکسل) ⬇</a>
@@ -77,6 +78,7 @@ export default function SettingsPage() {
 
       <div className="card">
         <h2>تغییر رمز عبور</h2>
+        <p className="hint">حداقل ۸ کاراکتر؛ شامل حرف بزرگ، حرف کوچک، عدد و نماد مثل !@#$</p>
         <div className="stack">
           <input type="password" dir="ltr" autoComplete="current-password" placeholder="رمز فعلی" value={oldPw} onChange={(e) => setOldPw(e.target.value)} />
           <input type="password" dir="ltr" autoComplete="new-password" placeholder="رمز جدید (حداقل ۸ کاراکتر)" value={newPw} onChange={(e) => setNewPw(e.target.value)} />

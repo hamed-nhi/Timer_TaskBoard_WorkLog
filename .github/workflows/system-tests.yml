@@ -36,8 +36,10 @@ jobs:
         working-directory: frontend
       - run: node tests/e2e/import-devices.cjs
         working-directory: frontend
+      - run: node tests/e2e/login-security.cjs
+        working-directory: frontend
       - run: python tools/audit_http_security.py
-      - run: python tools/audit_load.py --name load-windows-direct
+      - run: python tools/audit_load.py --seconds 30 --name release-legitimate-30s
       - run: python tools/audit_load.py --seconds 900 --name soak-release-15min
       - run: docker build -t timelog-qa-personal-backup -f backend/Dockerfile.backup backend
       - run: python tools/audit_personal_pipeline.py

@@ -1,0 +1,76 @@
+{
+  "/api/auth/config": {
+    "get": {}
+  },
+  "/api/admin/login-protection": {
+    "get": {},
+    "put": {
+      "requestBody": {
+        "content": {
+          "application/json": {
+            "schema": {
+              "additionalProperties": true,
+              "type": "object",
+              "title": "Data"
+            }
+          }
+        },
+        "required": true
+      }
+    }
+  },
+  "/api/admin/login-protection/{ban_id}/unblock": {
+    "post": {
+      "parameters": [
+        {
+          "name": "ban_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer",
+            "title": "Ban Id"
+          }
+        }
+      ],
+      "requestBody": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "additionalProperties": true,
+              "title": "Data"
+            }
+          }
+        }
+      }
+    }
+  },
+  "/api/admin/users/{user_id}/credentials": {
+    "put": {
+      "parameters": [
+        {
+          "name": "user_id",
+          "in": "path",
+          "required": true,
+          "schema": {
+            "type": "integer",
+            "title": "User Id"
+          }
+        }
+      ],
+      "requestBody": {
+        "required": true,
+        "content": {
+          "application/json": {
+            "schema": {
+              "type": "object",
+              "additionalProperties": true,
+              "title": "Data"
+            }
+          }
+        }
+      }
+    }
+  }
+}

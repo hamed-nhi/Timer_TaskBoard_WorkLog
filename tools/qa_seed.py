@@ -39,6 +39,10 @@ def seed(load=False, reset_ui=False):
             db.execute("INSERT INTO users (username,password_hash,display_name,is_admin) VALUES (?,?,?,?) "
                        "ON CONFLICT (username) DO NOTHING",
                        (name, hash_password(PASSWORD), name, name == "qa_admin"))
+        # These synthetic fixture accounts have already completed setup. Fresh-user
+        # onboarding is exercised separately; no real account is changed here.
+        db.execute("INSERT INTO user_settings (user_id,key,value) SELECT id,'backup_setup_done','1' "
+                   "FROM users WHERE username IN ('qa_alice','qa_bob','qa_admin') ON CONFLICT DO NOTHING")
         if load:
             for name in names[3:]:
                 uid = db.execute("SELECT id FROM users WHERE username=?", (name,)).fetchone()["id"]

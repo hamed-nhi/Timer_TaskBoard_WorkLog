@@ -26,6 +26,13 @@ services:
     environment:
       DATABASE_URL: postgresql+psycopg://timelog:${DB_PASSWORD}@db:5432/timelog
       COOKIE_SECURE: ${COOKIE_SECURE:-}
+      GOOGLE_SHEETS_SERVICE_EMAIL: ${GOOGLE_SHEETS_SERVICE_EMAIL:-}
+      CAPTCHA_PROVIDER: ${CAPTCHA_PROVIDER:-none}
+      ARCAPTCHA_SITE_KEY: ${ARCAPTCHA_SITE_KEY:-}
+      ARCAPTCHA_SECRET_KEY: ${ARCAPTCHA_SECRET_KEY:-}
+      LOGIN_IP_BURST: ${LOGIN_IP_BURST:-30}
+      LOGIN_IP_HOURLY: ${LOGIN_IP_HOURLY:-120}
+      LOGIN_GLOBAL_PER_MINUTE: ${LOGIN_GLOBAL_PER_MINUTE:-300}
     depends_on:
       db:
         condition: service_healthy
@@ -37,6 +44,25 @@ services:
       dockerfile: Dockerfile.backup
       args:
         PIP_INDEX_URL: ${PIP_INDEX_URL:-https://pypi.org/simple}
+    environment:
+      DATABASE_URL: postgresql+psycopg://timelog:${DB_PASSWORD}@db:5432/timelog
+      GOOGLE_APPLICATION_CREDENTIALS: ${GOOGLE_APPLICATION_CREDENTIALS:-}
+    volumes:
+      - ./backups:/backups
+      - ./secrets:/run/secrets:ro
+    depends_on:
+      db:
+        condition: service_healthy
+
+  backup-scheduler:
+    profiles: ["backup"]
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.backup
+      args:
+        PIP_INDEX_URL: ${PIP_INDEX_URL:-https://pypi.org/simple}
+    restart: unless-stopped
+    entrypoint: ["python", "-m", "app.backup_scheduler"]
     environment:
       DATABASE_URL: postgresql+psycopg://timelog:${DB_PASSWORD}@db:5432/timelog
       GOOGLE_APPLICATION_CREDENTIALS: ${GOOGLE_APPLICATION_CREDENTIALS:-}
@@ -61,7 +87,8 @@ services:
     volumes:
       - caddy_data:/data
     depends_on:
-      - api
+      api:
+        condition: service_healthy
 
 volumes:
   pgdata:

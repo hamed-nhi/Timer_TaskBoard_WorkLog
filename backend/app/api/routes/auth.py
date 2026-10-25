@@ -15,15 +15,21 @@ router = APIRouter(prefix="/api")
 def client_ip(request: Request):
     host = request.client.host if request.client else None
     try:
-        return str(ipaddress.ip_address(host))
-    except ValueError:
+        address = ipaddress.ip_address(host)
+        return str(address.ipv4_mapped or address) if isinstance(address, ipaddress.IPv6Address) else str(address)
+    except (ValueError, TypeError):
         return None
+
+
+@router.get("/auth/config")
+def login_config():
+    return service.public_login_config()
 
 
 @router.post("/auth/login")
 def login(request: Request, response: Response, data: dict = Body(...), db: Db = Depends(get_db)):
     user, token = service.login(db, str(data.get("username") or ""), str(data.get("password") or ""),
-                                client_ip(request), request.headers.get("user-agent"))
+                                client_ip(request), request.headers.get("user-agent"), data.get("captcha_token"))
     set_session_cookie(response, request, token)
     return user
 

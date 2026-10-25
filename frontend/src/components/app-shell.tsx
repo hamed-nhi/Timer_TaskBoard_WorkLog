@@ -10,6 +10,7 @@ import { Task } from "@/lib/types";
 import { Icon } from "@/shared/icon";
 import { ThemeToggle } from "@/shared/theme";
 import { BrandMark } from "@/shared/brand";
+import { BackupSetupGate } from "@/features/settings/backup-setup";
 import { FillProvider } from "@/features/fill/components";
 import { PresenceChip } from "@/features/presence/components";
 import { TagsProvider } from "@/features/tags/components";
@@ -135,7 +136,7 @@ function Frame({ children }: { children: ReactNode }) {
         </div>
       </nav>
 
-      <main id="main-content" className="app-main" tabIndex={-1}>{children}</main>
+      <main id="main-content" className="app-main" tabIndex={-1}><BackupSetupGate>{children}</BackupSetupGate></main>
 
       <RunningBar />
       <button type="button" className="fab" title="ادامه سریع (Alt+R)" onClick={() => setResume(true)}>▶</button>

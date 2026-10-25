@@ -25,3 +25,23 @@ def update_user(user_id: int, db: DbDep, admin: AdminDep, data: dict = Body(...)
 @router.post("/users/{user_id}/reset-password")
 def reset_password(user_id: int, db: DbDep, admin: AdminDep):
     return service.reset_password(user_id=user_id, db=db, admin=admin)
+
+
+@router.get("/login-protection")
+def login_protection(db: DbDep, admin: AdminDep):
+    return service.login_protection_overview(db)
+
+
+@router.put("/login-protection")
+def update_login_protection(db: DbDep, admin: AdminDep, data: dict = Body(...)):
+    return service.update_login_policy(db, admin, data)
+
+
+@router.post("/login-protection/{ban_id}/unblock")
+def unblock_login(ban_id: int, db: DbDep, admin: AdminDep, data: dict = Body(...)):
+    return service.unblock_login(db, admin, ban_id, data)
+
+
+@router.put("/users/{user_id}/credentials")
+def update_credentials(user_id: int, db: DbDep, admin: AdminDep, data: dict = Body(...)):
+    return service.update_credentials(db, admin, user_id, data)

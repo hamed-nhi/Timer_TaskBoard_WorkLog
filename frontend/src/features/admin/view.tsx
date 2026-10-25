@@ -5,7 +5,8 @@ import { del, errorText, fetcher, post, put } from "@/lib/api";
 import { fa } from "@/lib/format";
 import { refreshAll, useMe } from "@/lib/data";
 import { AdminUser } from "@/lib/types";
-import { useUi } from "@/shared/ui";
+import { Modal, useUi } from "@/shared/ui";
+import { LoginSecurity } from "./login-security";
 
 interface AdminCatalog {
   types: { id: number; name: string }[];
@@ -17,7 +18,7 @@ export default function AdminPage() {
   if (!me) return null;
   return (
     <>
-      {me.is_admin && <Users />}
+      {me.is_admin && <><Users /><LoginSecurity /></>}
       <Catalog />
     </>
   );
@@ -29,6 +30,24 @@ function Users() {
   const [username, setUsername] = useState("");
   const [name, setName] = useState("");
   const [isAdmin, setIsAdmin] = useState(false);
+  const [newPassword, setNewPassword] = useState("");
+  const [editing, setEditing] = useState<AdminUser | null>(null);
+  const [editUsername, setEditUsername] = useState("");
+  const [editName, setEditName] = useState("");
+  const [editPassword, setEditPassword] = useState("");
+  const [editAdmin, setEditAdmin] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const { data: me } = useMe();
+  async function saveUser(e: React.FormEvent) {
+    e.preventDefault(); if (!editing) return;
+    setSaving(true); setError("");
+    try {
+      const credentialsChanged = editUsername !== editing.username || !!editPassword;
+      await put(`/api/admin/users/${editing.id}/credentials`, { username: editUsername, display_name: editName, is_admin: editAdmin, ...(editPassword ? { password: editPassword } : {}) });
+      if (credentialsChanged && editing.id === me?.id) { window.location.replace("/login/"); return; }
+      setEditing(null); setEditPassword(""); await reload(); toast("حساب کاربر ذخیره شد");
+    } catch (e) { setError(errorText(e)); } finally { setSaving(false); }
+  }
   const [error, setError] = useState("");
   const [temp, setTemp] = useState<{ user: string; password: string } | null>(null);
 
@@ -36,9 +55,9 @@ function Users() {
     e.preventDefault();
     setError("");
     try {
-      const r = await post("/api/admin/users", { username, display_name: name, is_admin: isAdmin });
+      const r = await post("/api/admin/users", { username, display_name: name, is_admin: isAdmin, ...(newPassword ? { password: newPassword } : {}) });
       setTemp({ user: r.username, password: r.temp_password });
-      setUsername(""); setName(""); setIsAdmin(false);
+      setUsername(""); setName(""); setIsAdmin(false); setNewPassword("");
       await reload();
     } catch (err) { setError(errorText(err)); }
   }
@@ -54,6 +73,7 @@ function Users() {
   return (
     <div className="card">
       <h2>کاربران</h2>
+      <p className="hint">رمز جدید: حداقل ۸ کاراکتر و شامل حرف بزرگ، حرف کوچک، عدد و نماد.</p>
       {temp && (
         <div className="presence-note">
           رمز موقت «{temp.user}»: <b dir="ltr" style={{ userSelect: "all" }}>{temp.password}</b> — این رمز فقط همین یک بار نشان داده می‌شود؛ آن را امن برای کاربر بفرستید.
@@ -71,6 +91,7 @@ function Users() {
                 <td>{u.is_admin ? <span className="badge">مدیر</span> : "کاربر"}</td>
                 <td>{u.is_active ? "فعال" : <span className="badge off">غیرفعال</span>}</td>
                 <td style={{ whiteSpace: "nowrap" }}>
+                  <button className="btn btn-outline btn-sm" onClick={() => { setEditing(u); setEditUsername(u.username); setEditName(u.display_name); setEditPassword(""); setEditAdmin(u.is_admin); setError(""); }}>ویرایش حساب</button>{" "}
                   <button className="btn btn-outline btn-sm" onClick={() => reset(u)}>رمز جدید</button>{" "}
                   <button className="btn btn-outline btn-sm" onClick={() => toggle(u)}>{u.is_active ? "غیرفعال کن" : "فعال کن"}</button>
                 </td>
@@ -84,10 +105,19 @@ function Users() {
           <input type="text" dir="ltr" placeholder="نام کاربری (حروف لاتین کوچک)" autoCapitalize="none" required value={username} onChange={(e) => setUsername(e.target.value)} />
           <input type="text" placeholder="نام نمایشی" value={name} onChange={(e) => setName(e.target.value)} />
         </div>
+        <label className="stack">رمز اولیه (خالی = ساخت رمز تصادفی)<input type="password" dir="ltr" autoComplete="new-password" minLength={8} maxLength={1024} value={newPassword} onChange={e => setNewPassword(e.target.value)} /></label>
         <label className="finish-check"><input type="checkbox" checked={isAdmin} onChange={(e) => setIsAdmin(e.target.checked)} /> مدیر باشد</label>
         <div className="form-error">{error}</div>
-        <button className="btn btn-primary" type="submit">ساخت کاربر (رمز موقت ساخته می‌شود)</button>
+        <button className="btn btn-primary" type="submit">ساخت کاربر</button>
       </form>
+      {editing && <Modal onClose={() => !saving && setEditing(null)}><h2>ویرایش حساب</h2><form className="stack" onSubmit={saveUser}>
+        <label className="stack">نام کاربری جدید<input dir="ltr" required minLength={3} maxLength={64} value={editUsername} onChange={e => setEditUsername(e.target.value)} /></label>
+        <label className="stack">نام نمایشی<input maxLength={100} value={editName} onChange={e => setEditName(e.target.value)} /></label>
+        <label className="stack">رمز جدید (خالی = بدون تغییر)<input type="password" dir="ltr" autoComplete="new-password" minLength={8} maxLength={1024} value={editPassword} onChange={e => setEditPassword(e.target.value)} /></label>
+        <label className="finish-check"><input type="checkbox" checked={editAdmin} disabled={editing.id === me?.id} onChange={e => setEditAdmin(e.target.checked)} />مدیر باشد</label>
+        <p className="hint">تغییر نام کاربری یا رمز، نشست‌های این حساب را می‌بندد. تغییر مشخصات دیگر، اطلاعات کاری او را تغییر نمی‌دهد.</p>
+        <div className="form-error" role="alert">{error}</div><button className="btn btn-primary" disabled={saving}>ذخیره حساب</button>
+      </form></Modal>}
     </div>
   );
 }

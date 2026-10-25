@@ -37,7 +37,9 @@ def keep_awake():
             set_state(0x80000000)
 
 
-def worker(index, duration, count, run):
+def worker(index, duration, count, run, login_stagger):
+    # Respect ordinary login admission while the workload itself remains concurrent.
+    time.sleep(index * login_stagger)
     timings, errors, created = [], [], []
     with httpx.Client(base_url=BASE, timeout=15, headers=HEADERS, trust_env=False) as client:
         login = client.post("/api/auth/login", json={"username": f"qa_load_{index}", "password": "qa-system-password-1"})
@@ -86,16 +88,17 @@ def worker(index, duration, count, run):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--seconds", type=int, default=0)
+    parser.add_argument("--seconds", type=int, default=30)
     parser.add_argument("--requests", type=int, default=40)
     parser.add_argument("--name", default="load")
+    parser.add_argument("--login-stagger", type=float, default=0.25)
     args = parser.parse_args()
-    assert 0 <= args.seconds <= 900 and 1 <= args.requests <= 1000
+    assert 0 <= args.seconds <= 900 and 1 <= args.requests <= 1000 and 0 <= args.login_stagger <= 5
     OUT.mkdir(parents=True, exist_ok=True)
     run = uuid.uuid4().hex[:8]
     started = time.monotonic()
     with keep_awake(), ThreadPoolExecutor(max_workers=10) as pool:
-        futures = [pool.submit(worker, n, args.seconds, args.requests, run) for n in range(10)]
+        futures = [pool.submit(worker, n, args.seconds, args.requests, run, args.login_stagger) for n in range(10)]
         while not all(f.done() for f in futures):
             time.sleep(10)
             elapsed = int(time.monotonic() - started)

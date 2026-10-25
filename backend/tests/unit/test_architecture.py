@@ -50,7 +50,8 @@ def test_public_paths_parameters_and_bodies_match_pre_refactor_contract():
         for path, methods in app.openapi()["paths"].items()
     }
     extension = json.loads(baseline.with_name("import_contract.json").read_text(encoding="utf-8"))
-    additions = extension["paths"]
+    security = json.loads(baseline.with_name("login_contract.json").read_text(encoding="utf-8"))
+    additions = {**extension["paths"], **security}
     assert {name: app.openapi()["components"]["schemas"][name] for name in extension["schemas"]} == extension["schemas"]
     assert set(actual) == set(expected) | set(additions)
     assert {path: actual[path] for path in expected} == expected

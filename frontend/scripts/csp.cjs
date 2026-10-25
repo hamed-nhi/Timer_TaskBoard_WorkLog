@@ -17,6 +17,6 @@ function walk(dir) {
 }
 walk(path.join(process.cwd(), 'out'));
 if (!hashes.size) throw Error('No exported inline scripts found; check the Next export format');
-const policy = ["default-src 'self'", "script-src 'self' " + [...hashes].sort().join(' '), "style-src 'self' 'unsafe-inline'", "img-src 'self' data:", "font-src 'self'", "connect-src 'self'", "object-src 'none'", "base-uri 'self'", "form-action 'self'", "frame-ancestors 'none'"].join('; ');
+const policy = ["default-src 'self'", "script-src 'self' https://nwidget.arcaptcha.ir " + [...hashes].sort().join(' '), "style-src 'self' 'unsafe-inline'", "img-src 'self' data:", "font-src 'self'", "connect-src 'self' https://*.arcaptcha.ir https://*.arcaptcha.co", "frame-src https://*.arcaptcha.ir https://*.arcaptcha.co", "object-src 'none'", "base-uri 'self'", "form-action 'self'", "frame-ancestors 'none'"].join('; ');
 fs.writeFileSync('security-headers.caddy', 'Content-Security-Policy "' + policy + '"\n');
 console.log('CSP generated for ' + hashes.size + ' static inline scripts (' + policy.length + ' bytes)');

@@ -73,6 +73,7 @@ npm run build
 npm run test:e2e
 node tests/e2e/import-devices.cjs
 node tests/e2e/audit-ui.cjs
+node tests/e2e/login-security.cjs
 ```
 
 The import/device journey creates a fresh account, downloads templates, maps custom CSV columns, rejects invalid rows, simulates a lost commit response and tests two independent same-account sessions. It verifies refresh between devices, an edit conflict that preserves the draft, and independent logout.
@@ -141,3 +142,12 @@ Raw sanitized evidence belongs under ignored `artifacts/audit/`; private backups
 Live Google Sheets needs a service account and a dedicated test sheet. Without them, only transport/contract simulations are verified. Real HTTPS, Safari/iOS and a physical phone remain unverified unless those environments are explicitly available.
 
 CI runs the fast/backend checks in `ci.yml`; `system-tests.yml` provides a manually dispatched audit stack. Local commits do not publish changes or rewrite remote history.
+
+
+## Current release additions
+
+See [RELEASE_RESULTS.fa.md](RELEASE_RESULTS.fa.md) for the tested current release. `login-security.cjs` uses synthetic `qa_admin` credentials by default; a local private credentials file can be supplied through `QA_CREDENTIALS_FILE` and must never be uploaded as evidence. It checks admin controls, ban release, Caddy forwarding, first-login setup, self-service passwords and a bounded 1,000-request burst. Fresh import/device accounts explicitly complete backup onboarding; fixture seed accounts mark only their own synthetic setup complete.
+
+For production commands, use [DEPLOY.md](../../DEPLOY.md), not the old disposable 18081/tmpfs compose. The owner separately authorized updating the local 18081 API/web after a verified backup; its DB container was preserved. Server credentials are created independently and never committed.
+
+The current ordinary-load default is 30 seconds at one request per worker per second, with 0.25-second login staggering to respect the login admission budget. `--seconds 900` retains the continuous soak. Unlimited-speed bursts are tested separately by `login-security.cjs` and must expect 429; they are not a zero-error ordinary-user workload.

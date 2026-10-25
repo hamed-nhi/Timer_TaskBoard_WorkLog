@@ -2,6 +2,7 @@
 
 
 from ..core.errors import ApiError
+from ..core.config import settings as server_settings
 from ..core.backup import sheet_id
 from ..core.time import jalali_week_range, now_local, today_local
 from ..db.session import Db
@@ -19,7 +20,9 @@ def sheet_reserved(db, uid, sid):
 
 def settings_payload(db, uid):
     return {**get_goals(db, uid), "fill_target_percent": float(get_setting(db, uid, "fill_target_percent", 95)),
-            "google_sheet_url": get_setting(db, uid, "google_sheet_url", "")}
+            "google_sheet_url": get_setting(db, uid, "google_sheet_url", ""),
+            "backup_setup_done": get_setting(db, uid, "backup_setup_done", "0") == "1",
+            "backup_service_email": server_settings.google_sheets_service_email}
 
 
 def get_settings(db: Db, user: dict):
@@ -39,6 +42,10 @@ def update_settings(db: Db, user: dict, data: dict):
             if not 0 < value <= upper:
                 raise ApiError("هدف باید بیشتر از صفر و در حد منطقی باشد")
             updates[key] = value
+    if "backup_setup_done" in data:
+        if type(data["backup_setup_done"]) is not bool:
+            raise ApiError("وضعیت راه‌اندازی پشتیبان نامعتبر است")
+        updates["backup_setup_done"] = "1" if data["backup_setup_done"] else "0"
     if "google_sheet_url" in data:
         url = str(data["google_sheet_url"] or "").strip()
         if url:
