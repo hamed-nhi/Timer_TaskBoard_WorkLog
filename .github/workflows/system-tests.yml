@@ -1,0 +1,48 @@
+name: system-qa
+on:
+  workflow_dispatch:
+jobs:
+  docker-browser-recovery:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      QA_DATABASE_URL: postgresql+psycopg://timelog:qa-password-only@127.0.0.1:5543/timelog_system_test
+      QA_BROWSER_CHANNEL: chromium
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.13" }
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - run: pip install -r backend/requirements-dev.txt
+      - run: npm ci
+        working-directory: frontend
+      - run: npx playwright install --with-deps chromium
+        working-directory: frontend
+      - name: Build and start isolated QA stack
+        run: docker compose -p timelog-qa -f docker-compose.test.yml up -d --build
+      - name: Wait for API
+        run: |
+          for attempt in $(seq 1 60); do
+            if curl -fsS http://127.0.0.1:18081/api/health; then exit 0; fi
+            sleep 2
+          done
+          exit 1
+      - run: python tools/qa_seed.py --load --reset-ui
+      - run: npm run test:e2e
+        working-directory: frontend
+      - run: python tools/qa_load.py
+      - run: python tools/qa_recovery.py
+      - run: python tools/qa_crypto.py
+      - name: Upload sanitized QA evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: system-qa-evidence
+          path: |
+            artifacts/testing/*.json
+            artifacts/testing/*.xml
+            artifacts/testing/*.png
+      - name: Remove only the disposable QA stack
+        if: always()
+        run: docker compose -p timelog-qa -f docker-compose.test.yml down --volumes

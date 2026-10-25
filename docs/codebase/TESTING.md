@@ -33,3 +33,8 @@ See HANDOFF for the latest completed command results.
 - backend/tests/fixtures/api_contract.json
 - .github/workflows/ci.yml
 - frontend/package.json
+
+## System QA update — 2026-10-25
+
+Operational fault tests now live in backend/tests/operational; frontend unit tests use node:test and E2E uses Playwright/real Chrome under frontend/tests. docker-compose.test.yml isolates test data and ports. tools/qa_seed.py, qa_load.py, qa_recovery.py, qa_crypto.py and qa_report.py reproduce the dataset, measurements and evidence.
+Current results: 209 backend/operational passed, seven strict xfails representing five open defects; 12 frontend unit and 44 browser scenarios passed. Coverage and findings are in docs/testing/RESULTS.fa.md. Real Docker startup, actual restore/encryption and API-restart persistence were exercised. Browser E2E is no longer an unimplemented gap; Safari/Firefox, physical devices, full accessibility and long-running load remain untested.

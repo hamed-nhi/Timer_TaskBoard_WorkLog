@@ -23,7 +23,10 @@ Read docs/ARCHITECTURE.md for the current layout and docs/HANDOFF.md for operati
 - backend: python -m pytest -q tests/integration on an explicitly verified disposable PostgreSQL database.
 - Set TEST_DATABASE_URL to a dedicated database whose name ends in _test. Integration setup recreates its public schema.
 - Never run integration tests against development or production databases.
-- frontend: npm.cmd run lint and npm.cmd run build.
+- frontend: npm.cmd run test:unit, npm.cmd run lint and npm.cmd run build.
+- System QA: use only docker-compose.test.yml with project timelog-qa; frontend npm.cmd run test:e2e targets its local port 18081.
+- backend/tests/operational uses disposable Docker containers to inject backup failures. Strict xfails are known open defects, not passing behavior.
+- See docs/testing/TEST_PLAN.fa.md and RESULTS.fa.md for the executable QA matrix and limits.
 - Keep the HTTP request contract fixture and architecture tests meaningful; do not update snapshots simply to conceal accidental changes.
 
 ## Data and Git

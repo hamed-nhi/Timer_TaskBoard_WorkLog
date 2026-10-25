@@ -1,0 +1,32 @@
+# Disposable QA stack only. Never use the production project name or volumes.
+services:
+  db:
+    image: postgres:18
+    environment:
+      POSTGRES_USER: timelog
+      POSTGRES_PASSWORD: qa-password-only
+      POSTGRES_DB: timelog_system_test
+    ports:
+      - "127.0.0.1:5543:5432"
+    tmpfs:
+      - /var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U timelog -d timelog_system_test"]
+      interval: 2s
+      retries: 20
+  api:
+    build: ./backend
+    environment:
+      DATABASE_URL: postgresql+psycopg://timelog:qa-password-only@db:5432/timelog_system_test
+      COOKIE_SECURE: "false"
+    depends_on:
+      db:
+        condition: service_healthy
+  web:
+    build: ./frontend
+    environment:
+      SITE_ADDRESS: ":80"
+    ports:
+      - "127.0.0.1:18081:80"
+    depends_on:
+      - api

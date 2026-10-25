@@ -5,7 +5,9 @@
   "scripts": {
     "dev": "next dev -p 3000",
     "build": "next build",
-    "lint": "next lint"
+    "lint": "next lint",
+    "test:unit": "node --test tests/unit/*.test.cjs",
+    "test:e2e": "node tests/e2e/run.cjs"
   },
   "dependencies": {
     "@fontsource/vazirmatn": "^5.3.0",
@@ -22,6 +24,7 @@
     "@types/react-dom": "^19.3.0",
     "eslint": "^9.39.5",
     "eslint-config-next": "^15.5.28",
+    "playwright": "1.62.1",
     "postcss": "^8.5.31",
     "tailwindcss": "^4.3.3",
     "typescript": "^6.0.3"

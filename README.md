@@ -80,3 +80,10 @@ docker compose exec api python -m app.cli import-desktop /tmp/desktop_copy.db --
 تست سریع بدون دیتابیس: از backend، `python -m pytest -q tests/unit`.
 تست API و ذخیره‌سازی: `python -m pytest -q tests/integration` فقط با TEST_DATABASE_URL اختصاصی و نام پایان‌یافته به `_test`.
 فرمان‌های اجرا، آدرس‌ها و ساختار دیتابیس در این بازآرایی ثابت مانده‌اند.
+
+## آزمون سیستم و گزارش
+
+طرح آزمون در [docs/testing/TEST_PLAN.fa.md](docs/testing/TEST_PLAN.fa.md)، هفتاد سناریوی استفاده در [docs/testing/SCENARIOS.fa.md](docs/testing/SCENARIOS.fa.md) و آخرین نتیجهٔ محلی در [docs/testing/RESULTS.fa.md](docs/testing/RESULTS.fa.md) ثبت شده است.
+تست‌های واحد فرانت: `npm run test:unit`. تست مرورگر واقعی روی استک QA جدا: `npm run test:e2e`.
+فایل `docker-compose.test.yml` فقط محیط آزمایش با دادهٔ ساختگی، پورت‌های ۵۵۴۳ و ۱۸۰۸۱ و PostgreSQL موقت است؛ برای تولید استفاده نشود.
+تست‌های xfail ایرادهای باز را نشان می‌دهند و قبولی محسوب نمی‌شوند. گزارش اجرایی محلی، تصاویر و فایل پوشش در `artifacts/testing` تولید می‌شوند و در Git نمی‌روند. workflow `system-qa` اجرای دستی Docker/مرورگر/بار/بازیابی را فراهم می‌کند.
