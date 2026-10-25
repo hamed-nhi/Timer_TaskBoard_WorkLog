@@ -212,7 +212,7 @@ The isolated browser/recovery/load environment uses the `audit` profile in `dock
 - `frontend/src/features`: feature views and dialogs; `shared` and `lib` hold independent reusable code.
 - `deploy`, `tools`, `docs`: operations, QA utilities and documentation.
 
-See [Architecture](docs/ARCHITECTURE.md), [operational handoff](docs/HANDOFF.md) and [contribution rules](AGENTS.md). Existing detailed design documents are primarily in Persian.
+See [Architecture](docs/ARCHITECTURE.md), [operational handoff](docs/HANDOFF.md). Project documentation is maintained in English; the application interface remains Persian RTL.
 
 Before upgrading a real database, create and verify a backup. Add migrations instead of rewriting existing migrations. Docker applies migrations when starting the API. Migration `0002` separates previously shared catalogs by owner while preserving recorded times and legacy rows.
 

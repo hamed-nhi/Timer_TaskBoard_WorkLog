@@ -21,7 +21,8 @@ Pure/architecture tests live in tests/unit; real DB/API/migration tests in tests
 Preserve private ownership and recorded times, add migrations for schema changes, and never push automatically.
 
 ## Evidence
-- AGENTS.md
+- docs/ARCHITECTURE.md
+- docs/HANDOFF.md
 - backend/app/core/errors.py
 - backend/app/api/exception_handlers.py
 - backend/app/db/session.py

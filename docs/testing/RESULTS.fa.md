@@ -1,125 +1,93 @@
-> این گزارش تاریخی است. برای وضعیت فعلی به [گزارش ممیزی جدید](AUDIT_RESULTS.fa.md) و [راهنمای اجرا](AUDIT_RUNBOOK.md) مراجعه کنید.
+> Historical initial report. See [current release results](RELEASE_RESULTS.fa.md), [the later audit](AUDIT_RESULTS.fa.md) and [the runbook](AUDIT_RUNBOOK.md).
 
-# گزارش آزمون سیستم تایم‌لاگ
+# TIME LOG system test report
 
-زمان: 2026-10-25T09:36:47+03:30
+Timestamp: 2026-10-25T09:36:47+03:30
 
-## نتیجهٔ اصلی
+## Main result
 
-مسیرهای اصلی استفاده، جداسازی داده و آزمون‌های مرورگر موفق‌اند؛ این نتیجه به معنی نبود ایراد یا تأیید آمادگی کامل تولید نیست. ایرادهای بک‌آپ و چند مورد مرزی باز هستند.
+Core journeys, isolation and browser checks passed. This does not mean defect-free or fully production-ready; backup and boundary defects were open at this stage.
 
-- بک‌اند و عملیات: 209 موفق، 7 شکست موردانتظار مربوط به ۵ ایراد باز.
-- واحد فرانت: 12 موفق. مرورگر: 44 موفق از 44 سناریوی اجرایی.
-- پوشش خطوط: 94.82٪؛ شاخه‌ها: 87.22٪؛ ترکیبی: 93.40٪.
-- 70 سناریوی طراحی‌شده با پیش‌شرط، مراحل و شواهد.
-- بار داخل Docker: ۴۰۰ درخواست، صفر خطا، p95 برابر 317.98 میلی‌ثانیه.
-- مسیر ویندوز: 5 خطای انتقال در ۱۲۰۰ درخواست ثبت‌شده؛ علت ریشه‌ای هنوز قطعی نیست.
-- بازیابی: fingerprint تمام ۱۲ جدول برابر؛ سشن بعد از restart باقی ماند؛ API در 5.36 ثانیه برگشت.
-- رمزگذاری AES256 و رمزگشایی واقعی با SHA256 برابر و رد رمز غلط موفق بود.
-- بیلد واقعی API و Next/Caddy و lint موفق‌اند. مشکل راه‌اندازی Alembic رفع و دوباره آزموده شد.
+- Backend/operations: 209 passed; seven expected failures representing five open defects.
+- Frontend units: 12 passed. Browser: 44/44 executable scenarios passed.
+- Coverage: lines 94.82%, branches 87.22%, combined 93.40%.
+- Seventy designed scenarios with prerequisites, steps and evidence.
+- Docker-network load: 400 requests, zero errors, p95 317.98 ms.
+- Windows route: five transport errors in 1,200 recorded requests; root cause not yet confirmed.
+- Restore: all 12 table fingerprints matched; session survived restart; API recovered in 5.36 seconds.
+- Real AES256 encryption/decryption matched SHA256 and rejected the wrong password.
+- Real API/Next/Caddy builds and lint passed. Alembic startup was fixed and retested.
 
-## ایرادها و اقدامات
+## Findings and actions
 
-### QA-001 — گردکردن پیشنهاد از سقف ۵۰٪ تسک کوتاه عبور می‌کند
+### QA-001 — Rounding exceeds a short task's 50% cap
 
-شدت: متوسط؛ وضعیت: باز.
+Severity: medium. Historical status: open.
+Reproduction: suggest_fill for a six-minute task with a 100-minute deficit suggests five minutes.
+Expected: this task's fill cap is three minutes.
+Location: backend/app/services/fill.py:suggest_fill.
+Action: round below each task's cap and distribute the remainder without breaking caps.
 
-بازتولید: suggest_fill برای تسک ۶ دقیقه‌ای و نیاز ۱۰۰ دقیقه، ۵ دقیقه پیشنهاد می‌کند.
+### QA-002 — Rounded aggregate exceeds the allowed gap
 
-انتظار: سقف تکمیلی این تسک ۳ دقیقه است.
+Severity: medium. Historical status: open.
+Reproduction: two 60-minute tasks, weight one, eight-minute gap receive ten minutes total.
+Expected: do not exceed the server cap; the application's own suggestion must be saveable.
+Location: backend/app/services/fill.py:suggest_fill.
+Action: aggregate-aware rounding and suggestion-to-save roundtrip tests.
 
-محل: backend/app/services/fill.py:suggest_fill
+### QA-003 — Invalid date type produces 500
 
-اقدام: گردکردن را زیر سقف هر تسک انجام دهید و باقی‌مانده را با حفظ سقف‌ها توزیع کنید.
+Severity: medium. Historical status: open.
+Reproduction: POST /api/fill with date 123, [1] or an object, and empty items.
+Expected: controlled 400, no internal error.
+Location: backend/app/services/fill.py:parse_day.
+Action: validate type and convert TypeError into ApiError too.
 
-### QA-002 — جمع پیشنهاد گرد‌شده از فاصلهٔ مجاز بیشتر می‌شود
+### QA-004 — Failed pg_dump can produce false backup success
 
-شدت: متوسط؛ وضعیت: باز.
+Severity: high. Historical status: open.
+Reproduction: pg_dump exits 17, but encryption consumer exits zero with nonempty output; script exits zero.
+Expected: dump-producer failure immediately fails the backup.
+Location: deploy/backup.sh.
+Action: independently verify dump production; publish valid output only; retest with real GPG after fixing.
 
-بازتولید: دو تسک ۶۰ دقیقه‌ای، وزن ۱ و فاصلهٔ ۸ دقیقه، مجموعاً ۱۰ دقیقه پیشنهاد می‌گیرند.
+### QA-005 — Pipeline does not independently check decryption failure
 
-انتظار: مجموع از سقف مجاز سرور عبور نکند؛ پیشنهاد خود برنامه قابل ثبت باشد.
+Severity: medium. Historical status: open.
+Reproduction: injected gpg failure with successful fake pg_restore still reports script success.
+Expected: preserve failure from every stage even when the consumer succeeds.
+Location: deploy/restore_test.sh.
+Action: check decryption separately. This finding does not claim that actual restore succeeds with arbitrary wrong passwords.
 
-محل: backend/app/services/fill.py:suggest_fill
+### QA-006 — Docker startup stopped at Alembic
 
-اقدام: گردکردن مجموع‌محور و تست roundtrip پیشنهاد به ثبت اضافه شود.
+Severity: high. Status: fixed.
+Reproduction: Python 3.13 image failed alembic upgrade head with ModuleNotFoundError: app.
+Expected: resolve the application independently of cwd/executable location.
+Location: backend/alembic.ini.
+Action: anchor script_location/prepend_sys_path to %(here)s. CLI and Docker-stack checks passed.
 
-### QA-003 — نوع نامعتبر date پاسخ ۵۰۰ می‌دهد
+### QA-007 — Windows-to-Docker connections reset under load
 
-شدت: متوسط؛ وضعیت: باز.
+Severity: requires investigation. Historical status: observed.
+Reproduction: five WinError 10054 disconnects among 1,200 requests across three host runs; zero among 400 Docker-network requests.
+Expected: no transport errors on the intended usage path.
+Evidence: artifacts/testing/load-run1.json through load-run3.json; load-linux.json.
+Action: investigate forwarding/keep-alive and actual server environment. Comparing routes alone does not establish root cause.
 
-بازتولید: POST /api/fill با date برابر 123، [1] یا یک شیء و items خالی.
+### QA-008 — npm findings in PostCSS/Next chain
 
-انتظار: پاسخ ۴۰۰ کنترل‌شده و بدون خطای داخلی.
+Severity: high/moderate. Historical status: audit finding.
+Reproduction: full audit reported two affected packages, one high/one moderate, mainly transitive PostCSS.
+Expected: fixed versions or a documented assessment of build-path impact.
+Evidence: artifacts/testing/npm-audit.json.
+Action: assess a compatible upgrade and retest. npm audit fix --force was not run; production-only audit failed due to network issues.
 
-محل: backend/app/services/fill.py:parse_day
+## Evidence and limits
 
-اقدام: نوع ورودی بررسی و TypeError هم به ApiError تبدیل شود.
+JUnit, coverage JSON, browser results/screenshots, load and restore evidence are in artifacts/testing. report.html is the searchable report. Load figures apply only to the local synthetic dataset.
 
-### QA-004 — شکست pg_dump می‌تواند بک‌آپ موفق کاذب بسازد
+Seven xfails are not passes: defects were executed/reproduced. New CI was written but not run on GitHub. This initial QA did not deploy a real server or change real data.
 
-شدت: بالا؛ وضعیت: باز.
-
-بازتولید: pg_dump با خروج ۱۷ شکست می‌خورد ولی مصرف‌کنندهٔ رمزگذاری خروج صفر و فایل غیرخالی می‌دهد؛ script خروج صفر دارد.
-
-انتظار: خرابی تولید dump فوراً شکست بک‌آپ محسوب شود.
-
-محل: deploy/backup.sh
-
-اقدام: وضعیت تولید dump مستقل بررسی و فقط خروجی معتبر منتشر شود؛ آزمایش با gpg واقعی هم پس از اصلاح انجام شود.
-
-### QA-005 — خطای رمزگشایی در pipeline مستقل کنترل نمی‌شود
-
-شدت: متوسط؛ وضعیت: باز.
-
-بازتولید: در تزریق خطا، gpg خروج غیرصفر دارد ولی pg_restore ساختگی موفق است؛ script همچنان موفق اعلام می‌کند.
-
-انتظار: شکست هر مرحله حفظ شود، حتی اگر مصرف‌کننده موفق باشد.
-
-محل: deploy/restore_test.sh
-
-اقدام: وضعیت رمزگشایی جدا بررسی شود. این نتیجه به معنی موفقیت بازیابی واقعی با هر رمز اشتباه نیست.
-
-### QA-006 — راه‌اندازی Docker در Alembic متوقف می‌شد
-
-شدت: بالا؛ وضعیت: رفع‌شده.
-
-بازتولید: در تصویر واقعی Python 3.13، اجرای alembic upgrade head با ModuleNotFoundError: app متوقف شد.
-
-انتظار: یافتن برنامه مستقل از cwd و محل executable.
-
-محل: backend/alembic.ini
-
-اقدام: script_location و prepend_sys_path به %(here)s متصل شد؛ تست CLI و استک Docker موفق‌اند.
-
-### QA-007 — قطع اتصال از ویندوز به پورت Docker زیر بار
-
-شدت: نیاز بررسی؛ وضعیت: مشاهده‌شده.
-
-بازتولید: در سه اجرای ثبت‌شدهٔ میزبان، 5 قطع اتصال از ۱۲۰۰ درخواست؛ WinError 10054. در شبکهٔ داخلی Docker صفر از ۴۰۰.
-
-انتظار: صفر خطای انتقال در مسیر استفادهٔ هدف.
-
-محل: artifacts/testing/load-run1.json .. load-run3.json; load-linux.json
-
-اقدام: مسیر forwarding/keep-alive و محیط سرور واقعی بررسی شود؛ مقایسهٔ دو مسیر علت ریشه‌ای را قطعی نمی‌کند.
-
-### QA-008 — یافتهٔ npm audit در زنجیرهٔ PostCSS/Next
-
-شدت: بالا/متوسط؛ وضعیت: یافتهٔ ممیزی.
-
-بازتولید: ممیزی کامل دو بستهٔ آسیب‌پذیر گزارش کرده: یک high و یک moderate؛ عمدتاً PostCSS انتقالی.
-
-انتظار: نسخهٔ اصلاح‌شده یا ارزیابی مستند اثرگذاری بر مسیر build.
-
-محل: artifacts/testing/npm-audit.json
-
-اقدام: ارتقای سازگار و تست مجدد بررسی شود. npm audit fix --force اجرا نشده؛ خروجی production-only به خطای شبکه خورد.
-
-## شواهد و حدود اجرا
-
-JUnit، JSON پوشش، نتایج مرورگر، تصاویر، بار و بازیابی در artifacts/testing هستند. فایل report.html نسخهٔ قابل جست‌وجوی گزارش است. مقادیر بار فقط برای محیط محلی و این دادهٔ ساختگی‌اند.
-
-۷ xfail قبولی نیستند؛ تست‌ها اجرا شده و ایرادها بازتولید شده‌اند. workflow جدید نوشته شده ولی روی GitHub اجرا نشده است. تغییرات در این درخواست روی سرور واقعی منتشر نشده و دادهٔ واقعی تغییر نکرده است.
-
-انجام‌نشده: Safari/Firefox و گوشی فیزیکی؛ ممیزی کامل WCAG و تست نفوذ مستقل؛ HTTPS/دامنه/سرور واقعی؛ Soak طولانی، failover و خرابی PostgreSQL تولید؛ ممیزی کامل Python/OS و تعیین قطعی علت قطع اتصال ویندوز؛ اجرای workflow روی GitHub.
+Not tested then: Safari/Firefox/physical phones, full WCAG/independent penetration testing, real HTTPS/domain/server, long soak/failover/production PostgreSQL failure, full Python/OS audit, definitive Windows disconnect cause, and GitHub workflow execution.

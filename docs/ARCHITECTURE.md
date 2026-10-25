@@ -1,35 +1,35 @@
-# معماری و ساختار پروژه
+# Project architecture and layout
 
-این سند ساختار فعلی پروژه را توضیح می‌دهد. هدف، یک برنامهٔ یکپارچه با مرزهای روشن است: بتوان یک قابلیت را توسعه و تست کرد، بدون اینکه برای هر تغییر ساده به چند لایهٔ واسطه نیاز باشد. تعداد فایل‌ها محدودیت مصنوعی ندارد؛ هر فایل باید مسئولیت مشخص و محل قابل پیش‌بینی داشته باشد.
+This document describes the current layout. The application is a single deployable system with clear boundaries: a feature can be developed and tested without adding several intermediary layers for every small change. There is no artificial file-count target; each file needs a defined responsibility and a predictable location.
 
-## نقشهٔ پوشه‌ها
+## Directory map
 
 ```text
 workload/
 ├── backend/
 │   ├── app/
-│   │   ├── main.py                 # ساخت و اتصال اجزای FastAPI
+│   │   ├── main.py                 # Compose the FastAPI application
 │   │   ├── api/
-│   │   │   ├── router.py           # اتصال همهٔ مسیرها
-│   │   │   ├── routes/             # دریافت ورودی و ساخت پاسخ HTTP
-│   │   │   ├── dependencies.py     # کاربر، نقش و اتصال دیتابیس هر درخواست
-│   │   │   ├── middleware.py       # CSRF و تمدید کوکی
-│   │   │   ├── session.py          # تنظیم کوکی
+│   │   │   ├── router.py           # Register all routes
+│   │   │   ├── routes/             # HTTP input and response adapters
+│   │   │   ├── dependencies.py     # Request user, role and database dependencies
+│   │   │   ├── middleware.py       # CSRF protection and cookie renewal
+│   │   │   ├── session.py          # Session cookie configuration
 │   │   │   └── exception_handlers.py
-│   │   ├── services/              # قواعد تسک، تگ، حضور، تکمیل، گزارش و کاتالوگ
-│   │   ├── core/                  # تنظیمات، خطاها، رمزنگاری و زمان
-│   │   └── db/                    # Session/Db و مدل‌های SQLAlchemy
-│   ├── alembic/                   # مایگریشن‌های نسخه‌دار
+│   │   ├── services/              # Task, tag, attendance, fill, reporting and catalog rules
+│   │   ├── core/                  # Configuration, errors, security and time helpers
+│   │   └── db/                    # Session/Db adapter and SQLAlchemy models
+│   ├── alembic/                   # Versioned migrations
 │   ├── tests/
-│   │   ├── unit/                  # تست‌های سریع بدون نیاز به دیتابیس
-│   │   ├── integration/           # API، مالکیت و مایگریشن روی PostgreSQL تست
-│   │   ├── fixtures/              # قرارداد ورودی API قبل از بازآرایی
-│   │   └── support.py             # کلاینت و ابزارهای مشترک تست
+│   │   ├── unit/                  # Fast tests without a database
+│   │   ├── integration/           # API, ownership and migrations on test PostgreSQL
+│   │   ├── fixtures/              # HTTP request contract captured before the refactor
+│   │   └── support.py             # Shared test clients and helpers
 │   └── requirements*.txt
 ├── frontend/
 │   ├── src/
-│   │   ├── app/                   # مسیرها و layoutهای Next.js
-│   │   ├── features/              # کد هر قابلیت
+│   │   ├── app/                   # Next.js routes and layouts
+│   │   ├── features/              # Feature implementation
 │   │   │   ├── auth/
 │   │   │   ├── today/
 │   │   │   ├── tasks/
@@ -43,19 +43,19 @@ workload/
 │   │   │   ├── timesheet/
 │   │   │   ├── settings/
 │   │   │   └── admin/
-│   │   ├── components/            # اتصال قابلیت‌ها، مانند پوستهٔ برنامه
-│   │   ├── shared/                # اجزای UI مشترک و مستقل از قابلیت‌ها
-│   │   └── lib/                   # fetch، SWR، قراردادهای API و نمایش فارسی
-│   └── public/                    # آیکن‌ها و manifest
-├── deploy/                        # بک‌آپ، آزمون بازیابی و دریافت نسخه‌ها
-├── tools/                         # ابزارهای توسعه
-├── docs/                          # طراحی، راه‌اندازی و تحویل
-└── .github/workflows/             # بررسی‌های CI
+│   │   ├── components/            # Feature composition, including the app shell
+│   │   ├── shared/                # Reusable UI independent of features
+│   │   └── lib/                   # Fetch, SWR, API contracts and Persian formatting
+│   └── public/                    # Icons and manifest
+├── deploy/                        # Backup, restore checks and retrieval scripts
+├── tools/                         # Development and QA tools
+├── docs/                          # Design, setup and handoff
+└── .github/workflows/             # CI checks
 ```
 
-در هر قابلیت فرانت، `view.tsx` صفحه را پیاده می‌کند. فایل `app/**/page.tsx` فقط آن را صادر می‌کند. قابلیت‌هایی مثل تسک و حضور، اجزای تعاملی خود را هم کنار صفحه دارند. پوشهٔ خالی برای قابلیت احتمالی آینده ساخته نمی‌شود.
+Within each frontend feature, `view.tsx` implements the page. Its `app/**/page.tsx` only exports that view. Features such as tasks and attendance keep their interactive components alongside the view. Do not create empty directories for hypothetical future features.
 
-## مسئولیت و جهت وابستگی
+## Responsibilities and dependency direction
 
 ```text
 main → api → services → db
@@ -63,45 +63,45 @@ main → api → services → db
                 core
 ```
 
-- **API:** ورودی Body/Query، dependency ورود و نقش، کد وضعیت، هدر، کوکی و پاسخ دانلودی. کوئری و commit در route قرار نمی‌گیرد.
-- **Services:** قواعد کسب‌وکار، بررسی مالکیت، تراکنش و کوئری‌ها. سرویس‌ها FastAPI، Request یا Response را وارد نمی‌کنند؛ خروجی آن‌ها دادهٔ معمولی یا محتوای فایل است.
-- **DB:** مدل‌های جدول‌ها، ایجاد Session، اجرای SQL پارامتری و قفل تراکنشی هر کاربر. مدل‌ها و دیتابیس از API یا سرویس‌ها وارد نمی‌کنند.
-- **Core:** تنظیمات، خطای برنامه، ابزار زمان و هش رمز. این لایه از API، سرویس و دیتابیس مستقل است.
+- **API:** Body/query input, authentication and role dependencies, status codes, headers, cookies and downloadable responses. Routes do not execute queries or commit transactions.
+- **Services:** Business rules, ownership checks, transactions and queries. Services do not import FastAPI, Request or Response; they return plain data or file content.
+- **DB:** Table models, Session creation, parameterized SQL execution and per-user transaction locks. Models and the database adapter do not import API or services.
+- **Core:** Configuration, application errors, time utilities and password hashing. This layer is independent of API, services and DB.
 
-منطق مشترک بین دو قابلیت از سرویس مربوط فراخوانی می‌شود؛ سرویس حضور یا گزارش نباید از route تگ وارد کند. مسیر HTTP فقط یک ورودی به سرویس است و CLI می‌تواند همان قواعد را استفاده کند.
+Shared feature logic is called through its service. Attendance or reporting services must not import a tag route. An HTTP route is only one entry point to a service; the CLI can use the same rules.
 
-کوئری‌ها فعلاً در سرویس‌ها هستند. برای هر جدول Repository و Interface جدا ساخته نشده؛ wrapper کوچک Db برای این اندازهٔ پروژه کافی است. اگر یک مرز ذخیره‌سازی بعداً چند پیاده‌سازی واقعی پیدا کرد، همان مرز جدا می‌شود.
+Queries currently live in services. There is no separate Repository and Interface for every table; the small Db wrapper is sufficient at this scale. Introduce a storage boundary when it has multiple concrete implementations.
 
-## مرزهای فرانت
+## Frontend boundaries
 
-`app` مسیرها را تعریف می‌کند، `components/app-shell.tsx` قابلیت‌ها و providerها را متصل می‌کند و `features` رفتار صفحه‌ها را نگه می‌دارد. `shared` و `lib` از صفحه یا قابلیت خاص وارد نمی‌کنند. این محدودیت در ESLint کنترل می‌شود.
+`app` defines routes, `components/app-shell.tsx` composes features and providers, and `features` owns page behavior. `shared` and `lib` must not import a page or specific feature. ESLint enforces these boundaries.
 
-قراردادهای مشترک API در `lib/types.ts` هستند. وضعیت سرور در SWR و ساعت مشترک در `lib/data.tsx` قرار دارد. فایل CSS فعلی حفظ شده است؛ این بازآرایی طراحی ظاهری را عوض نمی‌کند.
+Shared API contracts live in `lib/types.ts`. SWR holds server state; `lib/data.tsx` supplies the shared clock. The original structural refactor preserved the CSS and did not redesign the interface.
 
-## قواعد افزودن قابلیت
+## Adding a feature
 
-1. قاعدهٔ جدید بک‌اند در فایل سرویس همان قابلیت قرار می‌گیرد؛ مسیر جدید فقط ورودی را حل و سرویس را صدا می‌زند.
-2. هر کوئری دادهٔ شخصی باید به کاربر محدود باشد. AdminDep فقط برای مدیریت حساب‌هاست؛ کاتالوگ هر ادمین هم خصوصی است.
-3. تغییر جدول با مایگریشن جدید و تست ارتقا انجام می‌شود. در این بازآرایی مایگریشن تازه‌ای لازم نشده است.
-4. صفحهٔ جدید فرانت در features پیاده و از route مربوط صادر می‌شود؛ اجزای مختص آن همان‌جا می‌مانند.
-5. تست مستقل از دیتابیس در unit و تست API/ذخیره‌سازی در integration قرار می‌گیرد.
-6. یک فایل فقط وقتی شکسته می‌شود که مسئولیت مستقلی دارد یا تغییر و تست آن سخت شده است. یک فایل کوچک برای هر تابع ساخته نمی‌شود.
+1. Put new backend rules in the feature's service. A new route only resolves input and calls that service.
+2. Scope every personal-data query by user. AdminDep is for account administration; an administrator's catalog is private too.
+3. Change tables through a new migration and test the upgrade. The structural refactor itself required no new migration.
+4. Implement new frontend pages in features and export them from the route. Keep feature-specific components there too.
+5. Put database-independent tests in unit and API/storage tests in integration.
+6. Split a file when it has a separate responsibility or becomes difficult to change and test; do not create a tiny file for every function.
 
-## قابلیت رشد و اطمینان‌پذیری
+## Scalability and reliability
 
-این ساختار توسعه و آزمون قابلیت‌ها را جدا می‌کند. قفل‌های PostgreSQL، جداسازی حساب‌ها، کوکی ماندگار و قرارداد API حفظ شده‌اند. ماندگاری داده و نشست در PostgreSQL است؛ فرانت در production خروجی استاتیک دارد.
+The layout separates feature development and testing. PostgreSQL locks, account isolation, persistent cookies and API contracts were preserved. PostgreSQL stores data and sessions; production frontend output is static.
 
-آزمون مرز لایه‌ها، ممنوعیت SQL در route و مقایسهٔ ۵۷ مسیر API در تست‌های unit اجرا می‌شوند. تست‌های unit بدون PostgreSQL هم اجرا می‌شوند؛ fixture حذف و ایجاد schema فقط در پوشهٔ integration فعال است و نام دیتابیس باید به `_test` ختم شود.
+Unit tests enforce layer boundaries, prohibit SQL in routes and compare the original 57-path request contract. Later feature contracts are tracked separately. Unit tests need no PostgreSQL; destructive schema fixtures are confined to integration tests, whose database name must end in `_test`.
 
-برای ظرفیت واقعی باید تعداد کاربر و بار مشخص شود و زمان پاسخ، تعداد کوئری، مصرف حافظه و pool اتصال اندازه‌گیری شود. صرف پوشه‌بندی تضمین ظرفیت یا دسترس‌پذیری نیست. تست بار و استقرار واقعی در این بازآرایی انجام نشده‌اند؛ ریسک‌های بک‌آپ در codebase/CONCERNS.md ثبت‌اند.
+Actual capacity depends on user count, workload, response time, query count, memory and connection-pool usage. Directory organization alone does not guarantee capacity or availability. The structural refactor did not include load testing or a real production deployment; later results are in [the current release report](testing/RELEASE_RESULTS.fa.md). Historical backup concerns are recorded in [codebase/CONCERNS.md](codebase/CONCERNS.md).
 
-## فرمان‌های ثابت
+## Stable commands
 
-- اجرای بک‌اند: `uvicorn app.main:app --port 8000`
+- Backend: `uvicorn app.main:app --port 8000`
 - CLI: `python -m app.cli ...`
-- مایگریشن: `alembic upgrade head`
-- تست سریع: `python -m pytest -q tests/unit`
-- تست دیتابیس: `python -m pytest -q tests/integration` روی دیتابیس اختصاصی تست
-- فرانت: `npm.cmd run dev`، `npm.cmd run lint`، `npm.cmd run build`
+- Migrations: `alembic upgrade head`
+- Fast tests: `python -m pytest -q tests/unit`
+- Database tests: `python -m pytest -q tests/integration` on a dedicated disposable test database
+- Frontend: `npm.cmd run dev`, `npm.cmd run lint`, `npm.cmd run build`
 
-فرمان‌های Python از backend و فرمان‌های npm از frontend اجرا می‌شوند. آدرس‌های عمومی API و مسیرهای صفحه‌ها ثابت مانده‌اند.
+Run Python commands from backend and npm commands from frontend. Existing public API URLs and page routes remain stable.

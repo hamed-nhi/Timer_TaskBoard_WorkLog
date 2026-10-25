@@ -151,3 +151,10 @@ See [RELEASE_RESULTS.fa.md](RELEASE_RESULTS.fa.md) for the tested current releas
 For production commands, use [DEPLOY.md](../../DEPLOY.md), not the old disposable 18081/tmpfs compose. The owner separately authorized updating the local 18081 API/web after a verified backup; its DB container was preserved. Server credentials are created independently and never committed.
 
 The current ordinary-load default is 30 seconds at one request per worker per second, with 0.25-second login staggering to respect the login admission budget. `--seconds 900` retains the continuous soak. Unlimited-speed bursts are tested separately by `login-security.cjs` and must expect 429; they are not a zero-error ordinary-user workload.
+
+
+## Documentation language
+
+Reviewed Markdown under docs is maintained in English. Legacy .fa.md filenames are retained to preserve existing links. Report generators write newly generated localized Markdown into ignored artifacts/testing or artifacts/audit, alongside their HTML/evidence, rather than overwriting reviewed repository snapshots. Scenario descriptions in scenarios.json are English; IDs and evidence selectors remain unchanged.
+
+Local coding instructions may exist in AGENTS.md, but that file is intentionally untracked and is not required for builds, CI or deployment. Public architecture/contribution boundaries remain in docs/ARCHITECTURE.md and docs/HANDOFF.md.

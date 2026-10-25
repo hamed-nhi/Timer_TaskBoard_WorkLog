@@ -4,13 +4,13 @@
   "scenarios": [
     {
       "id": "AUTH-01",
-      "category": "ورود",
-      "title": "ورود موفق و کوکی امن",
-      "precondition": "حساب فعال ساخته‌شده توسط ادمین",
+      "category": "Authentication",
+      "title": "Successful login and secure cookie",
+      "precondition": "Active account created by an administrator",
       "steps": [
-        "درج نام کاربری و رمز درست و ارسال فرم"
+        "Submit the correct username/password"
       ],
-      "expected": "بازشدن امروز و کوکی HttpOnly با انقضا",
+      "expected": "Today opens; expiring HttpOnly cookie",
       "evidence": [
         "E2E-01",
         "test_login_logout_and_cookie_flags"
@@ -18,65 +18,65 @@
     },
     {
       "id": "AUTH-02",
-      "category": "ورود",
-      "title": "حروف بزرگ و فاصله در نام کاربری",
-      "precondition": "حساب فعال",
+      "category": "Authentication",
+      "title": "Username case and whitespace",
+      "precondition": "Active account",
       "steps": [
-        "ورود با نام دارای فاصله و حروف بزرگ"
+        "Log in with uppercase letters and surrounding spaces"
       ],
-      "expected": "ورود همان حساب",
+      "expected": "Same account is authenticated",
       "evidence": [
         "test_username_is_case_insensitive"
       ]
     },
     {
       "id": "AUTH-03",
-      "category": "امنیت",
-      "title": "کاربر ناموجود و رمز غلط",
-      "precondition": "بدون ورود",
+      "category": "Security",
+      "title": "Unknown user and wrong password",
+      "precondition": "Signed out",
       "steps": [
-        "ارسال رمز غلط و سپس نام ناموجود"
+        "Submit wrong password, then nonexistent username"
       ],
-      "expected": "۴۰۱ با پیام یکسان",
+      "expected": "Identical 401 messages",
       "evidence": [
         "test_wrong_password_and_unknown_user"
       ]
     },
     {
       "id": "AUTH-04",
-      "category": "امنیت",
-      "title": "قفل سه تلاش و پایان قفل",
-      "precondition": "حساب فعال",
+      "category": "Security",
+      "title": "Three-attempt lock and expiry",
+      "precondition": "Active account",
       "steps": [
-        "سه رمز غلط، رمز درست، گذشت زمان"
+        "Three wrong passwords, correct password, then advance time"
       ],
-      "expected": "۴۲۹ و Retry-After و سپس ورود مجدد",
+      "expected": "429 with Retry-After, then successful login",
       "evidence": [
         "test_lockout_after_three_failures"
       ]
     },
     {
       "id": "AUTH-05",
-      "category": "امنیت",
-      "title": "سقف شکست یک IP",
-      "precondition": "چند نام کاربری از یک IP",
+      "category": "Security",
+      "title": "Per-IP failure cap",
+      "precondition": "Several usernames from one IP",
       "steps": [
-        "ده شکست و یک تلاش دیگر"
+        "Ten failures, then another attempt"
       ],
-      "expected": "۴۲۹",
+      "expected": "429",
       "evidence": [
         "test_ip_lockout_after_ten_failures"
       ]
     },
     {
       "id": "AUTH-06",
-      "category": "امنیت",
-      "title": "درخواست ناشناس و CSRF",
-      "precondition": "بدون سشن یا بدون هدر",
+      "category": "Security",
+      "title": "Anonymous requests and CSRF",
+      "precondition": "No session or missing header",
       "steps": [
-        "خواندن خصوصی و نوشتن بدون هدر"
+        "Read private data and write without the required header"
       ],
-      "expected": "۴۰۱ و ۴۰۳",
+      "expected": "401 and 403",
       "evidence": [
         "test_anonymous_cannot_use_the_api",
         "test_csrf_header_required"
@@ -84,39 +84,39 @@
     },
     {
       "id": "AUTH-07",
-      "category": "نشست",
-      "title": "بازکردن مجدد مرورگر",
-      "precondition": "کوکی معتبر",
+      "category": "Sessions",
+      "title": "Reopen the browser",
+      "precondition": "Valid cookie",
       "steps": [
-        "بستن Chrome تست و بازکردن همان پروفایل"
+        "Close test Chrome and reopen the same profile"
       ],
-      "expected": "ورود حفظ شود",
+      "expected": "Authentication persists",
       "evidence": [
         "E2E-11"
       ]
     },
     {
       "id": "AUTH-08",
-      "category": "نشست",
-      "title": "تمدید سشن فعال",
-      "precondition": "سشن قدیمی ولی معتبر",
+      "category": "Sessions",
+      "title": "Active-session renewal",
+      "precondition": "Old but valid session",
       "steps": [
-        "استفاده پس از ۲۰ روز و عبور از انقضای اولیه"
+        "Use after 20 days and beyond original expiry"
       ],
-      "expected": "تمدید ۹۰روزه",
+      "expected": "Renew for 90 days",
       "evidence": [
         "test_session_is_renewed_after_activity"
       ]
     },
     {
       "id": "AUTH-09",
-      "category": "نشست",
-      "title": "انقضا و لغو سشن",
-      "precondition": "توکن قدیمی",
+      "category": "Sessions",
+      "title": "Expiry and revocation",
+      "precondition": "Old token",
       "steps": [
-        "خروج، ارسال دوباره توکن و آزمایش منقضی"
+        "Logout, replay token, and test expiration"
       ],
-      "expected": "۴۰۱ و عدم احیا",
+      "expected": "401 without session resurrection",
       "evidence": [
         "E2E-51",
         "test_expired_session_is_rejected"
@@ -124,13 +124,13 @@
     },
     {
       "id": "AUTH-10",
-      "category": "نشست",
-      "title": "تغییر رمز و غیرفعال‌سازی",
-      "precondition": "دو نشست از یک حساب",
+      "category": "Sessions",
+      "title": "Password change and deactivation",
+      "precondition": "Two sessions for one account",
       "steps": [
-        "تغییر رمز یا غیرفعال‌کردن حساب"
+        "Change password or deactivate account"
       ],
-      "expected": "ابطال نشست‌های مربوط",
+      "expected": "Affected sessions revoked",
       "evidence": [
         "test_change_password_drops_other_sessions",
         "test_inactive_user_cannot_log_in"
@@ -138,26 +138,26 @@
     },
     {
       "id": "CAT-01",
-      "category": "کاتالوگ",
-      "title": "مدیریت شخصی از UI",
-      "precondition": "کاربر عادی",
+      "category": "Catalog",
+      "title": "Private management through UI",
+      "precondition": "Ordinary user",
       "steps": [
-        "ساخت نوع گزارش، پروژه و استوری"
+        "Create report type, project and story"
       ],
-      "expected": "ثبت برای همان حساب و نبود مدیریت کاربران",
+      "expected": "Owned by that account; no account-management access",
       "evidence": [
         "E2E-02"
       ]
     },
     {
       "id": "CAT-02",
-      "category": "مدیریت",
-      "title": "ساخت حساب توسط ادمین",
-      "precondition": "حساب ادمین",
+      "category": "Administration",
+      "title": "Administrator creates an account",
+      "precondition": "Administrator account",
       "steps": [
-        "ساخت حساب جدید از صفحه مدیریت"
+        "Create an account in Management"
       ],
-      "expected": "حساب ساخته شود و کاتالوگ دیگران دیده نشود",
+      "expected": "Account created; others' catalogs remain hidden",
       "evidence": [
         "E2E-10",
         "test_admin_only_routes"
@@ -165,39 +165,39 @@
     },
     {
       "id": "CAT-03",
-      "category": "کاتالوگ",
-      "title": "نام یکسان در دو حساب",
-      "precondition": "دو کاربر",
+      "category": "Catalog",
+      "title": "Identical names in two accounts",
+      "precondition": "Two users",
       "steps": [
-        "ساخت موارد هم‌نام و تکرار در یک حساب"
+        "Create same-named records, then duplicate within one account"
       ],
-      "expected": "شناسه‌های مستقل و تکرار داخلی ۴۰۹",
+      "expected": "Independent IDs; own duplicate returns 409",
       "evidence": [
         "test_duplicate_names_are_private"
       ]
     },
     {
       "id": "CAT-04",
-      "category": "جداسازی",
-      "title": "حدس شناسهٔ کاتالوگ دیگران",
-      "precondition": "شناسه از حساب دیگر",
+      "category": "Isolation",
+      "title": "Guess another user's catalog ID",
+      "precondition": "Foreign account identifier",
       "steps": [
-        "ویرایش و حذف حتی با ادمین"
+        "Edit/delete, including as administrator"
       ],
-      "expected": "۴۰۴ و حفظ دادهٔ مالک",
+      "expected": "404; owner's data preserved",
       "evidence": [
         "test_foreign_ids_are_404_even_for_admin"
       ]
     },
     {
       "id": "CAT-05",
-      "category": "جداسازی",
-      "title": "اتصال تگ/نوع/استوری خارجی",
-      "precondition": "دادهٔ متعلق به کاربر",
+      "category": "Isolation",
+      "title": "Attach foreign tag/type/story",
+      "precondition": "User-owned data",
       "steps": [
-        "ارسال شناسهٔ خارجی از API و SQL تست"
+        "Submit a foreign ID through API and test SQL"
       ],
-      "expected": "رد API و قید دیتابیس",
+      "expected": "API rejection and database constraint enforcement",
       "evidence": [
         "test_foreign_catalog_cannot_be_attached",
         "test_database_rejects_cross_account"
@@ -205,39 +205,39 @@
     },
     {
       "id": "CAT-06",
-      "category": "کاتالوگ",
-      "title": "حذف مورد استفاده‌شده",
-      "precondition": "کاتالوگ متصل به تگ",
+      "category": "Catalog",
+      "title": "Delete a referenced item",
+      "precondition": "Catalog linked to a tag",
       "steps": [
-        "حذف نوع گزارش، استوری یا پروژه"
+        "Delete report type, story or project"
       ],
-      "expected": "۴۰۹ و حفظ ارتباط",
+      "expected": "409; references retained",
       "evidence": [
         "test_used_catalog_items_cannot_be_removed"
       ]
     },
     {
       "id": "CAT-07",
-      "category": "کاتالوگ",
-      "title": "ورود تکراری JSON",
-      "precondition": "کاتالوگ خصوصی",
+      "category": "Catalog",
+      "title": "Repeated JSON import",
+      "precondition": "Private catalog",
       "steps": [
-        "دو بار import یک JSON"
+        "Import the same JSON twice"
       ],
-      "expected": "بدون تکرار و بدون اثر بر دیگران",
+      "expected": "No duplicates or effects on others",
       "evidence": [
         "test_catalog_import_is_idempotent"
       ]
     },
     {
       "id": "TASK-01",
-      "category": "تسک",
-      "title": "چرخهٔ زنده",
-      "precondition": "کاربر عادی",
+      "category": "Tasks",
+      "title": "Live lifecycle",
+      "precondition": "Ordinary user",
       "steps": [
-        "شروع، مکث، ادامه و پایان"
+        "Start, pause, resume and finish"
       ],
-      "expected": "تسک done و زمان صحیح",
+      "expected": "Done task with correct duration",
       "evidence": [
         "E2E-04",
         "test_pause_resume_stop_lifecycle"
@@ -245,13 +245,13 @@
     },
     {
       "id": "TASK-02",
-      "category": "تسک",
-      "title": "ثبت دستی و نیمه‌شب",
-      "precondition": "بازه بدون هم‌پوشانی",
+      "category": "Tasks",
+      "title": "Manual entry across midnight",
+      "precondition": "Nonoverlapping interval",
       "steps": [
-        "ثبت ۲۳:۵۰ تا ۰۰:۲۰ و مرزهای ساعت"
+        "Enter 23:50 to 00:20 and clock boundaries"
       ],
-      "expected": "مدت ۳۰ دقیقه و رفتار درست مرزها",
+      "expected": "30 minutes; correct boundary behavior",
       "evidence": [
         "test_clock_boundaries",
         "test_create_task_with_end_time"
@@ -259,13 +259,13 @@
     },
     {
       "id": "TASK-03",
-      "category": "تسک",
-      "title": "کلیک پایان دوباره و reopen",
-      "precondition": "تسک پایان‌یافته امروز",
+      "category": "Tasks",
+      "title": "Repeated finish and reopen",
+      "precondition": "Today's completed task",
       "steps": [
-        "پایان دوباره، ادامهٔ مجدد و پایان"
+        "Finish again, reopen, then finish"
       ],
-      "expected": "حفظ زمان قبلی و محاسبهٔ نوبت جدید",
+      "expected": "Preserve earlier time and add the new session",
       "evidence": [
         "test_double_stop_does_not_change",
         "test_reopen_adds_a_session"
@@ -273,13 +273,13 @@
     },
     {
       "id": "TASK-04",
-      "category": "تسک",
-      "title": "ویرایش عنوان بدون تغییر زمان",
-      "precondition": "تسک زنده یا مکث‌شده",
+      "category": "Tasks",
+      "title": "Edit title without changing time",
+      "precondition": "Running or paused task",
       "steps": [
-        "تغییر عنوان و ذخیره"
+        "Change title and save"
       ],
-      "expected": "حفظ مدت و سگمنت",
+      "expected": "Duration and segments preserved",
       "evidence": [
         "test_editing_title_of_running_task",
         "test_editing_title_of_paused_task"
@@ -287,13 +287,13 @@
     },
     {
       "id": "TASK-05",
-      "category": "تسک",
-      "title": "ویرایش ساعت همراه مکث و تعدیل",
-      "precondition": "چند سگمنت",
+      "category": "Tasks",
+      "title": "Edit clocks with pauses/adjustments",
+      "precondition": "Multiple segments",
       "steps": [
-        "ویرایش ساعت‌ها و تعدیل مثبت/منفی"
+        "Edit clocks and positive/negative adjustment"
       ],
-      "expected": "مکث جزو کار نشود و مدت منفی رد شود",
+      "expected": "Paused time excluded; negative duration rejected",
       "evidence": [
         "test_adjusting_a_task_with_pauses",
         "test_cannot_go_negative"
@@ -301,13 +301,13 @@
     },
     {
       "id": "TASK-06",
-      "category": "تسک",
-      "title": "هم‌پوشانی واقعی و فاصلهٔ مکث",
-      "precondition": "دو تسک یک کاربر",
+      "category": "Tasks",
+      "title": "Actual overlap and pause gaps",
+      "precondition": "Two tasks for one user",
       "steps": [
-        "ثبت بازهٔ متداخل و بازه داخل مکث"
+        "Submit overlapping interval and interval inside pause"
       ],
-      "expected": "رد تداخل و قبول فاصلهٔ آزاد",
+      "expected": "Reject overlap; accept free gap",
       "evidence": [
         "test_overlapping_manual_entry_is_refused",
         "test_pauses_leave_room"
@@ -315,26 +315,26 @@
     },
     {
       "id": "TASK-07",
-      "category": "تسک",
-      "title": "حذف قابل ردگیری",
-      "precondition": "تسک دارای سگمنت",
+      "category": "Tasks",
+      "title": "Auditable deletion",
+      "precondition": "Task with segments",
       "steps": [
-        "حذف تسک"
+        "Delete task"
       ],
-      "expected": "ذخیرهٔ snapshot در audit و حذف فعال",
+      "expected": "Snapshot archived in audit; active task removed",
       "evidence": [
         "test_delete_task_archives_it"
       ]
     },
     {
       "id": "PLAN-01",
-      "category": "برنامه‌ریزی",
-      "title": "تبدیل برنامه به کار زنده",
-      "precondition": "برنامه ثبت‌شده",
+      "category": "Planning",
+      "title": "Start planned work",
+      "precondition": "Saved plan",
       "steps": [
-        "شروع از UI و پایان تسک"
+        "Start through UI, then finish"
       ],
-      "expected": "حذف از برنامه و planned_flag فعال",
+      "expected": "Plan removed; planned_flag set",
       "evidence": [
         "E2E-06",
         "test_start_planned_creates_running_task"
@@ -342,13 +342,13 @@
     },
     {
       "id": "TAG-01",
-      "category": "تگ و بودجه",
-      "title": "بودجه و محدودهٔ تاریخ",
-      "precondition": "تگ دارای تاریخچه",
+      "category": "Tags and budgets",
+      "title": "Budget and date scope",
+      "precondition": "Tag with history",
       "steps": [
-        "تنظیم بودجه از کل سابقه یا امروز"
+        "Budget all history or from today"
       ],
-      "expected": "محاسبهٔ صرف‌شده مطابق محدوده",
+      "expected": "Spent time follows selected scope",
       "evidence": [
         "test_budget_counts_all_history",
         "test_from_today_ignores"
@@ -356,13 +356,13 @@
     },
     {
       "id": "TAG-02",
-      "category": "تگ و بودجه",
-      "title": "ادغام و تغییر نام",
-      "precondition": "تسک، برنامه و آرشیو متصل",
+      "category": "Tags and budgets",
+      "title": "Merge and rename",
+      "precondition": "Linked tasks, plans and archive",
       "steps": [
-        "تغییر نام و ادغام دو تگ"
+        "Rename and merge tags"
       ],
-      "expected": "حفظ همهٔ تسک‌ها و دقیقه‌ها",
+      "expected": "Every task/minute preserved",
       "evidence": [
         "test_merge_never_loses_a_minute",
         "test_merge_moves_tasks"
@@ -370,13 +370,13 @@
     },
     {
       "id": "PRES-01",
-      "category": "حضور",
-      "title": "ورود، خروج موقت و پایان",
-      "precondition": "روز کاری",
+      "category": "Attendance",
+      "title": "Check-in, temporary exit and finish",
+      "precondition": "Workday",
       "steps": [
-        "ورود، مکث، بازگشت و پایان"
+        "Check in, pause, return and finish"
       ],
-      "expected": "حضور مستقل از تسک و وضعیت درست",
+      "expected": "Attendance independent of tasks; correct state",
       "evidence": [
         "E2E-05",
         "test_check_in_out_back"
@@ -384,13 +384,13 @@
     },
     {
       "id": "PRES-02",
-      "category": "حضور",
-      "title": "یادآوری ورود ثبت‌نشده",
-      "precondition": "تسک زنده بدون حضور",
+      "category": "Attendance",
+      "title": "Missing check-in reminder",
+      "precondition": "Running task without attendance",
       "steps": [
-        "خواندن وضعیت حضور"
+        "Read attendance state"
       ],
-      "expected": "needs_checkin فعال و بدون ورود خودکار",
+      "expected": "needs_checkin true; no automatic check-in",
       "evidence": [
         "test_needs_checkin_reminder",
         "test_there_is_no_automatic"
@@ -398,52 +398,52 @@
     },
     {
       "id": "PRES-03",
-      "category": "حضور",
-      "title": "ویرایش و هم‌پوشانی بازه",
-      "precondition": "حضور ثبت‌شده",
+      "category": "Attendance",
+      "title": "Edit intervals and overlap",
+      "precondition": "Saved attendance",
       "steps": [
-        "ویرایش، افزودن، حذف و بازهٔ متداخل"
+        "Edit/add/delete and submit overlap"
       ],
-      "expected": "حفظ اعتبار بازه‌ها",
+      "expected": "Intervals remain valid",
       "evidence": [
         "test_edit_add_delete_and_validation"
       ]
     },
     {
       "id": "FILL-01",
-      "category": "تکمیل ساعت",
-      "title": "گردش کامل گزارش روزانه",
-      "precondition": "حضور و دو تسک واقعی",
+      "category": "Report fill",
+      "title": "Complete daily-report journey",
+      "precondition": "Attendance and two real tasks",
       "steps": [
-        "پیشنهاد، ثبت، اکسل، JSON و rollback"
+        "Suggest, save, export Excel/JSON, rollback"
       ],
-      "expected": "تکمیلی جدا و زمان واقعی ثابت",
+      "expected": "Separate fill; original time unchanged",
       "evidence": [
         "test_daily_work_report_fill_export_and_rollback"
       ]
     },
     {
       "id": "FILL-02",
-      "category": "تکمیل ساعت",
-      "title": "پیش‌نمایش و تأیید لمسی/فرمی",
-      "precondition": "دادهٔ معتبر برای پیشنهاد",
+      "category": "Report fill",
+      "title": "Touch/form preview and confirmation",
+      "precondition": "Valid suggestion inputs",
       "steps": [
-        "بازکردن دیالوگ، پیش‌نمایش، ثبت و بازگردانی"
+        "Open dialog, preview, apply and rollback"
       ],
-      "expected": "ثبت و برگشت تکمیلی بدون تغییر مدت",
+      "expected": "Fill saved/reverted without duration changes",
       "evidence": [
         "E2E-56"
       ]
     },
     {
       "id": "FILL-03",
-      "category": "تکمیل ساعت",
-      "title": "وزن، جلسه و درصد هدف",
-      "precondition": "چند تگ با وزن مختلف",
+      "category": "Report fill",
+      "title": "Weights, meetings and target",
+      "precondition": "Tags with different weights",
       "steps": [
-        "دریافت پیشنهاد با جلسه و وزن صفر"
+        "Request suggestion including meetings/zero weight"
       ],
-      "expected": "رعایت سیاست وزن و سقف کل",
+      "expected": "Weight rules and aggregate cap enforced",
       "evidence": [
         "test_fill_caps_each_task",
         "test_report_can_never_go_above"
@@ -451,13 +451,13 @@
     },
     {
       "id": "FILL-04",
-      "category": "تکمیل ساعت",
-      "title": "حضور نامعتبر و جمعه",
-      "precondition": "بدون حضور یا حضور مشکوک",
+      "category": "Report fill",
+      "title": "Invalid attendance and Friday",
+      "precondition": "No/suspicious attendance",
       "steps": [
-        "درخواست پیشنهاد"
+        "Request suggestion"
       ],
-      "expected": "بدون پیشنهاد و همراه هشدار",
+      "expected": "No suggestion; warning present",
       "evidence": [
         "test_no_presence_means_no_suggestion",
         "test_presence_over_eleven_hours",
@@ -466,65 +466,65 @@
     },
     {
       "id": "FILL-05",
-      "category": "تراکنش",
-      "title": "خطا وسط ثبت چند تسک",
-      "precondition": "یک تسک معتبر و یک شناسه نامعتبر",
+      "category": "Transactions",
+      "title": "Failure during multi-task save",
+      "precondition": "Valid task and invalid ID",
       "steps": [
-        "ارسال batch تکمیلی"
+        "Submit fill batch"
       ],
-      "expected": "rollback کامل، بدون ثبت جزئی",
+      "expected": "Full rollback; no partial save",
       "evidence": [
         "test_fill_batch_is_atomic"
       ]
     },
     {
       "id": "FILL-06",
-      "category": "مرزی",
-      "title": "سقف تسک شش‌دقیقه‌ای",
-      "precondition": "تسک ۶ دقیقه و نیاز زیاد",
+      "category": "Boundaries",
+      "title": "Six-minute task cap",
+      "precondition": "Six-minute task and large deficit",
       "steps": [
-        "پیشنهاد تکمیلی"
+        "Request fill suggestion"
       ],
-      "expected": "تکمیلی حداکثر ۳ دقیقه؛ فعلاً ۵ دقیقه برمی‌گردد",
+      "expected": "At most three minutes; historical result was five",
       "evidence": [
         "test_fill_suggestion_respects_cap_for_short_tasks"
       ]
     },
     {
       "id": "FILL-07",
-      "category": "مرزی",
-      "title": "گردکردن و سقف مجموع",
-      "precondition": "دو تسک ۶۰ دقیقه و فاصله ۸ دقیقه",
+      "category": "Boundaries",
+      "title": "Rounding and aggregate cap",
+      "precondition": "Two 60-minute tasks, eight-minute gap",
       "steps": [
-        "پیشنهاد تکمیلی"
+        "Request fill suggestion"
       ],
-      "expected": "جمع از ۹ دقیقه بیشتر نشود؛ فعلاً ۱۰ می‌شود",
+      "expected": "Total at most nine minutes; historical result was ten",
       "evidence": [
         "test_fill_suggestion_does_not_exceed_total"
       ]
     },
     {
       "id": "FILL-08",
-      "category": "اعتبارسنجی",
-      "title": "نوع نامعتبر تاریخ",
-      "precondition": "عدد، آرایه و شیء به‌عنوان date",
+      "category": "Validation",
+      "title": "Invalid date type",
+      "precondition": "Numeric/array/object date",
       "steps": [
-        "ارسال POST fill"
+        "POST fill"
       ],
-      "expected": "۴۰۰ به‌جای ۵۰۰",
+      "expected": "400 instead of 500",
       "evidence": [
         "test_fill_rejects_invalid_date_types"
       ]
     },
     {
       "id": "REPORT-01",
-      "category": "گزارش",
-      "title": "تایم‌شیت شنبه تا جمعه",
-      "precondition": "تاریخچهٔ چند هفته",
+      "category": "Reports",
+      "title": "Saturday–Friday timesheet",
+      "precondition": "Several weeks of history",
       "steps": [
-        "انتخاب روزهای مختلف و جابه‌جایی هفته"
+        "Select days and navigate weeks"
       ],
-      "expected": "ردیف و جمع‌ها مطابق هفته ایرانی",
+      "expected": "Rows/totals follow Iranian week",
       "evidence": [
         "test_week_runs_saturday_to_friday",
         "test_cells_rows_and_totals"
@@ -532,13 +532,13 @@
     },
     {
       "id": "REPORT-02",
-      "category": "گزارش",
-      "title": "مقایسهٔ دوره‌های هم‌اندازه",
-      "precondition": "داده دو ماه/سال",
+      "category": "Reports",
+      "title": "Compare equal-length periods",
+      "precondition": "Two months/years of data",
       "steps": [
-        "داشبورد ماه جاری و سال جاری"
+        "View current-month/current-year dashboard"
       ],
-      "expected": "مقایسه تا همان روز دوره قبل",
+      "expected": "Compare through the corresponding prior-period day",
       "evidence": [
         "test_running_month_is_compared",
         "test_running_and_finished_year"
@@ -546,26 +546,26 @@
     },
     {
       "id": "REPORT-03",
-      "category": "گزارش",
-      "title": "تقویم شمسی و مناسبت‌ها",
-      "precondition": "ماه معتبر و نامعتبر",
+      "category": "Reports",
+      "title": "Jalali calendar/events",
+      "precondition": "Valid and invalid months",
       "steps": [
-        "نمایش ماه و رفتن به روز"
+        "Display month and select day"
       ],
-      "expected": "روزها، مناسبت و تعداد کار درست",
+      "expected": "Correct days/events/task counts",
       "evidence": [
         "test_calendar_month"
       ]
     },
     {
       "id": "REPORT-04",
-      "category": "گزارش",
-      "title": "اکسل خالی و فیلتر سال",
-      "precondition": "دادهٔ چند سال و حساب خالی",
+      "category": "Reports",
+      "title": "Empty Excel and year filter",
+      "precondition": "Several years and an empty account",
       "steps": [
-        "دانلود Excel"
+        "Download Excel"
       ],
-      "expected": "فایل معتبر، ستون‌ها و فیلتر درست",
+      "expected": "Valid file/columns/filter",
       "evidence": [
         "test_export_empty_still_returns",
         "test_export_sheets_headers"
@@ -573,13 +573,13 @@
     },
     {
       "id": "REPORT-05",
-      "category": "جداسازی",
-      "title": "خروجی شخصی",
-      "precondition": "دو کاربر با داده",
+      "category": "Isolation",
+      "title": "Private exports",
+      "precondition": "Two populated accounts",
       "steps": [
-        "دانلود Excel و JSON توسط کاربر دوم"
+        "Second user downloads Excel/JSON"
       ],
-      "expected": "فقط داده و کاتالوگ خودش",
+      "expected": "Only own records and catalog",
       "evidence": [
         "test_export_and_backup_hold_only_own_data",
         "test_catalog_is_in_personal_backup"
@@ -587,13 +587,13 @@
     },
     {
       "id": "IMPORT-01",
-      "category": "انتقال",
-      "title": "خواندن امن کپی دسکتاپ",
-      "precondition": "SQLite ساختگی و حساب خالی",
+      "category": "Migration",
+      "title": "Read desktop copy safely",
+      "precondition": "Synthetic SQLite, empty account",
       "steps": [
-        "import معمولی و dry-run"
+        "Import normally and dry-run"
       ],
-      "expected": "حفظ اعداد و عدم تغییر مبدأ",
+      "expected": "Every value preserved; source unchanged",
       "evidence": [
         "test_full_import_keeps_every_number",
         "test_source_file_is_not_modified",
@@ -602,13 +602,13 @@
     },
     {
       "id": "IMPORT-02",
-      "category": "انتقال",
-      "title": "عدم تطابق و حساب غیرخالی",
-      "precondition": "ورودی نامعتبر/حساب دارای داده",
+      "category": "Migration",
+      "title": "Mismatch/nonempty account",
+      "precondition": "Invalid source or populated destination",
       "steps": [
-        "تلاش import و تزریق اختلاف"
+        "Attempt import and inject mismatch"
       ],
-      "expected": "rollback و رد انتقال",
+      "expected": "Rollback; migration refused",
       "evidence": [
         "test_a_mismatch_rolls_everything_back",
         "test_refuses_a_non_empty_account"
@@ -616,91 +616,91 @@
     },
     {
       "id": "IMPORT-03",
-      "category": "مایگریشن",
-      "title": "ارتقای 0001 به 0002",
-      "precondition": "دادهٔ مصنوعی مشترک قدیمی",
+      "category": "Schema migration",
+      "title": "Upgrade 0001 to 0002",
+      "precondition": "Synthetic shared legacy data",
       "steps": [
-        "اعمال مایگریشن در schema جدا"
+        "Migrate in separate schema"
       ],
-      "expected": "حفظ مدت، حضور، آرشیو و جداسازی مالک",
+      "expected": "Duration, attendance, archive and ownership preserved",
       "evidence": [
         "test_private_catalog_migration_preserves"
       ]
     },
     {
       "id": "CONC-01",
-      "category": "هم‌زمانی",
-      "title": "شروع موازی یک حساب",
-      "precondition": "شش کلاینت با یک سشن",
+      "category": "Concurrency",
+      "title": "Parallel starts for one user",
+      "precondition": "Six clients sharing a session",
       "steps": [
-        "شش درخواست شروع هم‌زمان"
+        "Six simultaneous starts"
       ],
-      "expected": "فقط یک تسک زنده",
+      "expected": "Exactly one running task",
       "evidence": [
         "test_parallel_start_allows_exactly_one"
       ]
     },
     {
       "id": "CONC-02",
-      "category": "هم‌زمانی",
-      "title": "پایان موازی",
-      "precondition": "یک تسک زنده",
+      "category": "Concurrency",
+      "title": "Parallel stops",
+      "precondition": "Running task",
       "steps": [
-        "پنج درخواست پایان"
+        "Five finish requests"
       ],
-      "expected": "همه موفق، زمان یکسان، یک سگمنت بسته",
+      "expected": "All succeed; identical time; one closed segment",
       "evidence": [
         "test_parallel_stop_is_idempotent"
       ]
     },
     {
       "id": "CONC-03",
-      "category": "هم‌زمانی",
-      "title": "ساخت هم‌نام موازی",
-      "precondition": "پنج کلاینت یک حساب",
+      "category": "Concurrency",
+      "title": "Parallel same-name creation",
+      "precondition": "Five clients for one account",
       "steps": [
-        "پنج ساخت پروژه هم‌نام"
+        "Five same-name project creates"
       ],
-      "expected": "یک ۲۰۱ و چهار ۴۰۹",
+      "expected": "One 201, four 409 responses",
       "evidence": [
         "test_parallel_catalog_creation"
       ]
     },
     {
       "id": "CONC-04",
-      "category": "هم‌زمانی",
-      "title": "کار موازی دو نفر",
-      "precondition": "دو حساب مستقل",
+      "category": "Concurrency",
+      "title": "Two users work concurrently",
+      "precondition": "Independent accounts",
       "steps": [
-        "شروع هم‌زمان هر دو"
+        "Start both simultaneously"
       ],
-      "expected": "دو موفقیت و جداسازی داده",
+      "expected": "Both succeed; data isolated",
       "evidence": [
         "test_parallel_users_do_not_block"
       ]
     },
     {
       "id": "UI-01",
-      "category": "فرانت",
-      "title": "اعداد فارسی و ساعت",
-      "precondition": "ورودی لاتین، فارسی و عربی",
+      "category": "Frontend",
+      "title": "Persian digits and clocks",
+      "precondition": "Latin/Persian/Arabic input",
       "steps": [
-        "تبدیل و parse ساعت و مدت"
+        "Convert/parse clocks and durations"
       ],
-      "expected": "خروجی معتبر و رد ساعت نامعتبر",
+      "expected": "Correct output; invalid clocks rejected",
       "evidence": [
         "FRONTEND-UNIT"
       ]
     },
     {
       "id": "UI-02",
-      "category": "امنیت مرورگر",
-      "title": "عنوان شبیه SQL و HTML",
-      "precondition": "کاربر واردشده",
+      "category": "Browser security",
+      "title": "SQL/HTML-looking title",
+      "precondition": "Authenticated user",
       "steps": [
-        "ثبت متن حاوی SQL و img/onerror"
+        "Save SQL and img/onerror text"
       ],
-      "expected": "متن عادی، عدم اجرای کد",
+      "expected": "Literal text; no code execution",
       "evidence": [
         "E2E-07",
         "test_sql_and_html_looking_titles"
@@ -708,65 +708,65 @@
     },
     {
       "id": "UI-03",
-      "category": "تاب‌آوری",
-      "title": "قطع شبکه هنگام ارسال",
-      "precondition": "فرم پرشده",
+      "category": "Resilience",
+      "title": "Disconnect during submission",
+      "precondition": "Filled form",
       "steps": [
-        "قطع شبکه، ارسال، اتصال و ارسال دوباره"
+        "Disconnect, submit, reconnect, retry"
       ],
-      "expected": "پیام خطا و حفظ فرم و ثبت یک‌باره",
+      "expected": "Error shown; draft retained; one record",
       "evidence": [
         "E2E-09"
       ]
     },
     {
       "id": "UI-04",
-      "category": "واکنش‌گرا",
-      "title": "همهٔ صفحه‌ها در سه عرض",
-      "precondition": "کاربر دارای داده",
+      "category": "Responsive",
+      "title": "All pages at three widths",
+      "precondition": "User with data",
       "steps": [
-        "بازکردن ۹ صفحه در ۳۶۰، ۷۶۸ و ۱۲۸۰"
+        "Open nine pages at 360/768/1280"
       ],
-      "expected": "بدون اسکرول افقی و با RTL",
+      "expected": "RTL; no page-wide horizontal scroll",
       "evidence": [
         "RESPONSIVE"
       ]
     },
     {
       "id": "UI-05",
-      "category": "لمس",
-      "title": "چرخهٔ تسک با لمس",
-      "precondition": "context موبایل با hasTouch",
+      "category": "Touch",
+      "title": "Task lifecycle by touch",
+      "precondition": "Mobile hasTouch context",
       "steps": [
-        "شروع، مکث، ادامه و پایان با tap"
+        "Tap start/pause/resume/finish"
       ],
-      "expected": "عملیات موفق",
+      "expected": "Actions succeed",
       "evidence": [
         "E2E-53"
       ]
     },
     {
       "id": "UI-06",
-      "category": "زمان",
-      "title": "مرورگر در لندن و سرور تهران",
-      "precondition": "timezone مرورگر متفاوت",
+      "category": "Time",
+      "title": "London browser and Tehran server",
+      "precondition": "Different browser timezone",
       "steps": [
-        "مشاهده ساعت امروز"
+        "View today's clock"
       ],
-      "expected": "ساعت UI با سرور تهران منطبق",
+      "expected": "UI matches Tehran server",
       "evidence": [
         "E2E-54"
       ]
     },
     {
       "id": "UI-07",
-      "category": "ناوبری",
-      "title": "بیشتر و گزارش در موبایل",
-      "precondition": "عرض ۳۶۰",
+      "category": "Navigation",
+      "title": "Mobile More and reports",
+      "precondition": "360px viewport",
       "steps": [
-        "لمس گزارش و سپس مدیریت از بیشتر"
+        "Tap report, then Management under More"
       ],
-      "expected": "مسیر درست",
+      "expected": "Correct routes",
       "evidence": [
         "E2E-50"
       ]
@@ -774,12 +774,12 @@
     {
       "id": "OPS-01",
       "category": "Docker",
-      "title": "راه‌اندازی واقعی استک",
-      "precondition": "Compose QA مستقل",
+      "title": "Real stack startup",
+      "precondition": "Isolated QA Compose",
       "steps": [
-        "بیلد، migration startup و درخواست از Caddy"
+        "Build, migrate at startup, request through Caddy"
       ],
-      "expected": "وب و API و PostgreSQL در دسترس",
+      "expected": "Web/API/PostgreSQL available",
       "evidence": [
         "DOCKER",
         "test_alembic_cli_resolves"
@@ -787,65 +787,65 @@
     },
     {
       "id": "OPS-02",
-      "category": "بازیابی",
-      "title": "dump و restore واقعی",
-      "precondition": "دادهٔ مصنوعی چندجدولی",
+      "category": "Recovery",
+      "title": "Actual dump/restore",
+      "precondition": "Synthetic multi-table data",
       "steps": [
-        "pg_dump، restore به DB تازه، مقایسه fingerprint"
+        "pg_dump, restore into fresh DB, fingerprint"
       ],
-      "expected": "برابری همهٔ ۱۲ جدول",
+      "expected": "All 12 tables equal",
       "evidence": [
         "RECOVERY"
       ]
     },
     {
       "id": "OPS-03",
-      "category": "تاب‌آوری",
-      "title": "ری‌استارت API",
-      "precondition": "سشن و تسک موجود",
+      "category": "Resilience",
+      "title": "API restart",
+      "precondition": "Existing session/tasks",
       "steps": [
-        "restart کانتینر و درخواست با همان کوکی"
+        "Restart container; reuse cookie"
       ],
-      "expected": "حفظ سشن و تسک‌ها",
+      "expected": "Session/tasks preserved",
       "evidence": [
         "RESTART"
       ]
     },
     {
       "id": "OPS-04",
-      "category": "خطایابی بک‌آپ",
-      "title": "شکست تولید dump",
-      "precondition": "docker ساختگی با خروج ۱۷",
+      "category": "Backup fault injection",
+      "title": "Dump producer fails",
+      "precondition": "Fake docker exits 17",
       "steps": [
-        "اجرای backup.sh در کانتینر جدا"
+        "Run backup.sh in isolated container"
       ],
-      "expected": "خروج غیرصفر؛ فعلاً موفقیت کاذب",
+      "expected": "Nonzero exit; historical false success reproduced",
       "evidence": [
         "test_backup_fails_when_database_dump_fails"
       ]
     },
     {
       "id": "OPS-05",
-      "category": "خطایابی بک‌آپ",
-      "title": "شکست رمزگشایی",
-      "precondition": "gpg ساختگی با خروج ۱۹",
+      "category": "Backup fault injection",
+      "title": "Decryption fails",
+      "precondition": "Fake gpg exits 19",
       "steps": [
-        "اجرای restore_test.sh"
+        "Run restore_test.sh"
       ],
-      "expected": "خروج غیرصفر؛ فعلاً موفقیت کاذب",
+      "expected": "Nonzero exit; historical false success reproduced",
       "evidence": [
         "test_restore_fails_when_decryption_fails"
       ]
     },
     {
       "id": "OPS-06",
-      "category": "خطایابی بک‌آپ",
-      "title": "شکست رمزگذاری یا pg_restore",
-      "precondition": "تزریق خطای مقصد pipeline",
+      "category": "Backup fault injection",
+      "title": "Encryption/pg_restore fails",
+      "precondition": "Injected pipeline consumer failure",
       "steps": [
-        "اجرای اسکریپت‌ها"
+        "Run scripts"
       ],
-      "expected": "خروج غیرصفر",
+      "expected": "Nonzero exit",
       "evidence": [
         "test_backup_fails_when_encryption_fails",
         "test_restore_fails_when_database_restore_fails"
@@ -853,39 +853,39 @@
     },
     {
       "id": "PERF-01",
-      "category": "کارایی",
-      "title": "بار چندکاربره",
-      "precondition": "۱۰ کاربر، ۲۸۰۰ تسک، ۲۸ روز",
+      "category": "Performance",
+      "title": "Multi-user load",
+      "precondition": "Ten users, 2,800 tasks, 28 days",
       "steps": [
-        "۴۰۰ درخواست با ۱۰ worker"
+        "400 requests with ten workers"
       ],
-      "expected": "صفر خطا و ثبت p50/p95/p99؛ صرفاً بودجهٔ محلی",
+      "expected": "Zero errors; p50/p95/p99; local budget only",
       "evidence": [
         "LOAD"
       ]
     },
     {
       "id": "SEC-01",
-      "category": "وابستگی‌ها",
-      "title": "ممیزی بسته‌های npm",
-      "precondition": "package-lock جاری",
+      "category": "Dependencies",
+      "title": "npm package audit",
+      "precondition": "Current package-lock",
       "steps": [
-        "npm audit بدون ارتقای خودکار"
+        "npm audit without automatic upgrades"
       ],
-      "expected": "ثبت یافته‌ها و حدود اثرگذاری",
+      "expected": "Record findings and impact limits",
       "evidence": [
         "AUDIT"
       ]
     },
     {
       "id": "ARCH-01",
-      "category": "معماری",
-      "title": "ثابت‌ماندن مرزها و قرارداد",
-      "precondition": "کل سورس",
+      "category": "Architecture",
+      "title": "Stable boundaries and contracts",
+      "precondition": "Complete source",
       "steps": [
-        "تست importها، routeهای بدون SQL و OpenAPI"
+        "Test imports, SQL-free routes, OpenAPI"
       ],
-      "expected": "قرارداد ۵۷ مسیر و جهت وابستگی حفظ شود",
+      "expected": "Original 57-route contract and dependency direction preserved",
       "evidence": [
         "test_dependency_direction",
         "test_http_routes_do_not_execute",
@@ -894,13 +894,13 @@
     },
     {
       "id": "SET-01",
-      "category": "تراکنش",
-      "title": "تنظیم نامعتبر همراه تغییر معتبر",
-      "precondition": "تنظیمات فعلی",
+      "category": "Transactions",
+      "title": "Invalid/valid settings in one request",
+      "precondition": "Existing settings",
       "steps": [
-        "هدف جدید و URL شیت نامعتبر در یک درخواست"
+        "Send new goal and invalid Sheet URL together"
       ],
-      "expected": "۴۰۰ و حفظ تمام تنظیمات قبلی",
+      "expected": "400; all earlier settings preserved",
       "evidence": [
         "test_invalid_settings_change_is_atomic"
       ]
@@ -908,14 +908,14 @@
     {
       "id": "CLI-01",
       "category": "CLI",
-      "title": "ساخت حساب و تغییر رمز با CLI",
-      "precondition": "دیتابیس تست",
+      "title": "Create account/reset password",
+      "precondition": "Test database",
       "steps": [
-        "ساخت حساب CLI",
-        "ورود با رمز اول",
-        "reset-password و ورود با رمز جدید"
+        "Create with CLI",
+        "Login with first password",
+        "Reset password and login with new one"
       ],
-      "expected": "حساب و نقش درست؛ نشست قدیمی لغو شود",
+      "expected": "Correct account/role; old session revoked",
       "evidence": [
         "test_cli_create_and_reset_account",
         "test_cli_duplicate_user_does_not_overwrite"
@@ -924,27 +924,27 @@
     {
       "id": "CLI-02",
       "category": "CLI",
-      "title": "import کاتالوگ برای حساب مشخص",
-      "precondition": "دو حساب مستقل و JSON ساختگی",
+      "title": "Import catalog for one account",
+      "precondition": "Two accounts, synthetic JSON",
       "steps": [
-        "دو بار import-catalog با --user alice"
+        "Run import-catalog twice with --user alice"
       ],
-      "expected": "بدون تکرار و بدون دیده‌شدن توسط bob",
+      "expected": "No duplicates; hidden from Bob",
       "evidence": [
         "test_cli_catalog_import_is_private"
       ]
     },
     {
       "id": "OPS-07",
-      "category": "رمزگذاری",
-      "title": "رمزگذاری AES256 و رمز اشتباه",
-      "precondition": "dump مصنوعی QA و keyring موقت",
+      "category": "Encryption",
+      "title": "AES256 and wrong password",
+      "precondition": "Synthetic QA dump, temporary keyring",
       "steps": [
-        "رمزگذاری",
-        "رمزگشایی و مقایسه SHA256",
-        "تلاش با رمز غلط"
+        "Encrypt",
+        "Decrypt and compare SHA256",
+        "Attempt wrong password"
       ],
-      "expected": "برابری فایل و رد رمز غلط",
+      "expected": "Identical file; wrong password rejected",
       "evidence": [
         "CRYPTO"
       ]

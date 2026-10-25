@@ -1,634 +1,636 @@
-# سناریوهای استفاده و نتیجهٔ اجرا
-
-| شناسه | حوزه | سناریو | نتیجه |
-|---|---|---|---|
-| AUTH-01 | ورود | ورود موفق و کوکی امن | موفق |
-| AUTH-02 | ورود | حروف بزرگ و فاصله در نام کاربری | موفق |
-| AUTH-03 | امنیت | کاربر ناموجود و رمز غلط | موفق |
-| AUTH-04 | امنیت | قفل سه تلاش و پایان قفل | موفق |
-| AUTH-05 | امنیت | سقف شکست یک IP | موفق |
-| AUTH-06 | امنیت | درخواست ناشناس و CSRF | موفق |
-| AUTH-07 | نشست | بازکردن مجدد مرورگر | موفق |
-| AUTH-08 | نشست | تمدید سشن فعال | موفق |
-| AUTH-09 | نشست | انقضا و لغو سشن | موفق |
-| AUTH-10 | نشست | تغییر رمز و غیرفعال‌سازی | موفق |
-| CAT-01 | کاتالوگ | مدیریت شخصی از UI | موفق |
-| CAT-02 | مدیریت | ساخت حساب توسط ادمین | موفق |
-| CAT-03 | کاتالوگ | نام یکسان در دو حساب | موفق |
-| CAT-04 | جداسازی | حدس شناسهٔ کاتالوگ دیگران | موفق |
-| CAT-05 | جداسازی | اتصال تگ/نوع/استوری خارجی | موفق |
-| CAT-06 | کاتالوگ | حذف مورد استفاده‌شده | موفق |
-| CAT-07 | کاتالوگ | ورود تکراری JSON | موفق |
-| TASK-01 | تسک | چرخهٔ زنده | موفق |
-| TASK-02 | تسک | ثبت دستی و نیمه‌شب | موفق |
-| TASK-03 | تسک | کلیک پایان دوباره و reopen | موفق |
-| TASK-04 | تسک | ویرایش عنوان بدون تغییر زمان | موفق |
-| TASK-05 | تسک | ویرایش ساعت همراه مکث و تعدیل | موفق |
-| TASK-06 | تسک | هم‌پوشانی واقعی و فاصلهٔ مکث | موفق |
-| TASK-07 | تسک | حذف قابل ردگیری | موفق |
-| PLAN-01 | برنامه‌ریزی | تبدیل برنامه به کار زنده | موفق |
-| TAG-01 | تگ و بودجه | بودجه و محدودهٔ تاریخ | موفق |
-| TAG-02 | تگ و بودجه | ادغام و تغییر نام | موفق |
-| PRES-01 | حضور | ورود، خروج موقت و پایان | موفق |
-| PRES-02 | حضور | یادآوری ورود ثبت‌نشده | موفق |
-| PRES-03 | حضور | ویرایش و هم‌پوشانی بازه | موفق |
-| FILL-01 | تکمیل ساعت | گردش کامل گزارش روزانه | موفق |
-| FILL-02 | تکمیل ساعت | پیش‌نمایش و تأیید لمسی/فرمی | موفق |
-| FILL-03 | تکمیل ساعت | وزن، جلسه و درصد هدف | موفق |
-| FILL-04 | تکمیل ساعت | حضور نامعتبر و جمعه | موفق |
-| FILL-05 | تراکنش | خطا وسط ثبت چند تسک | موفق |
-| FILL-06 | مرزی | سقف تسک شش‌دقیقه‌ای | ایراد باز |
-| FILL-07 | مرزی | گردکردن و سقف مجموع | ایراد باز |
-| FILL-08 | اعتبارسنجی | نوع نامعتبر تاریخ | ایراد باز |
-| REPORT-01 | گزارش | تایم‌شیت شنبه تا جمعه | موفق |
-| REPORT-02 | گزارش | مقایسهٔ دوره‌های هم‌اندازه | موفق |
-| REPORT-03 | گزارش | تقویم شمسی و مناسبت‌ها | موفق |
-| REPORT-04 | گزارش | اکسل خالی و فیلتر سال | موفق |
-| REPORT-05 | جداسازی | خروجی شخصی | موفق |
-| IMPORT-01 | انتقال | خواندن امن کپی دسکتاپ | موفق |
-| IMPORT-02 | انتقال | عدم تطابق و حساب غیرخالی | موفق |
-| IMPORT-03 | مایگریشن | ارتقای 0001 به 0002 | موفق |
-| CONC-01 | هم‌زمانی | شروع موازی یک حساب | موفق |
-| CONC-02 | هم‌زمانی | پایان موازی | موفق |
-| CONC-03 | هم‌زمانی | ساخت هم‌نام موازی | موفق |
-| CONC-04 | هم‌زمانی | کار موازی دو نفر | موفق |
-| UI-01 | فرانت | اعداد فارسی و ساعت | موفق |
-| UI-02 | امنیت مرورگر | عنوان شبیه SQL و HTML | موفق |
-| UI-03 | تاب‌آوری | قطع شبکه هنگام ارسال | موفق |
-| UI-04 | واکنش‌گرا | همهٔ صفحه‌ها در سه عرض | موفق |
-| UI-05 | لمس | چرخهٔ تسک با لمس | موفق |
-| UI-06 | زمان | مرورگر در لندن و سرور تهران | موفق |
-| UI-07 | ناوبری | بیشتر و گزارش در موبایل | موفق |
-| OPS-01 | Docker | راه‌اندازی واقعی استک | موفق |
-| OPS-02 | بازیابی | dump و restore واقعی | موفق |
-| OPS-03 | تاب‌آوری | ری‌استارت API | موفق |
-| OPS-04 | خطایابی بک‌آپ | شکست تولید dump | ایراد باز |
-| OPS-05 | خطایابی بک‌آپ | شکست رمزگشایی | ایراد باز |
-| OPS-06 | خطایابی بک‌آپ | شکست رمزگذاری یا pg_restore | موفق |
-| PERF-01 | کارایی | بار چندکاربره | نیاز بررسی |
-| SEC-01 | وابستگی‌ها | ممیزی بسته‌های npm | یافتهٔ ممیزی |
-| ARCH-01 | معماری | ثابت‌ماندن مرزها و قرارداد | موفق |
-| SET-01 | تراکنش | تنظیم نامعتبر همراه تغییر معتبر | موفق |
-| CLI-01 | CLI | ساخت حساب و تغییر رمز با CLI | موفق |
-| CLI-02 | CLI | import کاتالوگ برای حساب مشخص | موفق |
-| OPS-07 | رمزگذاری | رمزگذاری AES256 و رمز اشتباه | موفق |
-
-## AUTH-01 — ورود موفق و کوکی امن
-
-- پیش‌شرط: حساب فعال ساخته‌شده توسط ادمین
-- مراحل: درج نام کاربری و رمز درست و ارسال فرم
-- انتظار: بازشدن امروز و کوکی HttpOnly با انقضا
-- نتیجه: موفق
-- شواهد: E2E-01, test_login_logout_and_cookie_flags
-
-## AUTH-02 — حروف بزرگ و فاصله در نام کاربری
-
-- پیش‌شرط: حساب فعال
-- مراحل: ورود با نام دارای فاصله و حروف بزرگ
-- انتظار: ورود همان حساب
-- نتیجه: موفق
-- شواهد: test_username_is_case_insensitive
-
-## AUTH-03 — کاربر ناموجود و رمز غلط
-
-- پیش‌شرط: بدون ورود
-- مراحل: ارسال رمز غلط و سپس نام ناموجود
-- انتظار: ۴۰۱ با پیام یکسان
-- نتیجه: موفق
-- شواهد: test_wrong_password_and_unknown_user
-
-## AUTH-04 — قفل سه تلاش و پایان قفل
-
-- پیش‌شرط: حساب فعال
-- مراحل: سه رمز غلط، رمز درست، گذشت زمان
-- انتظار: ۴۲۹ و Retry-After و سپس ورود مجدد
-- نتیجه: موفق
-- شواهد: test_lockout_after_three_failures
+# Usage scenarios and recorded results
+
+> Historical initial QA matrix. Recorded open defects describe that run; subsequent fixes/current acceptance are in [RELEASE_RESULTS.fa.md](RELEASE_RESULTS.fa.md).
+
+| ID | Area | Scenario | Result |
+| --- | --- | --- | --- |
+| AUTH-01 | Authentication | Successful login and secure cookie | Passed |
+| AUTH-02 | Authentication | Username case and whitespace | Passed |
+| AUTH-03 | Security | Unknown user and wrong password | Passed |
+| AUTH-04 | Security | Three-attempt lock and expiry | Passed |
+| AUTH-05 | Security | Per-IP failure cap | Passed |
+| AUTH-06 | Security | Anonymous requests and CSRF | Passed |
+| AUTH-07 | Sessions | Reopen the browser | Passed |
+| AUTH-08 | Sessions | Active-session renewal | Passed |
+| AUTH-09 | Sessions | Expiry and revocation | Passed |
+| AUTH-10 | Sessions | Password change and deactivation | Passed |
+| CAT-01 | Catalog | Private management through UI | Passed |
+| CAT-02 | Administration | Administrator creates an account | Passed |
+| CAT-03 | Catalog | Identical names in two accounts | Passed |
+| CAT-04 | Isolation | Guess another user's catalog ID | Passed |
+| CAT-05 | Isolation | Attach foreign tag/type/story | Passed |
+| CAT-06 | Catalog | Delete a referenced item | Passed |
+| CAT-07 | Catalog | Repeated JSON import | Passed |
+| TASK-01 | Tasks | Live lifecycle | Passed |
+| TASK-02 | Tasks | Manual entry across midnight | Passed |
+| TASK-03 | Tasks | Repeated finish and reopen | Passed |
+| TASK-04 | Tasks | Edit title without changing time | Passed |
+| TASK-05 | Tasks | Edit clocks with pauses/adjustments | Passed |
+| TASK-06 | Tasks | Actual overlap and pause gaps | Passed |
+| TASK-07 | Tasks | Auditable deletion | Passed |
+| PLAN-01 | Planning | Start planned work | Passed |
+| TAG-01 | Tags and budgets | Budget and date scope | Passed |
+| TAG-02 | Tags and budgets | Merge and rename | Passed |
+| PRES-01 | Attendance | Check-in, temporary exit and finish | Passed |
+| PRES-02 | Attendance | Missing check-in reminder | Passed |
+| PRES-03 | Attendance | Edit intervals and overlap | Passed |
+| FILL-01 | Report fill | Complete daily-report journey | Passed |
+| FILL-02 | Report fill | Touch/form preview and confirmation | Passed |
+| FILL-03 | Report fill | Weights, meetings and target | Passed |
+| FILL-04 | Report fill | Invalid attendance and Friday | Passed |
+| FILL-05 | Transactions | Failure during multi-task save | Passed |
+| FILL-06 | Boundaries | Six-minute task cap | Open defect |
+| FILL-07 | Boundaries | Rounding and aggregate cap | Open defect |
+| FILL-08 | Validation | Invalid date type | Open defect |
+| REPORT-01 | Reports | Saturday–Friday timesheet | Passed |
+| REPORT-02 | Reports | Compare equal-length periods | Passed |
+| REPORT-03 | Reports | Jalali calendar/events | Passed |
+| REPORT-04 | Reports | Empty Excel and year filter | Passed |
+| REPORT-05 | Isolation | Private exports | Passed |
+| IMPORT-01 | Migration | Read desktop copy safely | Passed |
+| IMPORT-02 | Migration | Mismatch/nonempty account | Passed |
+| IMPORT-03 | Schema migration | Upgrade 0001 to 0002 | Passed |
+| CONC-01 | Concurrency | Parallel starts for one user | Passed |
+| CONC-02 | Concurrency | Parallel stops | Passed |
+| CONC-03 | Concurrency | Parallel same-name creation | Passed |
+| CONC-04 | Concurrency | Two users work concurrently | Passed |
+| UI-01 | Frontend | Persian digits and clocks | Passed |
+| UI-02 | Browser security | SQL/HTML-looking title | Passed |
+| UI-03 | Resilience | Disconnect during submission | Passed |
+| UI-04 | Responsive | All pages at three widths | Passed |
+| UI-05 | Touch | Task lifecycle by touch | Passed |
+| UI-06 | Time | London browser and Tehran server | Passed |
+| UI-07 | Navigation | Mobile More and reports | Passed |
+| OPS-01 | Docker | Real stack startup | Passed |
+| OPS-02 | Recovery | Actual dump/restore | Passed |
+| OPS-03 | Resilience | API restart | Passed |
+| OPS-04 | Backup fault injection | Dump producer fails | Open defect |
+| OPS-05 | Backup fault injection | Decryption fails | Open defect |
+| OPS-06 | Backup fault injection | Encryption/pg_restore fails | Passed |
+| PERF-01 | Performance | Multi-user load | Needs investigation |
+| SEC-01 | Dependencies | npm package audit | Audit finding |
+| ARCH-01 | Architecture | Stable boundaries and contracts | Passed |
+| SET-01 | Transactions | Invalid/valid settings in one request | Passed |
+| CLI-01 | CLI | Create account/reset password | Passed |
+| CLI-02 | CLI | Import catalog for one account | Passed |
+| OPS-07 | Encryption | AES256 and wrong password | Passed |
+
+## AUTH-01 — Successful login and secure cookie
+
+- Prerequisite: Active account created by an administrator
+- Steps: Submit the correct username/password
+- Expected: Today opens; expiring HttpOnly cookie
+- Result: Passed
+- Evidence: E2E-01, test_login_logout_and_cookie_flags
+
+## AUTH-02 — Username case and whitespace
+
+- Prerequisite: Active account
+- Steps: Log in with uppercase letters and surrounding spaces
+- Expected: Same account is authenticated
+- Result: Passed
+- Evidence: test_username_is_case_insensitive
+
+## AUTH-03 — Unknown user and wrong password
+
+- Prerequisite: Signed out
+- Steps: Submit wrong password, then nonexistent username
+- Expected: Identical 401 messages
+- Result: Passed
+- Evidence: test_wrong_password_and_unknown_user
+
+## AUTH-04 — Three-attempt lock and expiry
 
-## AUTH-05 — سقف شکست یک IP
+- Prerequisite: Active account
+- Steps: Three wrong passwords, correct password, then advance time
+- Expected: 429 with Retry-After, then successful login
+- Result: Passed
+- Evidence: test_lockout_after_three_failures
 
-- پیش‌شرط: چند نام کاربری از یک IP
-- مراحل: ده شکست و یک تلاش دیگر
-- انتظار: ۴۲۹
-- نتیجه: موفق
-- شواهد: test_ip_lockout_after_ten_failures
+## AUTH-05 — Per-IP failure cap
 
-## AUTH-06 — درخواست ناشناس و CSRF
+- Prerequisite: Several usernames from one IP
+- Steps: Ten failures, then another attempt
+- Expected: 429
+- Result: Passed
+- Evidence: test_ip_lockout_after_ten_failures
 
-- پیش‌شرط: بدون سشن یا بدون هدر
-- مراحل: خواندن خصوصی و نوشتن بدون هدر
-- انتظار: ۴۰۱ و ۴۰۳
-- نتیجه: موفق
-- شواهد: test_anonymous_cannot_use_the_api, test_csrf_header_required
+## AUTH-06 — Anonymous requests and CSRF
 
-## AUTH-07 — بازکردن مجدد مرورگر
+- Prerequisite: No session or missing header
+- Steps: Read private data and write without the required header
+- Expected: 401 and 403
+- Result: Passed
+- Evidence: test_anonymous_cannot_use_the_api, test_csrf_header_required
 
-- پیش‌شرط: کوکی معتبر
-- مراحل: بستن Chrome تست و بازکردن همان پروفایل
-- انتظار: ورود حفظ شود
-- نتیجه: موفق
-- شواهد: E2E-11
+## AUTH-07 — Reopen the browser
 
-## AUTH-08 — تمدید سشن فعال
+- Prerequisite: Valid cookie
+- Steps: Close test Chrome and reopen the same profile
+- Expected: Authentication persists
+- Result: Passed
+- Evidence: E2E-11
 
-- پیش‌شرط: سشن قدیمی ولی معتبر
-- مراحل: استفاده پس از ۲۰ روز و عبور از انقضای اولیه
-- انتظار: تمدید ۹۰روزه
-- نتیجه: موفق
-- شواهد: test_session_is_renewed_after_activity
+## AUTH-08 — Active-session renewal
 
-## AUTH-09 — انقضا و لغو سشن
+- Prerequisite: Old but valid session
+- Steps: Use after 20 days and beyond original expiry
+- Expected: Renew for 90 days
+- Result: Passed
+- Evidence: test_session_is_renewed_after_activity
 
-- پیش‌شرط: توکن قدیمی
-- مراحل: خروج، ارسال دوباره توکن و آزمایش منقضی
-- انتظار: ۴۰۱ و عدم احیا
-- نتیجه: موفق
-- شواهد: E2E-51, test_expired_session_is_rejected
+## AUTH-09 — Expiry and revocation
 
-## AUTH-10 — تغییر رمز و غیرفعال‌سازی
+- Prerequisite: Old token
+- Steps: Logout, replay token, and test expiration
+- Expected: 401 without session resurrection
+- Result: Passed
+- Evidence: E2E-51, test_expired_session_is_rejected
 
-- پیش‌شرط: دو نشست از یک حساب
-- مراحل: تغییر رمز یا غیرفعال‌کردن حساب
-- انتظار: ابطال نشست‌های مربوط
-- نتیجه: موفق
-- شواهد: test_change_password_drops_other_sessions, test_inactive_user_cannot_log_in
+## AUTH-10 — Password change and deactivation
 
-## CAT-01 — مدیریت شخصی از UI
+- Prerequisite: Two sessions for one account
+- Steps: Change password or deactivate account
+- Expected: Affected sessions revoked
+- Result: Passed
+- Evidence: test_change_password_drops_other_sessions, test_inactive_user_cannot_log_in
 
-- پیش‌شرط: کاربر عادی
-- مراحل: ساخت نوع گزارش، پروژه و استوری
-- انتظار: ثبت برای همان حساب و نبود مدیریت کاربران
-- نتیجه: موفق
-- شواهد: E2E-02
+## CAT-01 — Private management through UI
 
-## CAT-02 — ساخت حساب توسط ادمین
+- Prerequisite: Ordinary user
+- Steps: Create report type, project and story
+- Expected: Owned by that account; no account-management access
+- Result: Passed
+- Evidence: E2E-02
 
-- پیش‌شرط: حساب ادمین
-- مراحل: ساخت حساب جدید از صفحه مدیریت
-- انتظار: حساب ساخته شود و کاتالوگ دیگران دیده نشود
-- نتیجه: موفق
-- شواهد: E2E-10, test_admin_only_routes
+## CAT-02 — Administrator creates an account
 
-## CAT-03 — نام یکسان در دو حساب
+- Prerequisite: Administrator account
+- Steps: Create an account in Management
+- Expected: Account created; others' catalogs remain hidden
+- Result: Passed
+- Evidence: E2E-10, test_admin_only_routes
 
-- پیش‌شرط: دو کاربر
-- مراحل: ساخت موارد هم‌نام و تکرار در یک حساب
-- انتظار: شناسه‌های مستقل و تکرار داخلی ۴۰۹
-- نتیجه: موفق
-- شواهد: test_duplicate_names_are_private
+## CAT-03 — Identical names in two accounts
 
-## CAT-04 — حدس شناسهٔ کاتالوگ دیگران
+- Prerequisite: Two users
+- Steps: Create same-named records, then duplicate within one account
+- Expected: Independent IDs; own duplicate returns 409
+- Result: Passed
+- Evidence: test_duplicate_names_are_private
 
-- پیش‌شرط: شناسه از حساب دیگر
-- مراحل: ویرایش و حذف حتی با ادمین
-- انتظار: ۴۰۴ و حفظ دادهٔ مالک
-- نتیجه: موفق
-- شواهد: test_foreign_ids_are_404_even_for_admin
+## CAT-04 — Guess another user's catalog ID
 
-## CAT-05 — اتصال تگ/نوع/استوری خارجی
+- Prerequisite: Foreign account identifier
+- Steps: Edit/delete, including as administrator
+- Expected: 404; owner's data preserved
+- Result: Passed
+- Evidence: test_foreign_ids_are_404_even_for_admin
 
-- پیش‌شرط: دادهٔ متعلق به کاربر
-- مراحل: ارسال شناسهٔ خارجی از API و SQL تست
-- انتظار: رد API و قید دیتابیس
-- نتیجه: موفق
-- شواهد: test_foreign_catalog_cannot_be_attached, test_database_rejects_cross_account
+## CAT-05 — Attach foreign tag/type/story
 
-## CAT-06 — حذف مورد استفاده‌شده
+- Prerequisite: User-owned data
+- Steps: Submit a foreign ID through API and test SQL
+- Expected: API rejection and database constraint enforcement
+- Result: Passed
+- Evidence: test_foreign_catalog_cannot_be_attached, test_database_rejects_cross_account
 
-- پیش‌شرط: کاتالوگ متصل به تگ
-- مراحل: حذف نوع گزارش، استوری یا پروژه
-- انتظار: ۴۰۹ و حفظ ارتباط
-- نتیجه: موفق
-- شواهد: test_used_catalog_items_cannot_be_removed
+## CAT-06 — Delete a referenced item
 
-## CAT-07 — ورود تکراری JSON
+- Prerequisite: Catalog linked to a tag
+- Steps: Delete report type, story or project
+- Expected: 409; references retained
+- Result: Passed
+- Evidence: test_used_catalog_items_cannot_be_removed
 
-- پیش‌شرط: کاتالوگ خصوصی
-- مراحل: دو بار import یک JSON
-- انتظار: بدون تکرار و بدون اثر بر دیگران
-- نتیجه: موفق
-- شواهد: test_catalog_import_is_idempotent
+## CAT-07 — Repeated JSON import
 
-## TASK-01 — چرخهٔ زنده
+- Prerequisite: Private catalog
+- Steps: Import the same JSON twice
+- Expected: No duplicates or effects on others
+- Result: Passed
+- Evidence: test_catalog_import_is_idempotent
 
-- پیش‌شرط: کاربر عادی
-- مراحل: شروع، مکث، ادامه و پایان
-- انتظار: تسک done و زمان صحیح
-- نتیجه: موفق
-- شواهد: E2E-04, test_pause_resume_stop_lifecycle
+## TASK-01 — Live lifecycle
 
-## TASK-02 — ثبت دستی و نیمه‌شب
+- Prerequisite: Ordinary user
+- Steps: Start, pause, resume and finish
+- Expected: Done task with correct duration
+- Result: Passed
+- Evidence: E2E-04, test_pause_resume_stop_lifecycle
 
-- پیش‌شرط: بازه بدون هم‌پوشانی
-- مراحل: ثبت ۲۳:۵۰ تا ۰۰:۲۰ و مرزهای ساعت
-- انتظار: مدت ۳۰ دقیقه و رفتار درست مرزها
-- نتیجه: موفق
-- شواهد: test_clock_boundaries, test_create_task_with_end_time
+## TASK-02 — Manual entry across midnight
 
-## TASK-03 — کلیک پایان دوباره و reopen
+- Prerequisite: Nonoverlapping interval
+- Steps: Enter 23:50 to 00:20 and clock boundaries
+- Expected: 30 minutes; correct boundary behavior
+- Result: Passed
+- Evidence: test_clock_boundaries, test_create_task_with_end_time
 
-- پیش‌شرط: تسک پایان‌یافته امروز
-- مراحل: پایان دوباره، ادامهٔ مجدد و پایان
-- انتظار: حفظ زمان قبلی و محاسبهٔ نوبت جدید
-- نتیجه: موفق
-- شواهد: test_double_stop_does_not_change, test_reopen_adds_a_session
+## TASK-03 — Repeated finish and reopen
 
-## TASK-04 — ویرایش عنوان بدون تغییر زمان
+- Prerequisite: Today's completed task
+- Steps: Finish again, reopen, then finish
+- Expected: Preserve earlier time and add the new session
+- Result: Passed
+- Evidence: test_double_stop_does_not_change, test_reopen_adds_a_session
 
-- پیش‌شرط: تسک زنده یا مکث‌شده
-- مراحل: تغییر عنوان و ذخیره
-- انتظار: حفظ مدت و سگمنت
-- نتیجه: موفق
-- شواهد: test_editing_title_of_running_task, test_editing_title_of_paused_task
+## TASK-04 — Edit title without changing time
 
-## TASK-05 — ویرایش ساعت همراه مکث و تعدیل
+- Prerequisite: Running or paused task
+- Steps: Change title and save
+- Expected: Duration and segments preserved
+- Result: Passed
+- Evidence: test_editing_title_of_running_task, test_editing_title_of_paused_task
 
-- پیش‌شرط: چند سگمنت
-- مراحل: ویرایش ساعت‌ها و تعدیل مثبت/منفی
-- انتظار: مکث جزو کار نشود و مدت منفی رد شود
-- نتیجه: موفق
-- شواهد: test_adjusting_a_task_with_pauses, test_cannot_go_negative
+## TASK-05 — Edit clocks with pauses/adjustments
 
-## TASK-06 — هم‌پوشانی واقعی و فاصلهٔ مکث
+- Prerequisite: Multiple segments
+- Steps: Edit clocks and positive/negative adjustment
+- Expected: Paused time excluded; negative duration rejected
+- Result: Passed
+- Evidence: test_adjusting_a_task_with_pauses, test_cannot_go_negative
 
-- پیش‌شرط: دو تسک یک کاربر
-- مراحل: ثبت بازهٔ متداخل و بازه داخل مکث
-- انتظار: رد تداخل و قبول فاصلهٔ آزاد
-- نتیجه: موفق
-- شواهد: test_overlapping_manual_entry_is_refused, test_pauses_leave_room
+## TASK-06 — Actual overlap and pause gaps
 
-## TASK-07 — حذف قابل ردگیری
+- Prerequisite: Two tasks for one user
+- Steps: Submit overlapping interval and interval inside pause
+- Expected: Reject overlap; accept free gap
+- Result: Passed
+- Evidence: test_overlapping_manual_entry_is_refused, test_pauses_leave_room
 
-- پیش‌شرط: تسک دارای سگمنت
-- مراحل: حذف تسک
-- انتظار: ذخیرهٔ snapshot در audit و حذف فعال
-- نتیجه: موفق
-- شواهد: test_delete_task_archives_it
+## TASK-07 — Auditable deletion
 
-## PLAN-01 — تبدیل برنامه به کار زنده
+- Prerequisite: Task with segments
+- Steps: Delete task
+- Expected: Snapshot archived in audit; active task removed
+- Result: Passed
+- Evidence: test_delete_task_archives_it
 
-- پیش‌شرط: برنامه ثبت‌شده
-- مراحل: شروع از UI و پایان تسک
-- انتظار: حذف از برنامه و planned_flag فعال
-- نتیجه: موفق
-- شواهد: E2E-06, test_start_planned_creates_running_task
+## PLAN-01 — Start planned work
 
-## TAG-01 — بودجه و محدودهٔ تاریخ
+- Prerequisite: Saved plan
+- Steps: Start through UI, then finish
+- Expected: Plan removed; planned_flag set
+- Result: Passed
+- Evidence: E2E-06, test_start_planned_creates_running_task
 
-- پیش‌شرط: تگ دارای تاریخچه
-- مراحل: تنظیم بودجه از کل سابقه یا امروز
-- انتظار: محاسبهٔ صرف‌شده مطابق محدوده
-- نتیجه: موفق
-- شواهد: test_budget_counts_all_history, test_from_today_ignores
+## TAG-01 — Budget and date scope
 
-## TAG-02 — ادغام و تغییر نام
+- Prerequisite: Tag with history
+- Steps: Budget all history or from today
+- Expected: Spent time follows selected scope
+- Result: Passed
+- Evidence: test_budget_counts_all_history, test_from_today_ignores
 
-- پیش‌شرط: تسک، برنامه و آرشیو متصل
-- مراحل: تغییر نام و ادغام دو تگ
-- انتظار: حفظ همهٔ تسک‌ها و دقیقه‌ها
-- نتیجه: موفق
-- شواهد: test_merge_never_loses_a_minute, test_merge_moves_tasks
+## TAG-02 — Merge and rename
 
-## PRES-01 — ورود، خروج موقت و پایان
+- Prerequisite: Linked tasks, plans and archive
+- Steps: Rename and merge tags
+- Expected: Every task/minute preserved
+- Result: Passed
+- Evidence: test_merge_never_loses_a_minute, test_merge_moves_tasks
 
-- پیش‌شرط: روز کاری
-- مراحل: ورود، مکث، بازگشت و پایان
-- انتظار: حضور مستقل از تسک و وضعیت درست
-- نتیجه: موفق
-- شواهد: E2E-05, test_check_in_out_back
+## PRES-01 — Check-in, temporary exit and finish
 
-## PRES-02 — یادآوری ورود ثبت‌نشده
+- Prerequisite: Workday
+- Steps: Check in, pause, return and finish
+- Expected: Attendance independent of tasks; correct state
+- Result: Passed
+- Evidence: E2E-05, test_check_in_out_back
 
-- پیش‌شرط: تسک زنده بدون حضور
-- مراحل: خواندن وضعیت حضور
-- انتظار: needs_checkin فعال و بدون ورود خودکار
-- نتیجه: موفق
-- شواهد: test_needs_checkin_reminder, test_there_is_no_automatic
+## PRES-02 — Missing check-in reminder
 
-## PRES-03 — ویرایش و هم‌پوشانی بازه
+- Prerequisite: Running task without attendance
+- Steps: Read attendance state
+- Expected: needs_checkin true; no automatic check-in
+- Result: Passed
+- Evidence: test_needs_checkin_reminder, test_there_is_no_automatic
 
-- پیش‌شرط: حضور ثبت‌شده
-- مراحل: ویرایش، افزودن، حذف و بازهٔ متداخل
-- انتظار: حفظ اعتبار بازه‌ها
-- نتیجه: موفق
-- شواهد: test_edit_add_delete_and_validation
+## PRES-03 — Edit intervals and overlap
 
-## FILL-01 — گردش کامل گزارش روزانه
+- Prerequisite: Saved attendance
+- Steps: Edit/add/delete and submit overlap
+- Expected: Intervals remain valid
+- Result: Passed
+- Evidence: test_edit_add_delete_and_validation
 
-- پیش‌شرط: حضور و دو تسک واقعی
-- مراحل: پیشنهاد، ثبت، اکسل، JSON و rollback
-- انتظار: تکمیلی جدا و زمان واقعی ثابت
-- نتیجه: موفق
-- شواهد: test_daily_work_report_fill_export_and_rollback
+## FILL-01 — Complete daily-report journey
 
-## FILL-02 — پیش‌نمایش و تأیید لمسی/فرمی
+- Prerequisite: Attendance and two real tasks
+- Steps: Suggest, save, export Excel/JSON, rollback
+- Expected: Separate fill; original time unchanged
+- Result: Passed
+- Evidence: test_daily_work_report_fill_export_and_rollback
 
-- پیش‌شرط: دادهٔ معتبر برای پیشنهاد
-- مراحل: بازکردن دیالوگ، پیش‌نمایش، ثبت و بازگردانی
-- انتظار: ثبت و برگشت تکمیلی بدون تغییر مدت
-- نتیجه: موفق
-- شواهد: E2E-56
+## FILL-02 — Touch/form preview and confirmation
 
-## FILL-03 — وزن، جلسه و درصد هدف
+- Prerequisite: Valid suggestion inputs
+- Steps: Open dialog, preview, apply and rollback
+- Expected: Fill saved/reverted without duration changes
+- Result: Passed
+- Evidence: E2E-56
 
-- پیش‌شرط: چند تگ با وزن مختلف
-- مراحل: دریافت پیشنهاد با جلسه و وزن صفر
-- انتظار: رعایت سیاست وزن و سقف کل
-- نتیجه: موفق
-- شواهد: test_fill_caps_each_task, test_report_can_never_go_above
+## FILL-03 — Weights, meetings and target
 
-## FILL-04 — حضور نامعتبر و جمعه
+- Prerequisite: Tags with different weights
+- Steps: Request suggestion including meetings/zero weight
+- Expected: Weight rules and aggregate cap enforced
+- Result: Passed
+- Evidence: test_fill_caps_each_task, test_report_can_never_go_above
 
-- پیش‌شرط: بدون حضور یا حضور مشکوک
-- مراحل: درخواست پیشنهاد
-- انتظار: بدون پیشنهاد و همراه هشدار
-- نتیجه: موفق
-- شواهد: test_no_presence_means_no_suggestion, test_presence_over_eleven_hours, test_friday_is_never
+## FILL-04 — Invalid attendance and Friday
 
-## FILL-05 — خطا وسط ثبت چند تسک
+- Prerequisite: No/suspicious attendance
+- Steps: Request suggestion
+- Expected: No suggestion; warning present
+- Result: Passed
+- Evidence: test_no_presence_means_no_suggestion, test_presence_over_eleven_hours, test_friday_is_never
 
-- پیش‌شرط: یک تسک معتبر و یک شناسه نامعتبر
-- مراحل: ارسال batch تکمیلی
-- انتظار: rollback کامل، بدون ثبت جزئی
-- نتیجه: موفق
-- شواهد: test_fill_batch_is_atomic
+## FILL-05 — Failure during multi-task save
 
-## FILL-06 — سقف تسک شش‌دقیقه‌ای
+- Prerequisite: Valid task and invalid ID
+- Steps: Submit fill batch
+- Expected: Full rollback; no partial save
+- Result: Passed
+- Evidence: test_fill_batch_is_atomic
 
-- پیش‌شرط: تسک ۶ دقیقه و نیاز زیاد
-- مراحل: پیشنهاد تکمیلی
-- انتظار: تکمیلی حداکثر ۳ دقیقه؛ فعلاً ۵ دقیقه برمی‌گردد
-- نتیجه: ایراد باز
-- شواهد: test_fill_suggestion_respects_cap_for_short_tasks
+## FILL-06 — Six-minute task cap
 
-## FILL-07 — گردکردن و سقف مجموع
+- Prerequisite: Six-minute task and large deficit
+- Steps: Request fill suggestion
+- Expected: At most three minutes; historical result was five
+- Result: Open defect
+- Evidence: test_fill_suggestion_respects_cap_for_short_tasks
 
-- پیش‌شرط: دو تسک ۶۰ دقیقه و فاصله ۸ دقیقه
-- مراحل: پیشنهاد تکمیلی
-- انتظار: جمع از ۹ دقیقه بیشتر نشود؛ فعلاً ۱۰ می‌شود
-- نتیجه: ایراد باز
-- شواهد: test_fill_suggestion_does_not_exceed_total
+## FILL-07 — Rounding and aggregate cap
 
-## FILL-08 — نوع نامعتبر تاریخ
+- Prerequisite: Two 60-minute tasks, eight-minute gap
+- Steps: Request fill suggestion
+- Expected: Total at most nine minutes; historical result was ten
+- Result: Open defect
+- Evidence: test_fill_suggestion_does_not_exceed_total
 
-- پیش‌شرط: عدد، آرایه و شیء به‌عنوان date
-- مراحل: ارسال POST fill
-- انتظار: ۴۰۰ به‌جای ۵۰۰
-- نتیجه: ایراد باز
-- شواهد: test_fill_rejects_invalid_date_types
+## FILL-08 — Invalid date type
 
-## REPORT-01 — تایم‌شیت شنبه تا جمعه
+- Prerequisite: Numeric/array/object date
+- Steps: POST fill
+- Expected: 400 instead of 500
+- Result: Open defect
+- Evidence: test_fill_rejects_invalid_date_types
 
-- پیش‌شرط: تاریخچهٔ چند هفته
-- مراحل: انتخاب روزهای مختلف و جابه‌جایی هفته
-- انتظار: ردیف و جمع‌ها مطابق هفته ایرانی
-- نتیجه: موفق
-- شواهد: test_week_runs_saturday_to_friday, test_cells_rows_and_totals
+## REPORT-01 — Saturday–Friday timesheet
 
-## REPORT-02 — مقایسهٔ دوره‌های هم‌اندازه
+- Prerequisite: Several weeks of history
+- Steps: Select days and navigate weeks
+- Expected: Rows/totals follow Iranian week
+- Result: Passed
+- Evidence: test_week_runs_saturday_to_friday, test_cells_rows_and_totals
 
-- پیش‌شرط: داده دو ماه/سال
-- مراحل: داشبورد ماه جاری و سال جاری
-- انتظار: مقایسه تا همان روز دوره قبل
-- نتیجه: موفق
-- شواهد: test_running_month_is_compared, test_running_and_finished_year
+## REPORT-02 — Compare equal-length periods
 
-## REPORT-03 — تقویم شمسی و مناسبت‌ها
+- Prerequisite: Two months/years of data
+- Steps: View current-month/current-year dashboard
+- Expected: Compare through the corresponding prior-period day
+- Result: Passed
+- Evidence: test_running_month_is_compared, test_running_and_finished_year
 
-- پیش‌شرط: ماه معتبر و نامعتبر
-- مراحل: نمایش ماه و رفتن به روز
-- انتظار: روزها، مناسبت و تعداد کار درست
-- نتیجه: موفق
-- شواهد: test_calendar_month
+## REPORT-03 — Jalali calendar/events
 
-## REPORT-04 — اکسل خالی و فیلتر سال
+- Prerequisite: Valid and invalid months
+- Steps: Display month and select day
+- Expected: Correct days/events/task counts
+- Result: Passed
+- Evidence: test_calendar_month
 
-- پیش‌شرط: دادهٔ چند سال و حساب خالی
-- مراحل: دانلود Excel
-- انتظار: فایل معتبر، ستون‌ها و فیلتر درست
-- نتیجه: موفق
-- شواهد: test_export_empty_still_returns, test_export_sheets_headers
+## REPORT-04 — Empty Excel and year filter
 
-## REPORT-05 — خروجی شخصی
+- Prerequisite: Several years and an empty account
+- Steps: Download Excel
+- Expected: Valid file/columns/filter
+- Result: Passed
+- Evidence: test_export_empty_still_returns, test_export_sheets_headers
 
-- پیش‌شرط: دو کاربر با داده
-- مراحل: دانلود Excel و JSON توسط کاربر دوم
-- انتظار: فقط داده و کاتالوگ خودش
-- نتیجه: موفق
-- شواهد: test_export_and_backup_hold_only_own_data, test_catalog_is_in_personal_backup
+## REPORT-05 — Private exports
 
-## IMPORT-01 — خواندن امن کپی دسکتاپ
+- Prerequisite: Two populated accounts
+- Steps: Second user downloads Excel/JSON
+- Expected: Only own records and catalog
+- Result: Passed
+- Evidence: test_export_and_backup_hold_only_own_data, test_catalog_is_in_personal_backup
 
-- پیش‌شرط: SQLite ساختگی و حساب خالی
-- مراحل: import معمولی و dry-run
-- انتظار: حفظ اعداد و عدم تغییر مبدأ
-- نتیجه: موفق
-- شواهد: test_full_import_keeps_every_number, test_source_file_is_not_modified, test_dry_run_saves
+## IMPORT-01 — Read desktop copy safely
 
-## IMPORT-02 — عدم تطابق و حساب غیرخالی
+- Prerequisite: Synthetic SQLite, empty account
+- Steps: Import normally and dry-run
+- Expected: Every value preserved; source unchanged
+- Result: Passed
+- Evidence: test_full_import_keeps_every_number, test_source_file_is_not_modified, test_dry_run_saves
 
-- پیش‌شرط: ورودی نامعتبر/حساب دارای داده
-- مراحل: تلاش import و تزریق اختلاف
-- انتظار: rollback و رد انتقال
-- نتیجه: موفق
-- شواهد: test_a_mismatch_rolls_everything_back, test_refuses_a_non_empty_account
+## IMPORT-02 — Mismatch/nonempty account
 
-## IMPORT-03 — ارتقای 0001 به 0002
+- Prerequisite: Invalid source or populated destination
+- Steps: Attempt import and inject mismatch
+- Expected: Rollback; migration refused
+- Result: Passed
+- Evidence: test_a_mismatch_rolls_everything_back, test_refuses_a_non_empty_account
 
-- پیش‌شرط: دادهٔ مصنوعی مشترک قدیمی
-- مراحل: اعمال مایگریشن در schema جدا
-- انتظار: حفظ مدت، حضور، آرشیو و جداسازی مالک
-- نتیجه: موفق
-- شواهد: test_private_catalog_migration_preserves
+## IMPORT-03 — Upgrade 0001 to 0002
 
-## CONC-01 — شروع موازی یک حساب
+- Prerequisite: Synthetic shared legacy data
+- Steps: Migrate in separate schema
+- Expected: Duration, attendance, archive and ownership preserved
+- Result: Passed
+- Evidence: test_private_catalog_migration_preserves
 
-- پیش‌شرط: شش کلاینت با یک سشن
-- مراحل: شش درخواست شروع هم‌زمان
-- انتظار: فقط یک تسک زنده
-- نتیجه: موفق
-- شواهد: test_parallel_start_allows_exactly_one
+## CONC-01 — Parallel starts for one user
 
-## CONC-02 — پایان موازی
+- Prerequisite: Six clients sharing a session
+- Steps: Six simultaneous starts
+- Expected: Exactly one running task
+- Result: Passed
+- Evidence: test_parallel_start_allows_exactly_one
 
-- پیش‌شرط: یک تسک زنده
-- مراحل: پنج درخواست پایان
-- انتظار: همه موفق، زمان یکسان، یک سگمنت بسته
-- نتیجه: موفق
-- شواهد: test_parallel_stop_is_idempotent
+## CONC-02 — Parallel stops
 
-## CONC-03 — ساخت هم‌نام موازی
+- Prerequisite: Running task
+- Steps: Five finish requests
+- Expected: All succeed; identical time; one closed segment
+- Result: Passed
+- Evidence: test_parallel_stop_is_idempotent
 
-- پیش‌شرط: پنج کلاینت یک حساب
-- مراحل: پنج ساخت پروژه هم‌نام
-- انتظار: یک ۲۰۱ و چهار ۴۰۹
-- نتیجه: موفق
-- شواهد: test_parallel_catalog_creation
+## CONC-03 — Parallel same-name creation
 
-## CONC-04 — کار موازی دو نفر
+- Prerequisite: Five clients for one account
+- Steps: Five same-name project creates
+- Expected: One 201, four 409 responses
+- Result: Passed
+- Evidence: test_parallel_catalog_creation
 
-- پیش‌شرط: دو حساب مستقل
-- مراحل: شروع هم‌زمان هر دو
-- انتظار: دو موفقیت و جداسازی داده
-- نتیجه: موفق
-- شواهد: test_parallel_users_do_not_block
+## CONC-04 — Two users work concurrently
 
-## UI-01 — اعداد فارسی و ساعت
+- Prerequisite: Independent accounts
+- Steps: Start both simultaneously
+- Expected: Both succeed; data isolated
+- Result: Passed
+- Evidence: test_parallel_users_do_not_block
 
-- پیش‌شرط: ورودی لاتین، فارسی و عربی
-- مراحل: تبدیل و parse ساعت و مدت
-- انتظار: خروجی معتبر و رد ساعت نامعتبر
-- نتیجه: موفق
-- شواهد: FRONTEND-UNIT
+## UI-01 — Persian digits and clocks
 
-## UI-02 — عنوان شبیه SQL و HTML
+- Prerequisite: Latin/Persian/Arabic input
+- Steps: Convert/parse clocks and durations
+- Expected: Correct output; invalid clocks rejected
+- Result: Passed
+- Evidence: FRONTEND-UNIT
 
-- پیش‌شرط: کاربر واردشده
-- مراحل: ثبت متن حاوی SQL و img/onerror
-- انتظار: متن عادی، عدم اجرای کد
-- نتیجه: موفق
-- شواهد: E2E-07, test_sql_and_html_looking_titles
+## UI-02 — SQL/HTML-looking title
 
-## UI-03 — قطع شبکه هنگام ارسال
+- Prerequisite: Authenticated user
+- Steps: Save SQL and img/onerror text
+- Expected: Literal text; no code execution
+- Result: Passed
+- Evidence: E2E-07, test_sql_and_html_looking_titles
 
-- پیش‌شرط: فرم پرشده
-- مراحل: قطع شبکه، ارسال، اتصال و ارسال دوباره
-- انتظار: پیام خطا و حفظ فرم و ثبت یک‌باره
-- نتیجه: موفق
-- شواهد: E2E-09
+## UI-03 — Disconnect during submission
 
-## UI-04 — همهٔ صفحه‌ها در سه عرض
+- Prerequisite: Filled form
+- Steps: Disconnect, submit, reconnect, retry
+- Expected: Error shown; draft retained; one record
+- Result: Passed
+- Evidence: E2E-09
 
-- پیش‌شرط: کاربر دارای داده
-- مراحل: بازکردن ۹ صفحه در ۳۶۰، ۷۶۸ و ۱۲۸۰
-- انتظار: بدون اسکرول افقی و با RTL
-- نتیجه: موفق
-- شواهد: RESPONSIVE
+## UI-04 — All pages at three widths
 
-## UI-05 — چرخهٔ تسک با لمس
+- Prerequisite: User with data
+- Steps: Open nine pages at 360/768/1280
+- Expected: RTL; no page-wide horizontal scroll
+- Result: Passed
+- Evidence: RESPONSIVE
 
-- پیش‌شرط: context موبایل با hasTouch
-- مراحل: شروع، مکث، ادامه و پایان با tap
-- انتظار: عملیات موفق
-- نتیجه: موفق
-- شواهد: E2E-53
+## UI-05 — Task lifecycle by touch
 
-## UI-06 — مرورگر در لندن و سرور تهران
+- Prerequisite: Mobile hasTouch context
+- Steps: Tap start/pause/resume/finish
+- Expected: Actions succeed
+- Result: Passed
+- Evidence: E2E-53
 
-- پیش‌شرط: timezone مرورگر متفاوت
-- مراحل: مشاهده ساعت امروز
-- انتظار: ساعت UI با سرور تهران منطبق
-- نتیجه: موفق
-- شواهد: E2E-54
+## UI-06 — London browser and Tehran server
 
-## UI-07 — بیشتر و گزارش در موبایل
+- Prerequisite: Different browser timezone
+- Steps: View today's clock
+- Expected: UI matches Tehran server
+- Result: Passed
+- Evidence: E2E-54
 
-- پیش‌شرط: عرض ۳۶۰
-- مراحل: لمس گزارش و سپس مدیریت از بیشتر
-- انتظار: مسیر درست
-- نتیجه: موفق
-- شواهد: E2E-50
+## UI-07 — Mobile More and reports
 
-## OPS-01 — راه‌اندازی واقعی استک
+- Prerequisite: 360px viewport
+- Steps: Tap report, then Management under More
+- Expected: Correct routes
+- Result: Passed
+- Evidence: E2E-50
 
-- پیش‌شرط: Compose QA مستقل
-- مراحل: بیلد، migration startup و درخواست از Caddy
-- انتظار: وب و API و PostgreSQL در دسترس
-- نتیجه: موفق
-- شواهد: DOCKER, test_alembic_cli_resolves
-
-## OPS-02 — dump و restore واقعی
-
-- پیش‌شرط: دادهٔ مصنوعی چندجدولی
-- مراحل: pg_dump، restore به DB تازه، مقایسه fingerprint
-- انتظار: برابری همهٔ ۱۲ جدول
-- نتیجه: موفق
-- شواهد: RECOVERY
-
-## OPS-03 — ری‌استارت API
-
-- پیش‌شرط: سشن و تسک موجود
-- مراحل: restart کانتینر و درخواست با همان کوکی
-- انتظار: حفظ سشن و تسک‌ها
-- نتیجه: موفق
-- شواهد: RESTART
-
-## OPS-04 — شکست تولید dump
-
-- پیش‌شرط: docker ساختگی با خروج ۱۷
-- مراحل: اجرای backup.sh در کانتینر جدا
-- انتظار: خروج غیرصفر؛ فعلاً موفقیت کاذب
-- نتیجه: ایراد باز
-- شواهد: test_backup_fails_when_database_dump_fails
-
-## OPS-05 — شکست رمزگشایی
-
-- پیش‌شرط: gpg ساختگی با خروج ۱۹
-- مراحل: اجرای restore_test.sh
-- انتظار: خروج غیرصفر؛ فعلاً موفقیت کاذب
-- نتیجه: ایراد باز
-- شواهد: test_restore_fails_when_decryption_fails
-
-## OPS-06 — شکست رمزگذاری یا pg_restore
-
-- پیش‌شرط: تزریق خطای مقصد pipeline
-- مراحل: اجرای اسکریپت‌ها
-- انتظار: خروج غیرصفر
-- نتیجه: موفق
-- شواهد: test_backup_fails_when_encryption_fails, test_restore_fails_when_database_restore_fails
-
-## PERF-01 — بار چندکاربره
-
-- پیش‌شرط: ۱۰ کاربر، ۲۸۰۰ تسک، ۲۸ روز
-- مراحل: ۴۰۰ درخواست با ۱۰ worker
-- انتظار: صفر خطا و ثبت p50/p95/p99؛ صرفاً بودجهٔ محلی
-- نتیجه: نیاز بررسی
-- شواهد: LOAD
-
-## SEC-01 — ممیزی بسته‌های npm
-
-- پیش‌شرط: package-lock جاری
-- مراحل: npm audit بدون ارتقای خودکار
-- انتظار: ثبت یافته‌ها و حدود اثرگذاری
-- نتیجه: یافتهٔ ممیزی
-- شواهد: AUDIT
-
-## ARCH-01 — ثابت‌ماندن مرزها و قرارداد
-
-- پیش‌شرط: کل سورس
-- مراحل: تست importها، routeهای بدون SQL و OpenAPI
-- انتظار: قرارداد ۵۷ مسیر و جهت وابستگی حفظ شود
-- نتیجه: موفق
-- شواهد: test_dependency_direction, test_http_routes_do_not_execute, test_public_paths_parameters
-
-## SET-01 — تنظیم نامعتبر همراه تغییر معتبر
-
-- پیش‌شرط: تنظیمات فعلی
-- مراحل: هدف جدید و URL شیت نامعتبر در یک درخواست
-- انتظار: ۴۰۰ و حفظ تمام تنظیمات قبلی
-- نتیجه: موفق
-- شواهد: test_invalid_settings_change_is_atomic
-
-## CLI-01 — ساخت حساب و تغییر رمز با CLI
-
-- پیش‌شرط: دیتابیس تست
-- مراحل: ساخت حساب CLI؛ ورود با رمز اول؛ reset-password و ورود با رمز جدید
-- انتظار: حساب و نقش درست؛ نشست قدیمی لغو شود
-- نتیجه: موفق
-- شواهد: test_cli_create_and_reset_account, test_cli_duplicate_user_does_not_overwrite
-
-## CLI-02 — import کاتالوگ برای حساب مشخص
-
-- پیش‌شرط: دو حساب مستقل و JSON ساختگی
-- مراحل: دو بار import-catalog با --user alice
-- انتظار: بدون تکرار و بدون دیده‌شدن توسط bob
-- نتیجه: موفق
-- شواهد: test_cli_catalog_import_is_private
-
-## OPS-07 — رمزگذاری AES256 و رمز اشتباه
-
-- پیش‌شرط: dump مصنوعی QA و keyring موقت
-- مراحل: رمزگذاری؛ رمزگشایی و مقایسه SHA256؛ تلاش با رمز غلط
-- انتظار: برابری فایل و رد رمز غلط
-- نتیجه: موفق
-- شواهد: CRYPTO
+## OPS-01 — Real stack startup
+
+- Prerequisite: Isolated QA Compose
+- Steps: Build, migrate at startup, request through Caddy
+- Expected: Web/API/PostgreSQL available
+- Result: Passed
+- Evidence: DOCKER, test_alembic_cli_resolves
+
+## OPS-02 — Actual dump/restore
+
+- Prerequisite: Synthetic multi-table data
+- Steps: pg_dump, restore into fresh DB, fingerprint
+- Expected: All 12 tables equal
+- Result: Passed
+- Evidence: RECOVERY
+
+## OPS-03 — API restart
+
+- Prerequisite: Existing session/tasks
+- Steps: Restart container; reuse cookie
+- Expected: Session/tasks preserved
+- Result: Passed
+- Evidence: RESTART
+
+## OPS-04 — Dump producer fails
+
+- Prerequisite: Fake docker exits 17
+- Steps: Run backup.sh in isolated container
+- Expected: Nonzero exit; historical false success reproduced
+- Result: Open defect
+- Evidence: test_backup_fails_when_database_dump_fails
+
+## OPS-05 — Decryption fails
+
+- Prerequisite: Fake gpg exits 19
+- Steps: Run restore_test.sh
+- Expected: Nonzero exit; historical false success reproduced
+- Result: Open defect
+- Evidence: test_restore_fails_when_decryption_fails
+
+## OPS-06 — Encryption/pg_restore fails
+
+- Prerequisite: Injected pipeline consumer failure
+- Steps: Run scripts
+- Expected: Nonzero exit
+- Result: Passed
+- Evidence: test_backup_fails_when_encryption_fails, test_restore_fails_when_database_restore_fails
+
+## PERF-01 — Multi-user load
+
+- Prerequisite: Ten users, 2,800 tasks, 28 days
+- Steps: 400 requests with ten workers
+- Expected: Zero errors; p50/p95/p99; local budget only
+- Result: Needs investigation
+- Evidence: LOAD
+
+## SEC-01 — npm package audit
+
+- Prerequisite: Current package-lock
+- Steps: npm audit without automatic upgrades
+- Expected: Record findings and impact limits
+- Result: Audit finding
+- Evidence: AUDIT
+
+## ARCH-01 — Stable boundaries and contracts
+
+- Prerequisite: Complete source
+- Steps: Test imports, SQL-free routes, OpenAPI
+- Expected: Original 57-route contract and dependency direction preserved
+- Result: Passed
+- Evidence: test_dependency_direction, test_http_routes_do_not_execute, test_public_paths_parameters
+
+## SET-01 — Invalid/valid settings in one request
+
+- Prerequisite: Existing settings
+- Steps: Send new goal and invalid Sheet URL together
+- Expected: 400; all earlier settings preserved
+- Result: Passed
+- Evidence: test_invalid_settings_change_is_atomic
+
+## CLI-01 — Create account/reset password
+
+- Prerequisite: Test database
+- Steps: Create with CLI; Login with first password; Reset password and login with new one
+- Expected: Correct account/role; old session revoked
+- Result: Passed
+- Evidence: test_cli_create_and_reset_account, test_cli_duplicate_user_does_not_overwrite
+
+## CLI-02 — Import catalog for one account
+
+- Prerequisite: Two accounts, synthetic JSON
+- Steps: Run import-catalog twice with --user alice
+- Expected: No duplicates; hidden from Bob
+- Result: Passed
+- Evidence: test_cli_catalog_import_is_private
+
+## OPS-07 — AES256 and wrong password
+
+- Prerequisite: Synthetic QA dump, temporary keyring
+- Steps: Encrypt; Decrypt and compare SHA256; Attempt wrong password
+- Expected: Identical file; wrong password rejected
+- Result: Passed
+- Evidence: CRYPTO

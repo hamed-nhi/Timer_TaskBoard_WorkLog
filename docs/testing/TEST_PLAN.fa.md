@@ -1,82 +1,76 @@
-# طرح آزمون سیستم تایم‌لاگ
+# TIME LOG system test plan
 
-تاریخ طراحی و اجرا: ۲۰۲۶-۱۰-۲۵. هدف، بررسی سناریوهای واقعی استفاده، مرزهای ورودی، جداسازی حساب‌ها و رفتار خطا در کنار تست‌های واحد است.
+> Historical initial QA plan. Do not run its original 18081/tmpfs reset/teardown against the current environment. Use [AUDIT_RUNBOOK.md](AUDIT_RUNBOOK.md), [RELEASE_RESULTS.fa.md](RELEASE_RESULTS.fa.md) and [DEPLOY.md](../../DEPLOY.md).
 
-## محیط و حفاظت داده
+Design/execution: 2026-10-25. Test realistic usage, boundaries, isolation and errors alongside unit tests.
 
-تمام آزمایش‌ها روی پروژهٔ Docker جداگانهٔ timelog-qa انجام شدند. PostgreSQL تست روی پورت ۵۵۴۳ و وب روی ۱۸۰۸۱ است؛ دیتابیس‌های timelog_system_test و timelog_integration_test از داده‌های واقعی جدا هستند. دیتای مرورگر و بار ساختگی است. دیتابیس واقعی و نسخهٔ دسکتاپ استفاده نشده‌اند.
-Docker QA از tmpfs استفاده می‌کند؛ با پایین‌آوردن این استک، دادهٔ QA از بین می‌رود. از این فایل برای استقرار واقعی استفاده نکنید.
+## Environment and protection
 
-## نقش‌ها و روش‌های استفاده
+Separate timelog-qa Docker project: initial PostgreSQL 5543, web 18081, timelog_system_test and timelog_integration_test separate from real data. Browser/load records were synthetic; real DB and desktop were unused. The initial tmpfs database lost data when stopped and is not a production template. Later audit uses persistent 18082/5544.
 
-- کاربر تازه: ساخت حساب توسط ادمین، اولین ورود، ساخت کاتالوگ شخصی و اولین تسک.
-- کاربر روزانه: حضور دستی، شروع/مکث/ادامه/پایان، برنامه‌ریزی و گزارش روز.
-- کاربر گزارش‌محور: ورود دستی ساعت، تگ و بودجه، تکمیل گزارش، خروجی Excel و JSON.
-- چند همکار: کار هم‌زمان، نام‌های یکسان و درخواست مستقیم به شناسهٔ همکار.
-- کاربر موبایل: عرض کوچک، ناوبری پایین و عملیات با tap.
-- کاربر چندمنطقه‌ای: مرورگر با timezone لندن و سرور با ساعت تهران.
-- کاربر با اتصال ناپایدار: قطع شبکه هنگام ارسال و ارسال دوباره پس از اتصال.
-- بهره‌بردار: CLI، بیلد Docker، مایگریشن، بک‌آپ، بازیابی، رمزگذاری و ری‌استارت.
+## Roles and usage
 
-## انواع تست و معیارها
+- New user: admin-created account, first login/catalog/task.
+- Daily user: manual attendance, start/pause/resume/finish, plans/report.
+- Reporting user: manual times, tags/budgets/fill, Excel/JSON.
+- Colleagues: concurrent use, duplicate names, foreign identifiers.
+- Mobile: narrow viewport, bottom navigation, taps.
+- Cross-timezone: London browser/Tehran server.
+- Unstable network: disconnect during submission, reconnect/retry.
+- Operator: CLI, Docker, migrations, backup/restore/encryption/restart.
 
-| نوع | ابزار و محدوده | معیار |
-|---|---|---|
-| واحد | pytest و Node test؛ زمان، شمسی، ارقام فارسی و گردکردن | خروجی درست در مرزها، بدون تغییر دادهٔ ورودی |
-| یکپارچه | FastAPI TestClient و PostgreSQL واقعی | وضعیت HTTP، تراکنش، مالکیت و دادهٔ صحیح |
-| مسیر کامل استفاده | مرورگر واقعی Chrome/Playwright | عملیات UI و نتیجهٔ سرور هر دو درست باشند |
-| قرارداد و معماری | OpenAPI و AST/ESLint | ثابت‌بودن ورودی ۵۷ مسیر و مرز لایه‌ها |
-| امنیت عملکردی | ورود، CSRF، حدس شناسه، XSS و SQL-looking input | رد درخواست غیرمجاز و حفظ دادهٔ دیگران |
-| هم‌زمانی | ThreadPoolExecutor و چند کلاینت واقعی | یک تسک زنده، پایان idempotent و عدم تکرار کاتالوگ |
-| واکنش‌گرا و لمس | ۹ صفحه در ۳ عرض و context لمسی | RTL، نبود اسکرول افقی و انجام عملیات با tap |
-| کارایی اکتشافی | ۱۰ کاربر، ۲۸۰۰ تسک و ۴۰۰ درخواست در هر اجرا | ثبت صدک‌ها و تمام خطاها؛ بودجهٔ محلی p95 کمتر از ۲ ثانیه |
-| خطایابی بک‌آپ | اجرای اسکریپت واقعی در کانتینر با docker/gpg ساختگی | خطای هر مرحله باید باعث خروج غیرصفر شود |
-| بازیابی واقعی | pg_dump/pg_restore و fingerprint دوازده جدول | برابری کامل دادهٔ مبدأ و مقصد |
-| رمزگذاری واقعی | GPG AES256 با keyring موقت | تطابق hash پس از رمزگشایی و رد رمز اشتباه |
-| تاب‌آوری | restart API با کوکی موجود | بازگشت API، حفظ سشن و حفظ تسک‌ها |
-| ممیزی وابستگی | npm audit | گزارش یافته‌ها؛ بدون ارتقای عمدهٔ خودکار |
+## Test types
 
-بودجهٔ زمان پاسخ یک معیار محلی اکتشافی است؛ SLO تولید یا تضمین ظرفیت محسوب نمی‌شود. برای ظرفیت تولید باید سخت‌افزار سرور، حجم تاریخچه، تعداد کاربر و ساعات اوج مشخص شود.
+| Type | Scope/tool | Criterion |
+| --- | --- | --- |
+| Unit | pytest/Node; time/Jalali/Persian digits/rounding | Boundaries correct, input unchanged. |
+| Integration | FastAPI TestClient/real PostgreSQL | HTTP, transaction, ownership and data correctness. |
+| E2E | Chrome/Playwright | Correct UI and server result. |
+| Contract/architecture | OpenAPI/AST/ESLint | Original 57-route inputs and layer boundaries. |
+| Functional security | Login/CSRF/ID guessing/XSS/SQL-looking text | Unauthorized requests rejected; others' data intact. |
+| Concurrency | ThreadPoolExecutor/clients | One live task; idempotent finish; no catalog duplication. |
+| Responsive/touch | Nine pages, three widths, touch | RTL; no page-wide horizontal scroll; taps succeed. |
+| Exploratory load | Ten users, 2,800 tasks, 400 requests/run | Record errors/percentiles; local p95 below 2 seconds. |
+| Backup fault injection | Real scripts/fake Docker-GPG commands in containers | Any failed stage exits nonzero. |
+| Actual restore | pg_dump/pg_restore, 12-table fingerprints | Exact source/destination equality. |
+| Actual encryption | GPG AES256/temporary keyring | Decrypted hash matches; wrong password fails. |
+| Resilience | API restart/existing cookie | API/session/tasks recover. |
+| Dependency audit | npm audit | Record findings, no forced major upgrade. |
 
-## ثبت نتیجه و شکست موردانتظار
+Local exploratory latency budget is not a production SLO/capacity guarantee; specify hardware, history, users and peak periods first.
 
-پروندهٔ scenarios.json برای هر سناریو پیش‌شرط، مراحل، نتیجهٔ موردانتظار و شناسهٔ تست را دارد. گزارش به شواهد اجرایی JUnit/JSON متصل است.
-تست‌های دارای xfail شکست موردانتظار و ایراد باز هستند، نه قبولی. strict=True باعث می‌شود تغییر غیرمنتظرهٔ نتیجه پنهان نماند. شکست تازه‌ای که ثبت نشده باشد باید اجرای CI را ناموفق کند.
-ایراد راه‌اندازی Alembic در Docker با تغییر مسیر تنظیمات اصلاح شده و تست CLI از یک پوشهٔ نامرتبط برایش اضافه شده است. خطاهای منطق تکمیل و pipeline بک‌آپ در این درخواست صرفاً ثبت و بازتولید شده‌اند.
+## Results and expected failures
 
-## فرمان‌های بازاجرا
+scenarios.json provides prerequisites/steps/expectations/evidence, linked to JUnit/JSON. xfail means reproduced open defect, not success; strict=True exposes unexpected changes. Unregistered failures fail CI.
 
-از ریشهٔ پروژه در PowerShell:
+Alembic startup was fixed through config-path resolution and a CLI test from another directory. Fill/backup pipeline defects were initially reproduced only; later reports record fixes.
 
-```powershell
+## Original commands — historical only
+
+~~~powershell
 docker compose -p timelog-qa -f docker-compose.test.yml up -d --build
 docker compose -p timelog-qa -f docker-compose.test.yml exec -T db createdb -U timelog timelog_integration_test
 $env:QA_DATABASE_URL="postgresql+psycopg://timelog:qa-password-only@127.0.0.1:5543/timelog_system_test"
 .\venv\Scripts\python tools/qa_seed.py --load --reset-ui
-```
+~~~
 
-پیش از seed، پاسخ /api/health باید ۲۰۰ باشد. ساخت دیتابیس integration فقط بار اول لازم است.
+These seed commands no longer apply to the protected demo. Health had to return 200 first; integration DB creation was once only.
 
-از backend:
+Original backend run:
 
-```powershell
+~~~powershell
 $env:TEST_DATABASE_URL="postgresql+psycopg://timelog:qa-password-only@127.0.0.1:5543/timelog_integration_test"
 $env:COVERAGE_CORE="ctrace"
 python -m coverage run --branch --source=app -m pytest -q -rx
 python -m coverage report
-```
+~~~
 
-در Python 3.14 این محیط، tracer پیش‌فرض متوقف می‌شد؛ اجرای نهایی با ctrace انجام شد.
-از frontend: npm ci، npm run test:unit، npm run lint و npm run test:e2e. مرورگر Chrome نصب باشد؛ یا با نصب مرورگر Playwright و QA_BROWSER_CHANNEL=chromium اجرا شود.
-از ریشه: python tools/qa_load.py، python tools/qa_recovery.py و python tools/qa_crypto.py.
-بار داخل شبکهٔ Docker برای تشخیص مسیر اتصال، با QA_BASE_URL=http://web:80 و QA_IN_DOCKER=1 اجرا شده است.
-پس از اتمام، فقط استک تست را با docker compose -p timelog-qa -f docker-compose.test.yml down --volumes پایین بیاورید.
+Default tracing stalled on Python 3.14; the final initial run used ctrace. Frontend: npm ci, test:unit, lint, test:e2e; Chrome or Playwright Chromium/QA_BROWSER_CHANNEL=chromium. Root tools: python tools/qa_load.py, tools/qa_recovery.py, tools/qa_crypto.py. Docker comparison originally used QA_BASE_URL=http://web:80 and QA_IN_DOCKER=1.
 
-## CI
+Original teardown was docker compose -p timelog-qa -f docker-compose.test.yml down --volumes. **Do not run it now:** this project also contains preserved accounts/environments. Current runbook removes only designated disposable containers, retaining volumes.
 
-workflow عادی، تست‌های واحد/یکپارچه، خطایابی بک‌آپ و تست واحد فرانت را اجرا می‌کند. workflow جدید system-qa به‌صورت دستی بیلد Docker، مرورگر، بار و بازیابی را اجرا و شواهد بدون dump را نگه می‌دارد.
-workflow روی GitHub در این گفتگو اجرا نشده است؛ اجراهای گزارش‌شده محلی‌اند.
+## CI and exclusions
 
-## خارج از این اجرا
+Regular CI runs unit/integration, backup fault injection and frontend units. Manual system-qa builds Docker and runs browser/load/restore, retaining evidence without dumps. GitHub workflows were not run during the initial local QA.
 
-Safari/Firefox و گوشی فیزیکی، ممیزی کامل WCAG، تست نفوذ مستقل، اسکن کامل وابستگی‌های Python/OS، HTTPS و دامنهٔ واقعی، آزمون ماندگاری چندروزه و خرابی/بازیابی سرور تولید انجام نشده‌اند. همگام‌سازی Google Sheet و اسکرپ استوری هنوز پیاده نشده‌اند.
+Not tested then: Safari/Firefox, physical phones, full WCAG, independent penetration testing, full Python/OS audit, real HTTPS/domain, multi-day persistence and production failure/restore. Sheets/story scraping were not implemented at that stage; later docs describe current Sheets functionality.

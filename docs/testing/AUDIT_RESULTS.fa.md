@@ -1,92 +1,91 @@
-# گزارش ممیزی TIME LOG — 2026-10-25
+# TIME LOG audit report — 2026-10-25
 
-> این گزارش سابقهٔ ممیزی اولیه است. قابلیت‌های جدید ورود، مدیریت، راه‌اندازی پشتیبان و استقرار در [گزارش انتشار جاری](RELEASE_RESULTS.fa.md) آمده‌اند.
+> Initial audit history. Later login, administration, backup onboarding and deployment features are covered in [current release results](RELEASE_RESULTS.fa.md).
 
-**پذیرش عملکردی: موفق. وضعیت امنیت انتشار: باز/مشروط؛ imageها کاملاً پاک نیستند.**
+**Functional acceptance: passed. Release security: open/conditional; images are not fully clean.**
 
-این گزارش آزمون‌های محلی روی محیط مستقل audit را بیان می‌کند. شکست، skip، xfail و اجرا‌نشدن با موفقیت یکی حساب نشده‌اند.
+Local checks used an isolated audit environment. Failures, skips, xfails and unexecuted checks are not counted as success.
 
-## نتایج
+## Results
 
-| بخش | تعداد/معیار | شکست | شواهد/دامنه |
+| Area | Count/criterion | Failures | Evidence/scope |
 | --- | --- | --- | --- |
-| بک‌اند: Unit / Integration / Operational | 325 | 0 | PostgreSQL واقعی؛ رد دیتابیس‌های محافظت‌شده؛ بدون xfail/skip |
-| پوشش ترکیبی خط و شاخه | 91.23٪ | حداقل ۹۰٪ | coverage.xml / coverage.txt |
-| Unit فرانت | 15 | 0 | قالب زمان، تاریخ و محاسبات نمایشی |
-| E2E مرورگر و نقش‌ها | 46 | 0 | مدیر، دو کاربر عادی، غیرفعال؛ لمس، نشست و خروج |
-| UI / UX / دسترس‌پذیری | 341 | 0 | ۹ صفحه؛ ۳۲۰–۱۹۲۰؛ روشن/تیره/سیستم؛ axe و صفحه‌کلید |
-| ایمپورت و دو دستگاه | 10 | 0 | دانلود نمونه؛ mapping؛ پاسخ گمشده؛ همگام‌سازی و تعارض |
-| بار نهایی مستقیم | 400 | 0 | p95=573.62 ms؛ ثبت‌ها بررسی شدند |
-| آزمون پایدار نهایی | 9000 | 0 | ۱۰ کاربر، 2250 ثبت؛ p95=295.13 ms |
-| مقایسهٔ شبکهٔ داخلی Docker | 400 | 0 | p95=454.87 ms |
+| Backend Unit / Integration / Operational | 325 | 0 | Real PostgreSQL; protected DBs rejected; no xfail/skip. |
+| Combined line/branch coverage | 91.23% | Minimum 90% | coverage.xml / coverage.txt |
+| Frontend units | 15 | 0 | Time/date formatting and display calculations. |
+| Browser E2E and roles | 46 | 0 | Admin, two ordinary users, inactive user; touch, sessions, logout. |
+| UI/UX/accessibility | 341 | 0 | Nine pages, 320–1920, light/dark/system, axe/keyboard. |
+| Import and two devices | 10 | 0 | Templates, mapping, lost response, refresh/conflict. |
+| Final direct load | 400 | 0 | p95=573.62 ms; saved writes verified. |
+| Final continuous soak | 9000 | 0 | Ten users, 2250 writes; p95=295.13 ms. |
+| Internal Docker comparison | 400 | 0 | p95=454.87 ms. |
 
-بک‌اند: {'unit': 79, 'integration': 241, 'operational': 5}. تعداد skip: 0. lint، static-export build و بررسی drift مایگریشن نیز موفق‌اند. آمار امنیت بخشی از تعداد بک‌اند است و دوباره به جمع اضافه نشده است.
+Backend breakdown: unit 79, integration 241, operational 5. Skips: zero. Lint, static-export build and migration-drift checks also passed. Security tests are part of the backend count, not counted twice.
 
-## حفظ داده و استفادهٔ واقعی
+## Data preservation and real usage
 
-- محیط فعلی ۱۸۰۸۱، حساب‌های آن و دیتای دسکتاپ تغییر داده نشدند. نسخهٔ جدید فقط در audit روی localhost:18082 برای بررسی در دسترس است.
-- نمونهٔ واقعی پیش از آزمون با snapshot سازگار گرفته، رمزگذاری و در دیتابیس دیگری بازیابی شد؛ اثرانگشت هر ۱۴ جدول برابر بود. فایل و کلید خصوصی در گزارش و Git نیستند.
-- پس از ممیزی، داده‌های کاری محیط قبلی با مبنا برابرند؛ تغییر معمول expires_at و last_seen_at نشست فعال جدا ثبت شده است.
-- یک حساب مرجع کامل شامل تسک پایان‌یافته و مکث‌شده، سگمنت، حضور، تگ، کاتالوگ، برنامه، تنظیمات و تکمیلی ساخته شد؛ هیچ زمان واقعی به تکمیلی تبدیل نشد.
-- اجرای واقعی job پشتیبان، با منبع یکسان فایل/mtime تازه نساخت؛ ویرایش منبع نسخهٔ دوم ساخت و بایت‌های نسخهٔ قبلی حفظ شدند.
-- restart و بازسازی کانتینرهای audit با volume ماندگار، تمام جدول‌ها و نشست را حفظ کرد. dump/restore، رمز غلط و آرشیو ناقص نیز آزمایش شدند.
-- آزمون نهایی بار بدون وقفه بود: فعالیت هر worker حداقل 900.42 ثانیه، بیشترین فاصلهٔ بیکار 1.02 ثانیه و 2250 نوشتن معتبر. معیار p95 دو ثانیه بود؛ این تضمین ظرفیت تولید نیست.
-- در یک اجرای میانی، زمان پایش میزبان وقفه داشت؛ آن اجرا معیار پذیرشِ ۱۵ دقیقهٔ پیوسته محسوب نشد. اجرای نهایی مدت و فاصلهٔ فعالیت workerها را صریحاً ثبت می‌کند.
-- در سناریوی دو دستگاه، هر مرورگر نشست جدا داشت؛ تغییر گوشی در کامپیوتر و تغییر کامپیوتر در گوشی بدون reload دیده شد. خروج از یکی، دیگری را خارج نکرد.
+- At this audit stage, 18081, its accounts and desktop data were unchanged. New code was available only at localhost:18082.
+- Before testing, a consistent snapshot of existing data was encrypted and restored separately; all 14 table fingerprints matched. Dump/key were excluded from reports/Git.
+- Previous business data remained equal to baseline; normal active-session expires_at/last_seen_at renewals were recorded separately.
+- A complete reference account included finished/paused tasks, segments, attendance, tags, catalog, plans, settings and fill. Actual time was never converted into fill.
+- The real backup job created no new files/mtime changes for unchanged source. Source editing created a second version while retaining original bytes.
+- Audit restart/recreation with its persistent volume preserved every table and the session. Actual dump/restore, wrong passwords and truncated archives were tested.
+- Final uninterrupted load: each worker active at least 900.42 seconds, maximum idle gap 1.02 seconds, 2250 verified writes. Local p95 threshold was two seconds; this is not a production capacity guarantee.
+- A host-monitoring pause affected an intermediate run, which did not qualify as a continuous 15-minute soak. Final evidence explicitly records worker activity/gaps.
+- Desktop/phone browsers had independent sessions. Edits refreshed across devices without reload; logging out on one did not log out the other.
 
-## اصلاح‌های تأییدشده
+## Confirmed fixes
 
-| شناسه | مسئله | اصلاح/نتیجه | رگرسیون |
+| ID | Problem | Fix/result | Regression |
 | --- | --- | --- | --- |
-| QA-001/002 | زیادشدن پیشنهاد تکمیلی پس از گردکردن | کفِ گام ۵ دقیقه، سقف هر تسک و بودجهٔ کل با ۲۰۰۰ حالت تصادفی کنترل شد. | test_time_boundaries |
-| QA-003/009 | تاریخ با نوع نامعتبر یا مقدار خالی نامعتبر | ۴۰۰ صریح؛ نوع نامعتبر دیگر ۵۰۰ یا تاریخ پیش‌فرض ناخواسته نمی‌سازد. | test_journeys / test_security_audit |
-| QA-004/005 | موفقیت کاذب pipeline بک‌آپ و بازیابی | dump، اعتبار آرشیو، رمزگذاری، رمزگشایی و restore جدا کنترل می‌شوند. | test_backup_failures / backup-scripts.json |
-| QA-006 | رقابت کنترل‌های مکث/ادامه/پایان | کنترل‌ها هنگام درخواست غیرفعال‌اند؛ تست به پاسخ واقعی سرور متصل است. | E2E-04 / E2E-53 |
-| QA-007 | عبور بار loopback از پراکسی ویندوز | کلاینت محلی مستقیم شد؛ قطع اتصال اولیه به‌عنوان خطای محیط ثبت شده است. | load-proxy-baseline / load-release-direct |
-| QA-008 | PostCSS آسیب‌پذیر در وابستگی تو‌در‌توی Next | override سازگار به 8.5.31، npm ci، lint و build موفق؛ ارتقای عمدهٔ اجباری انجام نشد. | npm-advisories-before / npm-advisories |
-| QA-010/011 | دورزدن blocked یا سقف تکمیلی در API | ثبت مثبت در روز مسدود و عبور بیش از دقت قرارداد رد و rollback می‌شود. | test_security_audit |
-| QA-012 | فرمول‌شدن متن کاربر در Excel | همهٔ متن‌های خروجی صریحاً رشته‌اند؛ عنوان HYPERLINK اجرا نمی‌شود. | test_excel_user_text_is_never_executed_as_a_formula |
-| QA-013 | cache پاسخ خصوصی و نبود CSP | API با no-store؛ اسکریپت‌های استاتیک فقط با hash مجازند. تزریق اسکریپت در مرورگر رد شد. | http-security / E2E-57 |
-| QA-014 | ویرایش تسک واردشده بدون ساعت یا با مدت متفاوت | عنوان/متادیتا مدت را ترمیم یا گرد نمی‌کند؛ اعشار 60.12345 نیز حفظ می‌شود. | test_tabular_import / import-precision-red |
-| QA-015 | ویرایش قدیمی در دستگاه دوم | revision و خطای ۴۰۹؛ نسخهٔ جدید سرور و پیش‌نویس محلی محفوظ‌اند. | test_stale_device / import-devices |
-| QA-016 | تکرار ایمپورت یا قطع پاسخ بعد از commit | تکرار، no-op است؛ ردیف‌های یکسانِ واقعی حفظ می‌شوند و فایل قدیمی ویرایش بعدی را برنمی‌گرداند. | test_tabular_import / import-devices |
-| QA-017 | شمارهٔ خطا پس از سطرهای خالی فایل | شمارهٔ سطر فیزیکی فایل در خطا حفظ می‌شود. | test_errors_keep_physical_row_numbers |
-| UI-01 | نقش و نام دسترس‌پذیر نمودار و تقویم | دکمهٔ روز مستقل از تاریخ‌های کمکی و نمودار با نام/فوکوس درست ساخته شد. | axe route matrix |
-| UI-02 | کنتراست و برچسب کنترل‌ها | متن دکمه‌های روشن/تیره و checkbox گزارش روزانه اصلاح شد. | axe light/dark + dialogs |
-| UI-03 | گم‌شدن فوکوس پس از منوی تسک | فوکوس به محرک و پس از حذف به main برمی‌گردد؛ Escape و تلهٔ فوکوس بررسی شدند. | keyboard-focus-red / keyboard menu scenarios |
-| UI-04 | طولانی‌بودن ایمپورت با ستون‌های اختیاری | تشخیص خودکار و پیش‌نمایش کوتاه؛ تنظیم ستون‌ها فقط در صورت نیاز باز است. | import-devices screenshots |
-| IMG-01 | بسته‌های آسیب‌پذیر ابزار نصب و باینری‌ها | pip/ensurepip حذف و Caddy/gosu با Go 1.27.3 و وابستگی‌های اصلاح‌شده بازسازی شدند. | Trivy before/after |
+| QA-001/002 | Rounded fill suggestion exceeds caps | Floor five-minute steps; per-task/aggregate caps checked across 2000 randomized inputs. | test_time_boundaries |
+| QA-003/009 | Invalid or explicitly empty invalid date | Explicit 400; no 500 or unintended default date. | test_journeys / test_security_audit |
+| QA-004/005 | False pipeline success in backup/restore | Independently check dump, archive validity, encryption, decryption and restore. | test_backup_failures / backup-scripts.json |
+| QA-006 | Pause/resume/finish race | Disable controls while pending; tests await actual responses. | E2E-04 / E2E-53 |
+| QA-007 | Loopback load traverses Windows proxy | Direct local clients; initial disconnect retained as an environment failure. | load-proxy-baseline / load-release-direct |
+| QA-008 | Vulnerable nested PostCSS in Next | Compatible 8.5.31 override, npm ci/lint/build; no forced major upgrade. | npm-advisories-before / npm-advisories |
+| QA-010/011 | Bypass blocked state/fill cap through API | Reject/rollback positive blocked-day fill or values beyond contract precision. | test_security_audit |
+| QA-012 | User text becomes an Excel formula | Export text explicitly as strings; HYPERLINK title never executes. | test_excel_user_text_is_never_executed_as_a_formula |
+| QA-013 | Private caching/missing CSP | API no-store; only hashed static inline scripts; injected script blocked. | http-security / E2E-57 |
+| QA-014 | Imported task lacks clocks or duration differs | Metadata edits never repair/round duration; 60.12345 preserved. | test_tabular_import / import-precision-red |
+| QA-015 | Stale edit from a second device | Revision/409 preserves newer server data and local draft. | test_stale_device / import-devices |
+| QA-016 | Repeated import or lost post-commit response | Repeat is no-op; genuine identical rows retained; old file cannot undo later edits. | test_tabular_import / import-devices |
+| QA-017 | Wrong row number after blank lines | Report physical file row numbers. | test_errors_keep_physical_row_numbers |
+| UI-01 | Chart/calendar accessible roles/names | Separate day button from auxiliary dates; correct chart focus/name. | axe route matrix |
+| UI-02 | Contrast/control labels | Correct light/dark buttons and Daylog checkbox. | axe light/dark and dialogs |
+| UI-03 | Lost focus after task menu | Return focus to trigger/main after deletion; test Escape/focus trap. | keyboard-focus-red / keyboard menu scenarios |
+| UI-04 | Long import form with optional mappings | Automatic detection/short preview; expand mapping only when needed. | import-devices screenshots |
+| IMG-01 | Vulnerable installers/binaries | Remove pip/ensurepip; rebuild Caddy/gosu with Go 1.27.3/patched dependencies. | Trivy before/after |
 
-## اسکن imageهای نهایی
+## Final image scans
 
-| Image | Critical | High | Medium | Low | Unknown | دارای نسخهٔ اصلاح‌شده |
+| Image | Critical | High | Medium | Low | Unknown | Fixed version available |
 | --- | --- | --- | --- | --- | --- | --- |
 | API | 0 | 44 | 58 | 61 | 1 | 0 |
 | Web / Caddy | 0 | 0 | 0 | 0 | 1 | 0 |
 | PostgreSQL | 1 | 61 | 109 | 138 | 4 | 0 |
 | Personal backup | 0 | 44 | 58 | 61 | 1 | 0 |
 
-ممیزی npm: 0 بستهٔ دارای advisory از 394 بستهٔ قفل‌شده. Python: 0 آسیب‌پذیری شناخته‌شده در وابستگی‌های برنامه/Sheets. اسکن source: 0 secret تشخیص‌داده‌شده؛ فایل‌های خصوصی اصلاً جزو source scan و Git نیستند.
+npm: zero advisories among 394 locked packages. Python app/Sheets dependencies: zero known vulnerabilities. Source secrets: zero detected; private files were never in source-scan/Git scope.
 
-## موارد باز و حدود ادعا
+## Open findings and limits
 
-- امنیت imageها پاک نیست: یافته‌های توزیع Debian در API/job و PostgreSQL باقی‌اند. هیچ موردِ دارای نسخهٔ اصلاح‌شده در اسکن نهایی باقی نمانده، ولی این به معنی بی‌خطر بودن موارد بدون اصلاحیه نیست.
-- CVE-2026-6653 در libxml2 دیتابیس با شدت CRITICAL در خروجی اسکن باقی است. Debian trixie آن را vulnerable و در یادداشت ناشر «Minor issue / no-dsa» اعلام می‌کند. این برنامه ورودی XML را به توابع XML دیتابیس نمی‌دهد؛ این مشاهده، جای اصلاح کتابخانه یا تأیید نبود مسیر سوءاستفاده را نمی‌گیرد.
-- GO-2026-5932 دربارهٔ بستهٔ قدیمی openpgp به‌صورت UNKNOWN در module رمزنگاری Caddy گزارش می‌شود. بررسی مستقل باینری با govulncheck به پاسخ ۴۰۳ پایگاه عمومی خورد؛ اجرا موفق یا نتیجهٔ صفر محسوب نشده است.
-- ZAP احراز هویت‌شده روی حساب تازه، 55 مسیر API را با سیاست API بررسی کرد؛ هشدار Low برای HTML ریشهٔ وب مورد انتظار بود و پاسخ‌های ۴xx ورودی نامعتبر به‌عنوان اطلاع ثبت شدند. خطای ۵xx/یافتهٔ high در این اجرای محدود گزارش نشد؛ تست نفوذ کامل نیست.
-- ممیزی JavaScript با endpoint رسمی npm انجام شد؛ خود فرمان npm audit در تلاش اولیه خطای شبکه داشت. نتیجهٔ آن تلاش، قبولی محسوب نشده است.
-- Google Sheet واقعی به سرویس‌اکانت و شیت اختصاصی نیاز دارد؛ فقط تست‌های شبیه‌سازی/قرارداد، مالکیت، تغییر دستی مقصد، حذف و شکست شبکه انجام شدند.
-- HTTPS واقعی، Safari/iOS، Firefox و گوشی فیزیکی در این محیط تأیید نشده‌اند. آزمون موبایل، Chrome با viewport و لمس واقعیِ شبیه‌سازی‌شده بود.
-- GitHub Actions روی سرور GitHub در این کار اجرا نشده و انتشار تولید انجام نشده است. نوشتن workflow معادل اجرای آن نیست.
-- استک قدیمی ۱۸۰۸۱ از tmpfs استفاده می‌کند؛ آن را محیط دائمی فرض نکنید یا بدون مهاجرت/بک‌آپ متوقف نکنید. compose اصلی و audit volume ماندگار دارند.
+- Debian findings remain in API/job/PostgreSQL. No final finding had an available fixed version, which does not make unfixed findings harmless.
+- PostgreSQL libxml2 CVE-2026-6653 remains CRITICAL in scanner output. Debian trixie lists it vulnerable with a Minor issue/no-dsa vendor note. The application does not feed XML to DB XML functions; this observation is not a library fix or proof of unreachability.
+- Caddy crypto-module GO-2026-5932 concerning legacy openpgp remains UNKNOWN. Independent govulncheck failed with public-database HTTP 403, not a clean result.
+- Authenticated ZAP scanned 55 API paths under the API policy. Low warning for root HTML was expected; malformed-input 4xx responses were informational. No 5xx/high finding appeared in this bounded run; this is not a full penetration test.
+- JavaScript auditing used npm's official advisory endpoint. The initial npm audit transport failed; that attempt was not counted as success.
+- Live Sheets requires a service account/dedicated sheet; simulations/contracts covered ownership, destination edits, deletions and network failure.
+- Real HTTPS, Safari/iOS, Firefox and physical phones were unverified. Mobile tests used Chrome viewport/touch emulation.
+- GitHub Actions did not run remotely and production was not deployed. Writing a workflow does not execute it.
+- The old 18081 DB uses tmpfs; do not treat it as permanent or stop it without migration/backup. Main Compose/audit use persistent volumes.
 
-## تحویل و بازتولید
+## Delivery and reproduction
 
-- راهنمای دقیق محیط و فرمان‌ها: [AUDIT_RUNBOOK.md](AUDIT_RUNBOOK.md).
-- کد تست‌ها: `backend/tests` و `frontend/tests/e2e`؛ ابزارهای عملیاتی: `tools/audit_*.py`.
-- شواهد محلی و گزارش HTML/ZIP در `artifacts/audit` و `artifacts/TIME-LOG-QA-2026-10-25.zip` قرار می‌گیرند و در Git نیستند.
-- JUnit، coverage، JSON بار/امنیت، تصاویر حساب‌های آزمایشی و مقایسهٔ اثرانگشت نگهداری شده‌اند؛ dump، کلید، کوکی و رمز تولیدشده در بستهٔ تحویلی قرار ندارند.
-- README انگلیسی، عنوان TIME LOG و راهنمای قالب‌های Excel/CSV به‌روزرسانی شده‌اند. ساختار لایه‌ها و entrypointهای قبلی حفظ شده‌اند؛ import مایگریشن تازه‌ای نیاز ندارد.
-- انتشار نسخه و تاریخچهٔ اصلاح‌شده در GitHub با تأیید صریح صاحب مخزن مجاز شده است؛ استقرار تولید و اجرای GitHub Actions جزو این نتیجه نیست.
+- [Runbook](AUDIT_RUNBOOK.md); tests in backend/tests and frontend/tests/e2e; operational tools in tools/audit_*.py.
+- Ignored local evidence/HTML under artifacts/audit; package artifacts/TIME-LOG-QA-2026-10-25.zip.
+- JUnit, coverage, load/security JSON, synthetic screenshots and restore fingerprints retained; no dumps, keys, cookies or generated passwords in delivery.
+- English README, TIME LOG branding and Excel/CSV templates updated; layer boundaries/entrypoints preserved; import needed no migration.
+- Owner explicitly authorized publishing the version/rewritten history to GitHub. Actual production deployment/GitHub Actions execution are outside this result.
 
-منابع ارزیابی باز: [Debian دربارهٔ libxml2](https://security-tracker.debian.org/tracker/CVE-2026-6653)، [اعلان Go دربارهٔ openpgp](https://pkg.go.dev/vuln/GO-2026-5932)، [محدودهٔ API Scan در ZAP](https://www.zaproxy.org/docs/docker/api-scan/).
+Primary triage sources: [Debian libxml2](https://security-tracker.debian.org/tracker/CVE-2026-6653), [Go openpgp advisory](https://pkg.go.dev/vuln/GO-2026-5932), [ZAP API Scan scope](https://www.zaproxy.org/docs/docker/api-scan/).

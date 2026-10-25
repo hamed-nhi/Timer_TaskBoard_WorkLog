@@ -1,114 +1,127 @@
-# HANDOFF — تایم‌لاگ وب
+# HANDOFF — TIME LOG web
 
-این سند وضعیت فعلی پروژه در ۲۰۲۶-۱۰-۲۵ را بیان می‌کند. برای نقشهٔ معماری، docs/ARCHITECTURE.md و AGENTS.md را بخوانید. PLAN.md سند طراحی اولیه است؛ تصمیم‌های جدید این سند اولویت دارند.
+Project context as of 2026-10-25. Read [ARCHITECTURE.md](ARCHITECTURE.md) for the layout. PLAN.md records the original design; newer decisions in this handoff take precedence. Local contributor instructions may supplement these documents but are not required to deploy the application.
 
-## محصول و تصمیم‌ها
+## Product and decisions
 
-تایم‌لاگ یک برنامهٔ ثبت ساعت، تسک، برنامه‌ریزی، حضور دستی و گزارش شمسی با رابط فارسی RTL و موبایل‌پسند است. بک‌اند FastAPI و PostgreSQL 18، فرانت Next.js 15 و React 19 با خروجی استاتیک و Caddy است.
-نوع گزارش، پروژه و استوری برای هر حساب خصوصی است. تمام کاربران صفحهٔ «مدیریت» خود را دارند؛ مدیریت حساب کاربران فقط برای ادمین است. ادمین هم در API کاتالوگ و فعالیت دیگران را نمی‌خواند.
-ورود با نام کاربری/رمز، نشست در PostgreSQL و کوکی HttpOnly است. اعتبار پیش‌فرض ۹۰ روز است و با فعالیت کاربر حداکثر هر ساعت تمدید می‌شود. COOKIE_SECURE خالی از scheme پیروی می‌کند؛ مقدار صریح اولویت دارد. صفحهٔ login با سشن معتبر به برنامه می‌رود.
-محدودیت ورود در بک‌اند: برای IP/حساب سه خطا و مراحل ۱۵ دقیقه، ۱۰ ساعت و ۳۰ روز؛ سه نام ناشناس، بن ۲۴ ساعتهٔ IP. تنظیمات و رفع بن در پنل مدیر؛ راهنمای جدید DEPLOY.md. تغییر رمز بقیهٔ نشست‌ها را می‌بندد.
-حضور فقط دستی است. حالت آفلاین و service worker ندارد. PWA manifest فقط برای افزودن به صفحهٔ اصلی است.
+TIME LOG tracks time, tasks, plans, manual attendance and Jalali reports through a responsive Persian RTL interface. It uses FastAPI and PostgreSQL 18, Next.js 15 and React 19 with a static export, and Caddy.
 
-## قواعد کار و داده
+Report types, projects and stories are private to each account. Every user has a Management page for their own catalog; only administrators manage accounts. Administrators cannot read other users' catalogs or activities through the API.
 
-- پاسخ به کاربر فارسی و کوتاه باشد؛ محدودیت‌های تست/استقرار روشن بیان شود.
-- نسخهٔ دسکتاپ در C:\Users\hnahali\Documents\Folder\Hamed-stuff\time-sys فقط خوانده شود و هیچ تغییری در آن داده نشود.
-- tasklog.db واقعی هرگز برای نوشتن یا تست باز نشود. importer فقط کپی را با mode=ro می‌خواند.
-- زمان اصلی تسک‌ها در تکمیل ساعت تغییر نکند؛ fill_minutes جداست. داده‌های واقعی حفظ شوند.
-- تست فقط روی دیتابیس اختصاصی/کپی انجام شود. پیش از تغییر عمدی دادهٔ واقعی بک‌آپ معتبر لازم است. محل قبلی بک‌آپ دسکتاپ C:\TimeLogBackups\before_<what>_<ts>.db است.
-- مایگریشن‌های قبلی بازنویسی نشوند؛ تغییر طرح با مایگریشن جدید انجام شود.
-- .env، secret، دیتابیس و dump در Git نروند.
-- پس از تغییر کامل و تست‌شده کامیت محلی انجام شود؛ اعتباردهی خودکار به مدل به پیام کامیت اضافه نشود. کاربر خودش push می‌کند؛ push نکنید.
+Authentication uses usernames/passwords, PostgreSQL sessions and an HttpOnly cookie. Sessions default to 90 days and renew with activity at most once an hour. Empty COOKIE_SECURE follows the request scheme; an explicit value takes precedence. Opening login with a valid session redirects to the application.
 
-## ساختار فعلی
+Backend login bans apply to an IP/account pair: three failures trigger 15 minutes, then 10 hours, then 30 days. Three unknown usernames trigger a 24-hour IP ban. Administrators configure and release bans through the UI; see [DEPLOY.md](../DEPLOY.md). Changing a password invalidates other sessions.
 
-- app/main.py فقط create_app و اتصال اجزای برنامه است؛ app.main:app ثابت مانده است.
-- app/api/routes مسئول Body/Query، dependencyها و پاسخ HTTP است؛ SQL و commit در آن ممنوع است.
-- app/api/dependencies کاربر، نقش و اتصال درخواست را حل می‌کند. middleware، exception_handlers و session پاسخ/کوکی را مدیریت می‌کنند.
-- app/services قواعد کسب‌وکار و تراکنش را نگه می‌دارد؛ نباید FastAPI یا app/api را وارد کند. توابع ساده نگه داشته شده‌اند و Repository/Interface اضافی ایجاد نشده است.
-- app/db/session.py wrapper Db و Session را دارد؛ app/db/models.py مدل‌ها را دارد.
-- app/core تنظیمات، خطا، هش رمز/توکن و زمان را دارد؛ به API/سرویس/دیتابیس وابسته نیست.
-- frontend/src/app مسیر و layout است؛ page.tsxها view قابلیت را صادر می‌کنند.
-- frontend/src/features کد هر قابلیت را نگه می‌دارد؛ components/app-shell.tsx اتصال providerها و ناوبری است؛ shared و lib مستقل از قابلیت‌ها هستند.
-- تست‌های بدون دیتابیس در tests/unit؛ تست‌های API/PostgreSQL در tests/integration. ابزارهای مشترک در tests/support.py هستند؛ از conftest وارد نکنید.
-- tests یک پکیج است. ممنوعیت قدیمی tests/__init__.py دیگر معتبر نیست؛ وابستگی به import مستقیم conftest حذف شده است.
-- آدرس‌های عمومی API و صفحه‌ها ثابت مانده‌اند. در بازآرایی ساختار، مایگریشن یا دادهٔ واقعی تغییر نکرد.
+Attendance is manual. There is no offline mode or service worker. The PWA manifest only supports adding the application to a home screen.
 
-## قراردادهای مهم
+## Work and data rules
 
-زمان‌ها naive وقت تهران هستند؛ timestamp بدون timezone و start/end از نوع رشتهٔ HH:MM. now_local از Asia/Tehran استفاده می‌کند.
-هر دادهٔ شخصی باید با user_id فیلتر شود. task_segments از مالک تسک پیروی می‌کند. شناسهٔ متعلق به دیگری عموماً 404 است؛ حذف تسک/برنامه/حضور دیگران همچنان no-op است.
-کاتالوگ شخصی با /api/catalog مدیریت و با /api/company-catalog برای انتخاب خوانده می‌شود. قیود مرکب دیتابیس اتصال تگ/نوع/استوری از حساب دیگر را رد می‌کنند.
-شروع تسک دوم وقتی یکی running است رد می‌شود؛ مکث خودکار صورت نمی‌گیرد. چند تسک paused مجاز است. Db.lock_user از pg_advisory_xact_lock استفاده می‌کند.
-پرکردن: سقف هدف ۹۵٪، پیشنهاد هر تسک ۵۰٪ زمان خودش، گام ۵ دقیقه، سقف حضور قابل‌اعتماد ۶۶۰ دقیقه، ناهار فرضی ۳۰ دقیقه بعد از ۶ ساعت بی‌وقفه، جمعه بدون پیشنهاد. ذخیرهٔ تکمیلی مثبت در حالت blocked رد می‌شود؛ زمان اصلی تغییر نمی‌کند.
-Audit شامل task_deleted، fill_rollback و tag_merge است.
+- Keep user-facing communication concise and in Persian, and state material verification/deployment limits.
+- The desktop source at `C:\Users\hnahali\Documents\Folder\Hamed-stuff\time-sys` is read-only and must remain untouched.
+- Never open the live tasklog.db for writes or tests. The importer reads a copy with `mode=ro`.
+- Report fill must not change original task times; `fill_minutes` is separate. Preserve real data.
+- Test only on dedicated databases or copies. Verify a backup before intentional real-data migrations. A previous desktop backup location was `C:\TimeLogBackups\before_<what>_<ts>.db`.
+- Add migrations rather than rewriting existing ones.
+- Never commit .env, secrets, databases or dumps.
+- Commit complete, tested changes locally without automatic model attribution. Publishing requires the owner's authorization; this handoff does not grant it by itself.
 
-## مایگریشن و ورود داده
+## Current structure
 
-0001 طرح اولیه است. 0002 کاتالوگ مرتبط با تسک، تگ و آرشیو هر کاربر را برای او کپی و اتصال‌ها را منتقل می‌کند؛ زمان و حضور را تغییر نمی‌دهد.
-اصل رکوردهای مشترک قدیمی بدون مالک حفظ و از API مخفی می‌شود؛ موارد بدون ارتباط، چون مالک مشخصی ندارند، خودکار به کسی نسبت داده نمی‌شوند.
-0002 در این کار فقط روی دیتابیس تست اجرا شده است. پیش از استفاده از نسخهٔ جدید روی دیتابیس فعلی، بک‌آپ و سپس alembic upgrade head لازم است.
+- app/main.py only composes create_app and the application; app.main:app stays stable.
+- app/api/routes owns Body/Query input, dependencies and HTTP responses; SQL and commits are forbidden there.
+- app/api/dependencies resolves request users, roles and database access. Middleware, exception_handlers and session handle response/cookie behavior.
+- app/services owns business rules and transactions; it must not import FastAPI or app/api. Reuse plain functions without unnecessary Repository/Interface layers.
+- app/db/session.py provides Db and Session; app/db/models.py defines models.
+- app/core owns configuration, errors, password/token hashing and time; it does not depend on API/services/DB.
+- frontend/src/app owns routes/layouts; page.tsx files export feature views.
+- frontend/src/features owns feature code; components/app-shell.tsx composes providers and navigation. shared and lib are independent of features.
+- Database-independent tests live in tests/unit; API/PostgreSQL tests in tests/integration. Shared helpers live in tests/support.py; do not import conftest.
+- tests is a package. The old restriction against tests/__init__.py no longer applies; direct imports from conftest were removed.
+- The structural refactor preserved public API/page URLs and changed neither migrations nor real data.
+
+## Important contracts
+
+Times are naive Tehran wall-clock values: timestamps have no timezone and start/end are HH:MM strings. now_local uses Asia/Tehran.
+
+Filter all personal data by user_id. task_segments inherit ownership from the task. Other users' identifiers generally return 404; deleting their task/plan/attendance remains a no-op.
+
+Manage the personal catalog through /api/catalog and read its selection list through /api/company-catalog. Composite constraints reject tags/types/stories from another account.
+
+Starting a second task while one is running is rejected; no automatic pause occurs. Multiple paused tasks are allowed. Db.lock_user uses pg_advisory_xact_lock.
+
+Fill rules: maximum target 95%, each task capped at 50% of its own time, five-minute steps, trusted attendance capped at 660 minutes, assumed 30-minute lunch after six uninterrupted hours, and no Friday suggestion. Positive fill in a blocked state is rejected; original time is unchanged.
+
+Audit events include task_deleted, fill_rollback and tag_merge.
+
+## Migrations and data import
+
+0001 is the initial schema. 0002 copies each user's related catalog records and redirects task/tag/archive references without changing time or attendance.
+
+Legacy shared records are retained without an owner and hidden from the API. Unrelated records with no identifiable owner are not assigned automatically.
+
+At the catalog-refactor stage, 0002 had only been tested on disposable databases. Any real upgrade requires a verified backup followed by alembic upgrade head. Later authorized local upgrades are recorded below.
+
 CLI:
-- python -m app.cli create-user <username> --admin
-- python -m app.cli reset-password <username>
-- python -m app.cli import-catalog catalog.json --user <username>
-- python -m app.cli import-desktop <copy.db> --user <username> --dry-run
 
-## اجرا و بررسی
+- `python -m app.cli create-user <username> --admin`
+- `python -m app.cli reset-password <username>`
+- `python -m app.cli import-catalog catalog.json --user <username>`
+- `python -m app.cli import-desktop <copy.db> --user <username> --dry-run`
 
-Postgres توسعه: docker compose -f docker-compose.dev.yml up -d، پورت 5442.
-بک‌اند از backend: ..\venv\Scripts\python -m uvicorn app.main:app --port 8000.
-فرانت از frontend: npm.cmd run dev. از npm.cmd استفاده کنید چون npm.ps1 ممکن است مسدود باشد.
-تست سریع: python -m pytest -q tests/unit، بدون دیتابیس.
-تست کامل: TEST_DATABASE_URL باید یک دیتابیس اختصاصی با پسوند _test باشد؛ سپس python -m pytest -q. fixture integration، public schema را بازسازی می‌کند.
-دیتابیس مستقل استفاده‌شده در این کار: timelog_catalog_20261024_b68d_test. به timelog واقعی/توسعه وصل نشوید.
-فرانت: npm.cmd run lint و npm.cmd run build.
-CI unit/architecture و integration را جدا اجرا می‌کند. چهار تست معماری، مرز لایه‌ها، ممنوعیت SQL در route، قرارداد ورودی مسیرهای قبلی و سه مسیر جدید import و create_app را کنترل می‌کنند.
-۱۷۳ تست عملکرد قبلی پس از انتقال پاس شده‌اند؛ همراه چهار تست معماری، مجموعهٔ ۱۷۷تایی نیز پاس شده است. لینت و بیلد فرانت پس از انتقال به src موفق بودند. اجرای نهایی پس از پاکسازی واردسازی‌ها: ۱۷۷ تست در ۴۸ ثانیه پاس شد. alembic check هم هیچ تغییر طرحی تشخیص نداد.
+## Running and validating
 
-## وضعیت جاری QA و محدودیت‌ها — ۲۰۲۶-۱۰-۲۵
+Development PostgreSQL: `docker compose -f docker-compose.dev.yml up -d`, port 5442.
+Backend from backend: `..\venv\Scripts\python -m uvicorn app.main:app --port 8000`.
+Frontend from frontend: `npm.cmd run dev`; use npm.cmd if npm.ps1 is blocked.
+Fast tests: `python -m pytest -q tests/unit`, without a database.
+For full tests, set TEST_DATABASE_URL explicitly to a dedicated `_test` database, then run `python -m pytest -q`. Integration fixtures recreate public schema.
+A historical disposable database was timelog_catalog_20261024_b68d_test; never point tests at real/development timelog.
+Frontend validation: `npm.cmd run lint` and `npm.cmd run build`.
 
-مرجع اجرا و گزارش فعلی `docs/testing/AUDIT_RUNBOOK.md` و `AUDIT_RESULTS.fa.md` است؛ گزارش‌های قدیمی‌تر صرفاً سابقه‌اند. ۳۲۵ تست بک‌اند/عملیات با پوشش ترکیبی ۹۱٫۲۳٪ موفق‌اند؛ xfailهای قبلی حذف و ایرادها با تست رگرسیون اصلاح شده‌اند. واحدهای فرانت، سفر مرورگر مدیر/کاربر، واردکردن فایل و دو دستگاه، و ماتریس دسترس‌پذیری/عرض/رنگ جدا گزارش می‌شوند.
+CI separates unit/architecture checks from integration. Architecture tests enforce layer boundaries, no SQL in routes, original HTTP input contracts, the separate three-route import contract, and equivalent create_app composition. New login contracts are tracked separately.
 
-محیط audit مستقل روی ۱۸۰۸۲ و PostgreSQL روی ۵۵۴۴ با volume ماندگار است. integration فقط روی `timelog_audit_integration_test` اجرا می‌شود؛ fixture به TEST_DATABASE_URL صریح نیاز دارد و دیتابیس مرورگر/نسخه‌های حفظ‌شده را رد می‌کند. استک قبلی روی ۱۸۰۸۱ و دیتای دسکتاپ در این ممیزی تغییر نکرده‌اند. دیتابیس آن دموی قدیمی tmpfs است؛ آن را با استقرار دائمی اشتباه نگیرید یا بدون مهاجرت و بک‌آپ متوقف نکنید.
+Historical refactor results: all 173 pre-existing functional tests passed; adding four architecture tests produced 177 passes. Frontend lint/build passed after moving to src. The final import-cleanup run passed 177 tests in 48 seconds; alembic check found no schema drift.
 
-بازیابی و fingerprint چهارده جدول، سشن پس از restart/recreate، رمزگذاری واقعی نسخهٔ حفظ‌شده و شکست صریح رمز غلط/فایل ناقص بررسی شده‌اند. backup.sh و restore_test.sh دیگر موفقیت مصرف‌کنندهٔ pipeline را جای موفقیت تولیدکننده حساب نمی‌کنند. بار ترکیبی ده کاربر و آزمون ۱۵ دقیقه‌ای با بررسی تک‌تک ثبت‌ها انجام شده؛ جزئیات و مرز تفسیر در گزارش‌اند.
+## Initial audit results and limits — 2026-10-25
 
-PostCSS آسیب‌پذیرِ تو‌در‌تو با override سازگار ارتقا یافت. Caddy و gosu با Go و وابستگی‌های اصلاح‌شده بازسازی می‌شوند؛ موتور PostgreSQL و چیدمان دیتای آن حفظ شده است. pip/ensurepip غیرضروری در imageهای API/job حذف شده‌اند. CSP خروجی استاتیک با hash اسکریپت‌ها ساخته می‌شود؛ API دادهٔ خصوصی را no-store می‌دهد. برخی یافته‌های بسته‌های Debian هنوز بدون اصلاحیهٔ stable هستند؛ گزارش امنیت پاک اعلام نمی‌شود. govulncheck به دلیل پاسخ ۴۰۳ پایگاه عمومی کامل نشد و موفق محسوب نیست.
+The initial audit is documented in docs/testing/AUDIT_RUNBOOK.md and AUDIT_RESULTS.fa.md; older reports are historical. It passed 325 backend/operational tests at 91.23% combined coverage. Previous xfails were replaced by fixes and regression tests. Frontend units, admin/user journeys, file import/two-device checks and accessibility/viewport/theme matrices were reported separately.
 
-اتصال واقعی Google Sheet، HTTPS دامنهٔ واقعی، Safari/iOS، گوشی فیزیکی، تست نفوذ کامل و ظرفیت تولید تأیید نشده‌اند. اجرای CI روی GitHub نیز با اجرای محلی یکی نیست. اسکرپ استوری سامانهٔ اصلی خارج از این تغییر است. هیچ push یا انتشار تولید در این ممیزی انجام نمی‌شود.
+Audit uses port 18082 and PostgreSQL 5544 with a persistent volume. Integration uses only timelog_audit_integration_test; fixtures require an explicit TEST_DATABASE_URL and reject browser/preserved databases. That audit did not change the old 18081 stack or desktop data. The old demo DB uses tmpfs; it is not permanent storage and must not be stopped without backup/migration.
 
-## ورود تاریخچه و چند دستگاه
+Verified checks included 14-table restore fingerprints, session persistence through restart/recreation, actual encryption of the preserved copy, and explicit rejection of wrong keys/truncated archives. backup.sh and restore_test.sh no longer mistake consumer pipeline success for producer success. Mixed load and a 15-minute soak verified every saved write; see the audit for interpretation limits.
 
-نام نمایشی محصول TIME LOG و README انگلیسی است. تنظیمات فایل XLSX/CSV و نمونهٔ هر دو قالب و راهنمای قابل دانلود برای تبدیل توسط مدل دارد. `tabular_parser.py` خواندن محدود فایل و اعتبارسنجی را انجام می‌دهد؛ `tabular_import.py` پیش‌نمایش، مالکیت، تشخیص ورود مجدد و تراکنش را نگه می‌دارد. تمام ردیف‌های فایل با هم ثبت می‌شوند؛ خطا مانع کل ثبت است. زمان واقعی، تکمیلی، اعشار و تعداد ردیف‌های یکسان واقعی حفظ می‌شوند. ورود مجدد فایل قبلی، ویرایش یا حذف بعدی کاربر را برنمی‌گرداند. فایل تغییرکرده رکورد موجود را بازنویسی نمی‌کند؛ پیش‌نمایش و README این رفتار را توضیح می‌دهند.
+A compatible override fixed nested PostCSS. Caddy and gosu are rebuilt with patched Go/dependencies while preserving PostgreSQL engine/data layout. Unused pip/ensurepip are removed from API/job images. Static CSP hashes authorize exported scripts; private API responses use no-store. Some Debian packages have no stable fix. Image security is not clean. govulncheck failed with a public-database HTTP 403 and is not counted as successful.
 
-این قالب فقط تسک تمام‌شده را منتقل می‌کند؛ حضور، لاگ مکث و برنامهٔ آیندهٔ غایب از خروجی ساخته نمی‌شوند. انتقال کامل SQLite همچنان CLI و فقط روی کپی/حساب خالی است. برای ایمپورت مایگریشن تازه‌ای لازم نشده است. فایل بیش از ۵ مگابایت، بیش از ۵۰۰۰ ردیف، گسترش ZIP بیش از ۵۰ مگابایت و سلول فرمول رد می‌شود؛ defusedxml در runtime نصب است.
+Live Google Sheets, real-domain HTTPS, Safari/iOS, physical phones, a full penetration test and production capacity remain unverified. Writing GitHub CI is not equivalent to running it. Story scraping from the original upstream system is outside this change. The audit itself did not deploy production; subsequent owner-authorized GitHub publication is separate.
 
-SWR صفحه‌های فعال را دوره‌ای تازه می‌کند؛ ورود هم‌زمان دو مرورگر سشن جدا دارد. فرم ویرایش تسک revision می‌فرستد و ویرایش قدیمی با ۴۰۹ رد می‌شود؛ پیش‌نویس در فرم باقی می‌ماند. تغییر عنوان/متادیتای تسک واردشده، زمان آن را ترمیم یا گرد نمی‌کند. نامعلوم‌بودن ساعت شروع/پایان جلوی ویرایش عنوان تسکِ دارای مدت را نمی‌گیرد.
+## History import and multiple devices
 
-## پشتیبان شخصی (۲۰۲۶-۱۰-۲۵)
+The public name is TIME LOG and README is English. Settings supports XLSX/CSV history import, templates for both formats and a downloadable model-conversion guide. tabular_parser.py bounds file reading and validates input; tabular_import.py owns preview, ownership, repeat detection and transactions. Rows commit together or not at all. Recorded time, separate fill, fractional values and counts of genuine identical rows are preserved. Re-importing an old file cannot undo later edits/deletions. A changed file adds records instead of overwriting existing records, as preview and README explain.
 
-خروجی‌های JSON/Excel نام نسخه‌دار مختص حساب دارند. `python -m app.cli backup-users --output ...` فایل‌های تغییرناپذیر هر حساب را می‌سازد؛ زمان اجرا به‌تنهایی نسخه نمی‌سازد. اتصال اختیاری Google Sheet فقط رکوردهای جدید/تغییرکرده در منبع را همگام می‌کند و برای حذف، سابقه را نگه می‌دارد. لینک مشترک بین حساب‌ها رد می‌شود. image جدا `Dockerfile.backup` و profile `backup` اضافه شده‌اند. تنظیمات سرویس‌اکانت و زمان‌بندی واقعی باید در سرور انجام شوند؛ راهنما و محدودیت‌ها در `docs/PERSONAL_BACKUPS.fa.md` آمده‌اند. فایل checkpoint و `.instance-id` باید همراه نسخه‌ها نگهداری شوند. اتصال واقعی Google در محیط توسعه آزمایش نشده است.
+The format transfers completed tasks only; it does not invent missing attendance, pause logs or future plans. Full SQLite migration remains a CLI operation on a copy and an empty account. Import required no new migration. Files above 5 MB, 5,000 rows, 50 MB expanded ZIP size, or containing formula cells are rejected. Runtime includes defusedxml.
 
-## رابط واکنش‌گرا و هشدار حضور (۲۰۲۶-۱۰-۲۵)
+SWR refreshes active pages periodically. Two browsers have separate sessions. Task edit forms send a revision; stale edits return 409 and retain the draft. Editing an imported task's title/metadata does not repair or round its time. Unknown start/end times do not prevent editing a duration-bearing task's title.
 
-پوسته وب fluid تا ۱۹۲۰ است؛ از ۱۱۰۰ به بالا منوی کناری دارد و چیدمان قابلیت‌ها با container query از عرض محتوای ۹۰۰ به بالا چندستونه می‌شود. shared/theme.tsx حالت system/light/dark را با کلید timelog-theme نگه می‌دارد؛ layout ریشه قبل از paint پوسته را اعمال می‌کند. Modal و MoreMenu از portal به body استفاده می‌کنند. استوری کاتالوگِ بدون تگ در انتخاب‌گر نمایش داده می‌شود و با پنجره ازپیش‌پرشده و تأیید کاربر به تگ وصل می‌شود.
+## Personal backups — 2026-10-25
 
-مسیر جدید /api/presence/alerts هشدار خصوصی روزهای گذشته را می‌دهد؛ جمع واقعی + تکمیلی با حضور مقایسه می‌شود. روز جاری/آینده هشدار ندارد و داده خودکار اصلاح نمی‌شود. POST /api/presence اکنون date اختیاری ISO برای اصلاح روز گذشته دارد؛ ساعت خروج برای گذشته اجباری و ثبت آینده ممنوع است. محاسبه هشدارِ بازه باز قدیمی در نیمه‌شب همان روز متوقف می‌شود. تست‌ها و محدودیت‌ها در docs/testing/UI_REVIEW.fa.md آمده‌اند.
+JSON/Excel downloads have account-specific versioned names. `python -m app.cli backup-users --output ...` creates immutable account files; elapsed runtime alone does not create a revision. Optional Google Sheet sync writes only source-new/source-changed records and preserves deletion history. Accounts cannot share a sheet. Dockerfile.backup and the backup profile provide the job. Server credentials/scheduling require deployment configuration; see docs/PERSONAL_BACKUPS.fa.md. Preserve checkpoints and .instance-id with versions. Live Google connectivity was not tested locally.
 
+## Responsive UI and attendance warnings — 2026-10-25
 
-## تحویل استقرار و امنیت ورود — ۲۰۲۶-۱۰-۲۵
+The fluid web shell extends to 1920 pixels, uses a sidebar from 1100 pixels, and switches features to multiple columns using container queries at 900 pixels of content width. shared/theme.tsx stores system/light/dark under timelog-theme; root layout applies the theme before paint. Modal and MoreMenu portal into body. A catalog story without a tag appears in the selector and can be linked through a prefilled confirmation dialog.
 
-راهنمای سرور در `DEPLOY.md` است. مایگریشن‌های افزایشی 0003 و 0004 فقط state امنیت ورود می‌سازند و زمان‌های کاری را تغییر نمی‌دهند. حساب‌ها حذف نمی‌شوند؛ فقط فعال/غیرفعال می‌شوند. مدیر می‌تواند نام کاربری، رمز، نام نمایشی و نقش را ویرایش کند؛ تغییر مشخصات ورود نشست‌ها را لغو می‌کند. دسترسی به دادهٔ شخصی دیگران همچنان ممنوع است.
+/api/presence/alerts returns private warnings for past days, comparing actual plus fill time against attendance. Today/future dates are excluded; data is never corrected automatically. POST /api/presence accepts an optional ISO date for past corrections, requires an end time for past days and rejects future attendance. Old open intervals are capped at that day's midnight. Tests and limits are in docs/testing/UI_REVIEW.fa.md.
 
-کپچای Arcaptcha اختیاری و پیش‌فرض خاموش است چون کلید واقعی ارائه نشده. پیکربندی عمومی از بک‌اند می‌آید؛ Secret فقط سرور است؛ هر توکن در سرور تأیید و در PostgreSQL یکبار مصرف می‌شود. خطای سرویس باعث ورود بدون کپچا نمی‌شود. تست زندهٔ ارائه‌دهنده بدون کلید تأیید نشده است.
+## Deployment handoff and login security — 2026-10-25
 
-سد سریع حافظه‌ای پیش از route/SQL، بودجهٔ ثابت و cache محدود دارد. بن اصلی در PostgreSQL ماندگار است. سد حافظه‌ای per-process است و جای CDN/WAF یا حفاظت حجمی DDoS را نمی‌گیرد. هیچ CDN یا سرور واقعی از این محیط تنظیم نشده است.
+DEPLOY.md is the server guide. Additive migrations 0003/0004 create login-security state without changing recorded work times. Accounts are only activated/deactivated, not deleted. Administrators edit usernames, passwords, display names and roles; credential changes invalidate sessions. Other users' personal records remain inaccessible.
 
-کنسول نجات: `python -m app.cli login-security` و `python -m app.cli unblock-login --ip <IP> --reset`. رمزهای حساب‌های محلی در فایل خصوصی زیر secrets نگه داشته می‌شوند و در Git/گزارش نیستند؛ سرور تازه با فرمان‌های DEPLOY حساب‌های مستقل می‌سازد.
+ARCaptcha is optional and disabled by default because no real keys were supplied. Public config comes from the backend; Secret remains server-only. Tokens are verified server-side and reserved for one use in PostgreSQL. Provider failures cannot bypass captcha. Live-provider behavior without keys is unverified.
 
+A bounded in-memory gate runs before routing/SQL; durable bans live in PostgreSQL. The per-process gate does not replace CDN/WAF or volumetric DDoS protection. No actual CDN or production server was configured here.
 
-راهنمای اولین ورود، وضعیت مستقل هر کاربر و دانلود Excel افزوده شده است. سرویس `backup-scheduler` در profile پشتیبان Compose، اجرای اولیه و روزانه ساعت ۰۳:۰۰ تهران با retry ۱۵ دقیقه‌ای و marker ماندگار دارد. فعال‌شدن واقعی Google Sheets همچنان به کلید سرویس‌اکانت و دسترسی Editor نیاز دارد؛ صرف ذخیرهٔ لینک، ادعای ارسال موفق نیست.
+Console recovery: `python -m app.cli login-security` and `python -m app.cli unblock-login --ip <IP> --reset`. Local account credentials are private under secrets, excluded from Git/reports. Fresh servers create independent accounts using DEPLOY.
 
-با تأیید صریح جدید کاربر، API و UI محیط ۱۸۰۸۱ پس از بک‌آپ و بازیابی تأییدشده ارتقا یافت؛ کانتینر دیتابیس آن بازسازی نشد و جدول‌های شخصی برابر ماندند. نام/رمز سه حساب در هر دو محیط با حفظ شناسه‌ها طبق درخواست تغییر کرد. رمزها فقط در secrets محلی‌اند. نتیجهٔ جاری انتشار را در `docs/testing/RELEASE_RESULTS.fa.md` ببینید؛ گزارش AUDIT_RESULTS سابقهٔ ممیزی قبل از این قابلیت‌هاست.
+First-use setup now explains backups, retains per-user completion and offers Excel download. The backup-scheduler Compose service runs initially and daily at 03:00 Tehran, retries failures after 15 minutes and keeps a persistent success marker. Actual Sheets delivery still requires service-account credentials and Editor permission; saving a URL is not proof of delivery.
+
+With the owner's later explicit approval, the 18081 API/UI were upgraded after a verified backup/restore. Its DB container was not recreated; personal tables remained equal. Three accounts were renamed/recredentialed in both environments while retaining IDs. Credentials remain local secrets. See docs/testing/RELEASE_RESULTS.fa.md for current release results; AUDIT_RESULTS predates these additions.

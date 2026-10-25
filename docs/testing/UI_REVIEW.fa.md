@@ -1,30 +1,32 @@
-# بررسی رابط وب — ۲۰۲۶-۱۰-۲۵
+# Web UI review — 2026-10-25
 
-## تغییرها
+> Historical responsive-redesign review. Counts/open defects describe that stage, not the current release; see [RELEASE_RESULTS.fa.md](RELEASE_RESULTS.fa.md).
 
-- محدودیت عرض ۹۲۰ پیکسل حذف شد. پوسته تا ۱۹۲۰ پیکسل رشد می‌کند؛ در نمای Full HD محتوای اصلی حدود ۱۵۷۰ پیکسل عرض دارد و منوی کناری فضای مستقلی می‌گیرد.
-- از عرض ۱۱۰۰ پیکسل، همه مسیرهای اصلی در منوی کناری در دسترس‌اند. تبلت از ناوبری بالا و گوشی از نوار پایین استفاده می‌کند.
-- فرم ثبت سریع در ابتدای صفحه امروز قرار گرفت. در فضای کافی، حضور و هدف روز در ستون کناری نمایش داده می‌شوند. راهنمای حضور جمع‌شونده است و ورود اولیه کنار فرم هم قابل ثبت است.
-- چیدمان تقویم، برنامه‌ریزی و تنظیمات متناسب با فضای واقعی محتوا تغییر می‌کند؛ جدول‌های عریض در محدوده خودشان اسکرول دارند.
-- حالت روشن، تیره و همگام با دستگاه اضافه شد. انتخاب در مرورگر ذخیره می‌شود؛ پوسته پیش از اولین رنگ‌آمیزی اعمال می‌شود. فرم‌ها، منوها، تقویم و پنجره‌ها هم از رنگ‌های همان پوسته استفاده می‌کنند.
-- استوری جدیدِ مدیریت، مستقیم در انتخاب‌گر فرم تسک ظاهر می‌شود. انتخابش پنجره ازپیش‌پرشده را باز می‌کند تا با یک تأیید به تسک‌ها متصل شود؛ نیاز به پیدا کردن آن در مدیریت تگ‌ها نیست.
-- پنجره‌ها و منوهای سطری در body نمایش داده می‌شوند تا ستون‌بندی و container query باعث بریدن یا جابه‌جایی آن‌ها نشود. فوکوس داخل پنجره می‌ماند، Escape آن را می‌بندد و فوکوس به کنترل قبلی برمی‌گردد.
-- تاریخ میلادی در عنوان تقویم و توضیحات تاریخ، با عدد ماه نمایش داده می‌شود.
+## Changes
 
-## هشدار تطابق حضور
+- Removed the 920px cap: shell grows to 1920px, with approximately 1570px main content at Full HD and separate sidebar space.
+- Primary routes appear in a sidebar from 1100px; tablets use top and phones bottom navigation.
+- Quick task entry comes first on Today. Attendance/goals occupy a side column when possible. Attendance help collapses; check-in is beside the form.
+- Calendar/plans/settings respond to content width; wide tables scroll internally.
+- Light/dark/system themes persist in-browser, apply before first paint, and cover forms/menus/calendar/dialogs.
+- New catalog stories appear in the task selector and link through a prefilled confirmation, without searching tag management.
+- Dialogs/row menus portal into body to avoid clipping/displacement from columns/container queries. Dialogs trap focus, close on Escape and restore prior focus.
+- Gregorian month values in calendar titles/date descriptions are numeric.
 
-`GET /api/presence/alerts` فقط روزهای قبل از امروزِ تهران را مقایسه می‌کند؛ پارامتر اختیاری `date=YYYY-MM-DD` یک روز را بررسی می‌کند. زمان گزارش برابر زمان واقعی ذخیره‌شده به‌اضافه تکمیلی است. همه تسک‌ها، از جمله موارد علامت‌خورده خارج از شرکت، طبق درخواست بدون استثنا در مقایسه هستند. روز بدون حضور، صفر دقیقه حضور دارد.
+## Attendance warnings
 
-هشدار در امروز و گزارش روزانه دیده می‌شود و حضور، زمان تسک و مقدار اختلاف را نمایش می‌دهد. «اصلاح حضور» بازه واقعی گذشته را اضافه یا ویرایش می‌کند؛ «مشاهده تسک‌ها» گزارش همان روز را باز می‌کند. برای روز گذشته، ساعت خروج الزامی است. زمان روز جاری محدود یا خودکار تغییر داده نمی‌شود.
+GET /api/presence/alerts compares dates before today in Tehran; optional date=YYYY-MM-DD selects one day. Report time is stored actual plus fill. All tasks, including outside-company work, participate. Missing attendance means zero.
 
-بازه بازِ فراموش‌شده و تسک قدیمیِ باز، در این مقایسه تا نیمه‌شب همان روز محاسبه می‌شوند؛ گذشت چند روز عدد هشدار را بزرگ نمی‌کند. این محاسبه فقط خواندنی است و اصل زمان‌ها را بازنویسی نمی‌کند. آخرین ۵۰ روز دارای مغایرت در فهرست نمایش داده می‌شوند؛ هر روز قدیمی‌تر از طریق گزارش روزانه خودش بررسی می‌شود. قرارداد API موجود حفظ شد و فقط قرارداد مسیر جدید به fixture اضافه شد.
+Today/Daylog warnings show attendance/task totals/difference. Correct attendance adds/edits historical intervals; View tasks opens that report. Past attendance requires an end time. Current-day time is not capped or auto-corrected.
 
-## بررسی‌ها و حدود نتیجه
+Old open tasks/attendance are capped at that day's midnight in this read-only comparison, avoiding inflation over later days without rewriting original time. Show the latest 50 mismatched days; older dates remain checkable through their reports. Preserve existing API contracts, adding only the new route's fixture.
 
-- ۲۴۱ تست واحد و یکپارچه بک‌اند پاس شد. ۵ xfail مربوط به ایرادهای قبلی باقی‌اند؛ این موارد پاس‌شدن رفتار معیوب محسوب نمی‌شوند. PostgreSQL تست جداگانه `timelog_personal_backup_test` بود؛ داده محیط نمایشی یا واقعی پاک نشد.
-- ۱۵ تست فرانت، lint و ساخت static export موفق بودند؛ imageهای API و وب نیز ساخته و در پروژه Docker آزمایشی `timelog-qa` اجرا شدند.
-- در مرورگر داخلی، ۹ صفحه امروز، برنامه‌ریزی، گزارش روزانه، داشبورد، تقویم، تایم‌شیت، همه تسک‌ها، تنظیمات و مدیریت در هر دو پوسته و عرض‌های ۳۲۰، ۳۶۰، ۳۹۰، ۷۶۸، ۱۰۲۴، ۱۳۶۶ و ۱۹۲۰ بررسی شدند: ۱۲۶ ترکیب. در بررسی هندسی، کنترل‌ها از صفحه بیرون نزدند و اسکرول افقی سراسری ایجاد نشد. جدول و نمودار عریض اسکرول داخلی دارند.
-- از داخل UI یک تسک دو ساعته برای روز گذشته ساخته شد. هشدار حضور صفر نمایان شد؛ ذخیره حضور گذشته بدون خروج رد شد. پس از ثبت حضور واقعی ۰۹:۰۰ تا ۱۱:۰۰، هشدار برطرف شد و زمان تسک تغییر نکرد.
-- انتخاب مستقیم استوری جدید و تأیید اتصال آن، گردش فوکوس پنجره، تغییر پوسته و حفظ آن بین صفحه‌ها، و مسیرهای موبایل به‌صورت تعاملی بررسی شدند.
-- فایل‌های شواهد محلی در `artifacts/testing/ui-redesign` هستند. بررسی عرض‌ها شبیه‌سازی اندازه مرورگر است؛ آزمون روی سخت‌افزار واقعی گوشی، Safari/iOS یا همه نسبت‌های بزرگ‌نمایی انجام نشده است.
-- اتصال واقعی Google Sheet و cron سرور هنوز به کلید و تنظیمات استقرار نیاز دارند؛ راهنمای آن در `docs/PERSONAL_BACKUPS.fa.md` است.
+## Verification and limits at that stage
+
+- 241 backend unit/integration tests passed; five earlier xfails remained, not accepted as correct behavior. Separate timelog_personal_backup_test was used; demo/real data were not cleared.
+- Fifteen frontend tests, lint, static export and API/web Docker builds passed in timelog-qa.
+- The in-app browser checked Today, Plans, Daylog, Dashboard, Calendar, Timesheet, All tasks, Settings and Management in two themes at 320/360/390/768/1024/1366/1920: 126 combinations. No off-screen controls or page-wide horizontal scroll; wide charts/tables scroll inside themselves.
+- A two-hour historical task produced a zero-attendance warning. Missing end time was rejected; actual 09:00–11:00 attendance removed it without changing task time.
+- Direct story selection/linking, dialog focus cycling, theme persistence and mobile navigation were interactively checked.
+- Evidence: artifacts/testing/ui-redesign. Viewports emulate dimensions, not physical phones, Safari/iOS or every zoom level.
+- Live Sheets/server cron required credentials/deployment; see [personal backups](../PERSONAL_BACKUPS.fa.md).

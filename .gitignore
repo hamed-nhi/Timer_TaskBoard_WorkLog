@@ -24,3 +24,6 @@ secrets/
 
 # Static-build CSP is regenerated with each export.
 frontend/security-headers.caddy
+
+# Local coding instructions are intentionally not published.
+/AGENTS.md

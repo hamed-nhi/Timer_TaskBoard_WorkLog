@@ -139,7 +139,8 @@ md=f'''# گزارش ممیزی TIME LOG — {DATE}
 
 منابع ارزیابی باز: [Debian دربارهٔ libxml2](https://security-tracker.debian.org/tracker/CVE-2026-6653)، [اعلان Go دربارهٔ openpgp](https://pkg.go.dev/vuln/GO-2026-5932)، [محدودهٔ API Scan در ZAP](https://www.zaproxy.org/docs/docker/api-scan/).
 '''
-(ROOT/'docs/testing/AUDIT_RESULTS.fa.md').write_text(md,encoding='utf-8')
+# Reviewed English snapshots in docs/testing are maintained separately.
+(OUT/'AUDIT_RESULTS.fa.md').write_text(md,encoding='utf-8')
 sections=''
 for title,items in [('حفظ داده و کاربرد چنددستگاهی',notes),('موارد باز و محدودیت‌های تأیید',limits)]:
  sections+='<section><h2>'+title+'</h2><ul>'+''.join('<li>'+html.escape(n)+'</li>' for n in items)+'</ul></section>'

@@ -131,7 +131,8 @@ md += ["## شواهد و حدود اجرا\n\n",
        "JUnit، JSON پوشش، نتایج مرورگر، تصاویر، بار و بازیابی در artifacts/testing هستند. فایل report.html نسخهٔ قابل جست‌وجوی گزارش است. مقادیر بار فقط برای محیط محلی و این دادهٔ ساختگی‌اند.\n\n",
        "۷ xfail قبولی نیستند؛ تست‌ها اجرا شده و ایرادها بازتولید شده‌اند. workflow جدید نوشته شده ولی روی GitHub اجرا نشده است. تغییرات در این درخواست روی سرور واقعی منتشر نشده و دادهٔ واقعی تغییر نکرده است.\n\n",
        "انجام‌نشده: " + "؛ ".join(summary["limitations"]) + ".\n"]
-(DOC / "RESULTS.fa.md").write_text("".join(md), encoding="utf-8")
+# Reviewed English snapshots in docs/testing are maintained separately.
+(OUT / "RESULTS.fa.md").write_text("".join(md), encoding="utf-8")
 matrix = ["# سناریوهای استفاده و نتیجهٔ اجرا\n\n",
           "| شناسه | حوزه | سناریو | نتیجه |\n|---|---|---|---|\n"]
 for case in specs:
@@ -141,7 +142,8 @@ for case in specs:
                f"- پیش‌شرط: {case['precondition']}\n- مراحل: {'؛ '.join(case['steps'])}\n",
                f"- انتظار: {case['expected']}\n- نتیجه: {labels[case['status']]}\n",
                f"- شواهد: {', '.join(case['evidence'])}\n"]
-(DOC / "SCENARIOS.fa.md").write_text("".join(matrix), encoding="utf-8")
+# Reviewed English snapshots in docs/testing are maintained separately.
+(OUT / "SCENARIOS.fa.md").write_text("".join(matrix), encoding="utf-8")
 
 def h(value): return escape(str(value), quote=True)
 cards = "".join(f'<div class="card"><b>{h(value)}</b><span>{h(label)}</span></div>' for label, value in [

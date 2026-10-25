@@ -1,50 +1,50 @@
-# نتیجهٔ تست انتشار TIME LOG — ۲۰۲۶-۱۰-۲۵
+# TIME LOG release test results — 2026-10-25
 
-**پذیرش عملکردی: موفق. امنیت بدون شرط پاک اعلام نمی‌شود.**
+**Functional acceptance: passed. Security is not declared unconditionally clean.**
 
-| آزمون | تعداد/معیار | نتیجه/شکست |
+| Check | Count/criterion | Result/failures |
 | --- | --- | --- |
-| بک‌اند Unit / Integration / Operational | 402 | 0 |
-| پوشش ترکیبی | 90.94% | حداقل ۹۰٪ |
-| Unit فرانت | 15 | 0 |
-| E2E اصلی | 46 | 0 |
-| UI / UX، ۹ صفحه و عرض ۳۲۰ تا ۱۹۲۰ | 341 | 0 |
-| ایمپورت و دو دستگاه | 10 | 0 |
-| امنیت، مدیر، onboarding و رمز شخصی در مرورگر | 14 | 0 |
-| onboarding موبایل و axe | ۳۹۰ پیکسل / لمس | موفق |
-| نصب تمیز Compose تولید و زمان‌بند واقعی | دیتابیس خالی / volume ماندگار | موفق |
-| ترافیک عادی ۱۰ کاربر پس از سد سریع | 300 درخواست | صفر خطای غیرمنتظره |
-| موج هجوم به API | 1000 | 798 پاسخ ۴۲۹؛ صفر خطای غیرمنتظره |
+| Backend Unit / Integration / Operational | 402 | 0 |
+| Combined coverage | 90.94% | Minimum 90% |
+| Frontend units | 15 | 0 |
+| Main E2E | 46 | 0 |
+| UI/UX, nine pages at 320–1920 | 341 | 0 |
+| Import/two devices | 10 | 0 |
+| Browser security, admin, onboarding, own password | 14 | 0 |
+| Mobile onboarding/axe | 390px/touch | Passed |
+| Fresh production Compose/real scheduler | Empty DB/persistent volume | Passed |
+| Ordinary ten-user load after flood gate | 300 requests | Zero unexpected errors |
+| API request burst | 1000 | 798 HTTP 429; zero unexpected errors |
 
-## رفتارها و شواهد
+## Behavior and evidence
 
-- تاریخ گزارش ۲۰۲۶-۱۰-۲۵؛ نتیجه مربوط به کد جاری پس از قابلیت‌های امنیت ورود و پشتیبان است. گزارش AUDIT_RESULTS سابقهٔ ممیزی اولیه و بار ۱۵ دقیقه‌ای آن نسخه است؛ آن بار طولانی به‌عنوان تست مجدد این نسخه معرفی نمی‌شود.
-- بن در PostgreSQL برای IP/حساب است: سه رمز اشتباه، ۱۵ دقیقه؛ مرحلهٔ بعد ۱۰ ساعت؛ مرحلهٔ بعد و بعدتر ۳۰ روز. سه نام ناشناس بن ۲۴ ساعتهٔ کل IP دارد. درخواست زمان بن، پایان را تمدید نمی‌کند. ورود موفق به‌صورت پیش‌فرض مرحلهٔ همان IP/حساب را پاک می‌کند؛ از پنل قابل تغییر است.
-- مدیر تعداد تلاش، مدت‌ها و سقف‌های مکمل IP/کل سرویس را تغییر می‌دهد، بن را رفع یا سابقهٔ تشدید را پاک می‌کند. خطای واقعی باقی‌ماندن شمارندهٔ کوتاه‌مدت پس از رفع بن اصلاح و ورود فوری با تست رگرسیون تأیید شد. فرمان کنسولی نجات هم روی نصب تمیز اجرا شد.
-- ساخت حساب با رمز انتخابی/تصادفی، تغییر نام کاربری، نام نمایشی، نقش و رمز، و فعال/غیرفعال‌سازی بررسی شدند. API حذف حساب وجود ندارد. غیرفعال و فعال‌کردن، دادهٔ تسک را حتی در مقایسهٔ کامل ردیف تغییر نداد. تغییر مشخصات ورود نشست‌های حساب را لغو می‌کند.
-- رمز جدید در همهٔ ورودی‌های وب و CLI حداقل هشت کاراکتر، حرف بزرگ/کوچک، عدد و نماد می‌خواهد. رمز قدیمیِ ذخیره‌شده هنگام ورود ناخواسته عوض نمی‌شود. تغییر رمز شخصی در تنظیمات، نشست جاری را نگه می‌دارد و سایر نشست‌ها را می‌بندد.
-- تنظیمات عمومی کپچا از بک‌اند می‌آید؛ Secret به مرورگر ارسال نمی‌شود. نبود توکن، پاسخ false/بدشکل، خطای شبکه، پاسخ بزرگ، redirect و تکرار هم‌زمان توکن نمی‌توانند نشست بسازند. اتصال فعلاً غیرفعال است چون کلید واقعی ارائه نشده.
-- سد حافظه‌ای محدود قبل از JSON/route/SQL، درخواست اضافی را رد می‌کند. تست منطقی ۱۰هزار شناسهٔ IP و تست واقعی ۱۰۰۰ درخواست API اجرا شد. سقف حافظه و رقابت threadها آزموده شد. این تست، شبیه‌سازی کامل botnet یا حملهٔ حجمی نیست.
-- اولین ورود راهنمای ساخت شیت خصوصی، دسترسی Editor به سرویس‌اکانت، ذخیرهٔ لینک و دانلود Excel شخصی را نشان می‌دهد. وضعیت هر نفر مستقل و ماندگار است. خطای لینک آن را تکمیل‌شده علامت نمی‌زند؛ ادامه بدون شیت و بازکردن دوبارهٔ راهنما از تنظیمات ممکن است.
-- زمان‌بند Docker اجرای اولیه و روزانهٔ ۰۳:۰۰ تهران با retry پانزده‌دقیقه‌ای و marker روی volume دارد. اجرای واقعی روی نصب تمیز موفق شد؛ ورودی یکسان snapshot جدید یا بازنویسی نساخت. زمان‌بندی با ساعت‌های کنترل‌شده تست شد؛ برای گزارش منتظر یک روز واقعی نماندیم.
-- Compose اصلی روی پروژه‌ای جدا و دیتابیس خالی اجرا شد؛ مایگریشن 0004، ساخت مدیر با CLI، سلامت API، backup-scheduler و بازسازی کانتینرها آزمایش شدند. داده و سشن پس از بازسازی باقی ماندند.
-- صاحب پروژه ارتقای ۱۸۰۸۱ را جداگانه تأیید کرد. پیش از ارتقا، dump در دیتابیس دیگری بازیابی و اثرانگشت همهٔ جدول‌ها برابر شد. فقط API و وب ارتقا یافتند؛ کانتینر دیتابیس آن بازسازی نشد. جدول‌های شخصی قبلی پس از ارتقا برابر ماندند.
-- سه حساب درخواستی در هر دو محیط با حفظ شناسه‌ها و نقش‌ها آماده شدند؛ هر شش ورود موفق بررسی شد. راهنمای اولین ورود برای استفادهٔ انسانی بازنشانی و نشست‌های آزمایشی این حساب‌ها لغو شدند. نام‌های واقعی و رمزها در Git و بستهٔ گزارش نیستند.
-- در اجرای اولیهٔ تست بار، ورودهای هم‌زمان با فعالیت مرورگر به سقف ورود خوردند و نتیجهٔ ۴۲۹ قبولی محسوب نشد. در اجرای ترافیک عادی، شروع نشست‌ها با فاصله و مطابق سیاست ورود انجام شد؛ بار کاری ده کاربر همچنان هم‌زمان بود.
-- دو ایراد انتظار تست هم اصلاح شد: نام قدیمی دکمهٔ ساخت حساب و انتظار فارسی برای خطای Google Sheet. assertionها حذف نشدند؛ سناریوهای کامل دوباره اجرا و موفق شدند. xfail/skip موفقیت محسوب نشده است.
+- Report date: 2026-10-25. This describes the release after login-security/backup additions. AUDIT_RESULTS covers the earlier audit/15-minute soak; that long test is not presented as a repeat against this release.
+- PostgreSQL bans an IP/account pair after three wrong passwords: 15 minutes, then 10 hours, then 30 days for this and later stages. Three unknown names ban the entire IP for 24 hours. Banned requests do not extend the deadline. Successful login clears that pair's escalation by default; the administrator can change this.
+- Admins configure attempts, durations and complementary IP/global budgets, release bans or reset stages. A real defect left short admission counters after release; it was fixed and regression-tested for immediate login. Console recovery was tested on a clean installation.
+- Tested chosen/generated passwords, account creation, username/display-name/role/password edits and activation/deactivation. No account-delete API exists. Deactivate/reactivate left complete task rows identical. Credential changes revoke account sessions.
+- New passwords at every web/CLI setter require at least eight characters, uppercase/lowercase, a digit and symbol. Existing passwords are not silently changed on login. Self-service changes preserve the current session and revoke the others.
+- Public captcha config comes from backend; Secret never reaches browser. Missing/rejected/malformed tokens, network failures, oversized responses, redirects and concurrent replay cannot create sessions. Provider remains disabled because real keys were not supplied.
+- A bounded memory gate rejects excess traffic before JSON/routing/SQL. Logical tests used 10,000 IP identifiers; an actual burst sent 1,000 API requests. Memory bounds/thread races were checked. This is not a full botnet or volumetric attack simulation.
+- First use explains private sheet creation, Editor permission for the service account, URL saving and private Excel download. Completion is per-user/persistent. Invalid URL cannot mark setup complete. Users can continue without a sheet and reopen setup in Settings.
+- Docker scheduler runs initially/daily at 03:00 Tehran, retries after 15 minutes and stores its marker on a volume. A real job passed on a fresh installation; unchanged input created no new/overwritten snapshot. Controlled clocks tested schedules; no real full-day wait was claimed.
+- Main production Compose ran separately on an empty DB. Migration 0004, CLI admin creation, health, backup-scheduler and force-recreation were tested. Data/session persisted.
+- Owner separately approved the 18081 upgrade. Beforehand, a dump restored elsewhere with every table fingerprint equal. Only API/web were upgraded; its DB container was not recreated. Pre-existing personal tables remained equal.
+- Three requested accounts in both environments retained IDs/roles; all six logins passed. Setup completion was reset for first human use and test sessions revoked. Real names/passwords are absent from Git/delivery.
+- Initial load setup hit login limits while browser work was active; that 429 result was not passed. Ordinary load staggered session starts according to admission policy while ten users' actual workloads remained concurrent.
+- Two test expectations were corrected: old create-user button wording and expecting a Persian word in the Google Sheet error. Assertions were retained; complete journeys reran successfully. xfail/skip are not success.
 
-## محدودیت‌ها
+## Limits
 
-- Google Sheets واقعی بدون سرویس‌اکانت، شیت و دسترسی واقعی آزمایش نشده است. ذخیرهٔ لینک به‌معنی ارسال موفق نیست؛ راهنمای DEPLOY مراحل و اجازه‌ها را مشخص می‌کند.
-- ARCaptcha واقعی بدون Site Key/Secret Key فعال یا تأیید نشده؛ قرارداد سمت سرور و ویجت با پاسخ کنترل‌شده آزموده شدند. در حالت فعال، قطعی سرویس مانع ورود تازه می‌شود و به عبور بدون کپچا تبدیل نمی‌شود.
-- حفاظت حجمی DDoS/CDN/WAF، DNS و HTTPS واقعی سرور مقصد، Safari/iOS و گوشی فیزیکی تأیید نشده‌اند. سد حافظه‌ای per-process و محدود است؛ با restart reset و با replicaها تکثیر می‌شود. بن اصلی PostgreSQL ماندگار می‌ماند.
-- امنیت imageها کاملاً پاک نیست. یافته‌های Debian بدون اصلاحیهٔ موجود باقی‌اند؛ CVE-2026-6653 در libxml2 image PostgreSQL در گزارش قبلی CRITICAL است و وضعیت ناشر باز است. GO-2026-5932 در Caddy به‌صورت UNKNOWN باقی مانده. اسکن مستقل govulncheck قبلاً به خطای ۴۰۳ خورده و نتیجهٔ پاک محسوب نشده است.
-- ممیزی Python فعلی آسیب‌پذیری شناخته‌شده گزارش نکرد؛ اسکن source صفر secret تشخیص داد. این تضمین نبود همهٔ ضعف‌ها نیست. فایل‌های خصوصی اصلاً در scope منبع و Git نیستند.
-- محیط قدیمی محلی از tmpfs استفاده می‌کند و نباید volume تولید فرض شود. Compose اصلی سرور و نصب تمیز آزموده‌شده، volume ماندگار دارند. بک‌آپ رمزگذاری‌شدهٔ دیتابیس و نسخهٔ خارج سرور همچنان لازم‌اند.
+- Live Sheets was not tested without a real service account, sheet and permissions. A saved URL is not proof of delivery; DEPLOY specifies setup/access.
+- Live ARCaptcha lacks Site/Secret keys. Server/widget contracts used controlled responses. When enabled, an outage blocks new login rather than bypassing captcha.
+- Volumetric DDoS/CDN/WAF, destination DNS/real HTTPS, Safari/iOS and physical phones remain unverified. The bounded memory gate is per-process, resets on restart and multiplies with replicas; PostgreSQL bans persist.
+- Images are not fully clean. Debian findings lack available fixes. Earlier PostgreSQL libxml2 CVE-2026-6653 was CRITICAL and remains vendor-open; Caddy GO-2026-5932 remains UNKNOWN. Independent govulncheck failed with HTTP 403, not a clean result.
+- Current Python audit found no known dependency vulnerability; source scan detected zero secrets. This does not prove absence of all weaknesses. Private files were outside source/Git scope.
+- The old local DB uses tmpfs, not production storage. Main server Compose/fresh-install smoke use persistent volumes. Encrypted DB/off-server backups remain necessary.
 
-## اجرا و تحویل
+## Reproduction and delivery
 
-- [راهنمای سرور](../../DEPLOY.md)؛ [فرمان‌های تست](AUDIT_RUNBOOK.md).
-- شواهد محلی پالایش‌شده: `artifacts/audit/release-summary.json`، JUnit، coverage، نتایج مرورگر، smoke و اسکن‌ها.
-- بستهٔ HTML و ZIP شامل dump، کلید، کوکی، نام واقعی یا رمز حساب‌ها نیست. فایل خصوصی حساب‌ها از Git حذف/نادیده‌گرفته شده است.
-- منابع رسمی: [ARCaptcha Verify](https://github.com/arcaptcha/arcaptcha-docs/blob/main/versioned_docs/version-4.0.0/API/Verify.md)، [قواعد هدر Caddy](https://caddyserver.com/docs/caddyfile/directives/reverse_proxy#headers).
+- [Server guide](../../DEPLOY.md); [test commands](AUDIT_RUNBOOK.md).
+- Sanitized local evidence: artifacts/audit/release-summary.json, JUnit, coverage, browser/smoke/scans.
+- HTML/ZIP exclude dumps, keys, cookies and real account names/passwords. The private credentials file is ignored/untracked.
+- Primary references: [ARCaptcha Verify](https://github.com/arcaptcha/arcaptcha-docs/blob/main/versioned_docs/version-4.0.0/API/Verify.md), [Caddy header rules](https://caddyserver.com/docs/caddyfile/directives/reverse_proxy#headers).

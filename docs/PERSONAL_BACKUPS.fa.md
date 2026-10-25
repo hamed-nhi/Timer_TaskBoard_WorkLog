@@ -1,59 +1,61 @@
-# پشتیبان شخصی و همگام‌سازی Google Sheet
+# Personal backups and Google Sheets synchronization
 
-## رفتار
+## Behavior
 
-- خروجی اکسل و JSON با کاربر واردشده محدود می‌شود؛ ادمین هم خروجی حساب خودش را می‌گیرد.
-- نام دانلود شامل شناسه حساب و هش محتوای منبع است. اجرای دوباره با داده یکسان نام یکسان دارد؛ تغییر منبع نام تازه می‌سازد. مدیریت نام فایل دانلودشده روی دستگاه در اختیار مرورگر و کاربر است.
-- فرمان پشتیبان خودکار برای هر حساب پوشه `user-ID/versions` می‌سازد. فقط با تغییر محتوای اصلی، یک JSON و اکسل تازه اضافه می‌کند. زمان اجرای پشتیبان به‌تنهایی نسخه تازه نمی‌سازد. فایل موجود هرگز جایگزین نمی‌شود و نسخه قبلی حفظ می‌شود؛ بازگشت داده به نسخه قبلی همان فایل قدیمی را نگه می‌دارد.
-- پشتیبان کامل شامل تسک، تگ، کاتالوگ، بازه‌های کار و حضور، برنامه‌ها، تنظیمات و audit همان حساب است؛ رمز و نشست وارد فایل نمی‌شود. اکسل نمای تسک‌هاست.
-- فایل‌ها روی سرور دسترسی محدود دارند؛ این نسخه‌های شخصی JSON/Excel رمزگذاری نشده‌اند. مسیر `backups` نباید وب‌سرو شود. نسخه رمزگذاری‌شده کل دیتابیس در `deploy/backup.sh` مستقل است و جای این پشتیبان‌های شخصی را نمی‌گیرد.
+- Excel and JSON exports are scoped to the signed-in user. Administrators export only their own account too.
+- Download filenames include account ID and a source-content hash. Identical source data produces the same name; changed source produces a new name. Browser/device handling of downloaded filenames remains under the user's control.
+- The backup command creates `user-ID/versions` for each account. It adds JSON/Excel files only when source content changes. Runtime alone does not create a revision. Existing files are never replaced; earlier versions remain, including when source data returns to a previous revision.
+- Full personal JSON includes that account's tasks, tags, catalog, work/attendance segments, plans, settings and audit log. It excludes passwords and sessions. Excel is the task view.
+- Server files have restricted permissions, but personal JSON/Excel copies are not encrypted. Never web-serve backups. The encrypted full-database backup in deploy/backup.sh is separate and does not replace personal exports.
 
-## شیت
+## Sheets
 
-هر فایل Google Sheet فقط برای یک حساب ثبت می‌شود، حتی با لینک‌های متفاوت یک فایل. لینک حساب دیگر از API خوانده نمی‌شود؛ بررسی رزرو فقط وجود شناسه مقصد را کنترل می‌کند. نشان مالکیت شامل شناسه نصب و حساب است؛ یک نصب دیگر یا حساب دیگر هم نمی‌تواند برگه‌های مدیریت‌شده را تصاحب کند.
+Each Google spreadsheet is reserved for one account, including alternate URLs for the same file. The API does not disclose another account's URL; reservation checks only test destination identity. Ownership includes installation and account IDs, preventing another account or installation from taking over managed tabs.
 
-نرم‌افزار فقط تب‌های `TimeLog` و `_TimeLog_owner` را ایجاد می‌کند؛ تب‌های دیگر حفظ می‌شوند. در TimeLog هر تسک یک شناسه ثابت دارد:
+Only the `TimeLog` and `_TimeLog_owner` tabs are created; other tabs are preserved. Each task has a stable identifier in TimeLog:
 
-1. تسک جدید: ردیف تازه اضافه می‌شود.
-2. داده اصلی بدون تغییر: هیچ سلولی از آن ردیف نوشته نمی‌شود، حتی اگر کاربر در شیت متن یا ستون هش را دست‌کاری کرده باشد.
-3. تغییر واقعی تسک یا اطلاعات مرتبطش در برنامه: همان ردیف از منبع به‌روز می‌شود. ستون‌های A تا O تحت مدیریت برنامه‌اند؛ یادداشت‌های شخصی را از P به بعد یا در تب جدا بنویسید.
-4. حذف از منبع: ردیف قدیمی پاک نمی‌شود؛ فقط وضعیت `deleted` و نسخه منبع تغییر می‌کند. فایل‌های پشتیبان قبلی هم باقی می‌مانند.
+1. New task: append a row.
+2. Unchanged source: write no cells in its row, even if the user edited sheet text or its hash column.
+3. Actual task/related-source change: update that row from source. The application manages columns A–O; put personal notes from P onward or in a separate tab.
+4. Source deletion: keep the old row, changing only status to `deleted` and its source revision. Earlier backup files remain too.
 
-مدت تسک در حال اجرا از فیلدهای ذخیره‌شده می‌آید؛ گذشت زمان به‌تنهایی سبب بازنویسی شبانه نمی‌شود. پایان/مکث/ویرایش در برنامه تغییر منبع محسوب می‌شود. مرتب‌سازی کامل ردیف‌ها مجاز است؛ حذف/تکرار شناسه، تغییر عنوان ستون‌ها یا پاک‌شدن نشان مالکیت باعث توقف امن می‌شود.
+Running-task duration uses stored fields; elapsed time alone does not trigger nightly rewrites. Stop/pause/edit operations count as source changes. Sorting complete rows is supported. Missing/duplicate IDs, changed column headers or a missing ownership marker stop synchronization safely.
 
-فایل checkpoint در پوشه حساب و `.instance-id` در ریشه پشتیبان باید همراه نسخه‌های داده نگهداری شوند. پس از حذف checkpoint، برنامه شیت موجود را خودکار بازنویسی نمی‌کند؛ ابتدا فایل checkpoint سالم را بازیابی کنید یا یک Google Sheet جدید اختصاص دهید. پس از خطای شبکه، checkpoint جلو نمی‌رود و اجرای بعدی قابل تکرار است. برای یک حساب فقط یک کار همگام‌سازی هم‌زمان اجرا می‌شود؛ job lock جدا از قفل کارهای روزمره کاربر است.
+Preserve the account checkpoint and root `.instance-id` with backup versions. If a checkpoint is deleted, the application does not automatically overwrite the existing sheet; restore a healthy checkpoint or assign a new spreadsheet. Network failures do not advance the checkpoint, so the next run is repeatable. Only one sync job per account runs at once; its job lock is separate from normal user-operation locks.
 
-## راه‌اندازی روی سرور
+## Server setup
 
-ذخیره لینک به‌تنهایی زمان‌بندی یا اتصال گوگل را فعال نمی‌کند. این مراحل باید روی سرور انجام شود:
+Saving a URL alone does not enable scheduling or Google access. Configure the server:
 
-1. سرویس‌اکانت مخصوص این نصب با Sheets API فعال بسازید. فایل کلید را فقط روی سرور در `secrets/google-sheets.json` با دسترسی محدود نگه دارید؛ این پوشه در Git نادیده گرفته می‌شود. هر کاربر فقط شیت خودش را با ایمیل همان سرویس‌اکانت به صورت Editor اشتراک دهد.
-2. برای ارسال به گوگل در `.env` تنظیم کنید: `GOOGLE_APPLICATION_CREDENTIALS=/run/secrets/google-sheets.json`. خالی بودن این مقدار فقط فایل شخصی می‌سازد و هیچ داده‌ای به گوگل نمی‌فرستد.
-3. image را بسازید و یک بار اجرا کنید:
+1. Create a service account dedicated to this installation and enable Sheets API. Store its key only on the server as `secrets/google-sheets.json` with restricted access; Git ignores this directory. Each user shares only their own sheet with the service-account email as Editor.
+2. Set `GOOGLE_APPLICATION_CREDENTIALS=/run/secrets/google-sheets.json` in .env for delivery. Empty credentials create local personal files only and send nothing to Google. The current first-use guide also displays GOOGLE_SHEETS_SERVICE_EMAIL; see [DEPLOY.md](../DEPLOY.md).
+3. Build and run once:
 
 ```sh
 docker compose --profile backup build personal-backup
 docker compose --profile backup run --rm personal-backup
 ```
 
-4. پس از اجرای موفق، با cron سرور هر شب اجرا کنید:
+4. The original deployment used this nightly cron entry:
 
 ```cron
 15 3 * * * /opt/timelog/deploy/personal_backup.sh >> /var/log/timelog-personal-backup.log 2>&1
 ```
 
-همه حساب‌های فعال پردازش می‌شوند. برای یک حساب: `docker compose --profile backup run --rm personal-backup --user USERNAME`. خطای یک حساب مانع پشتیبان بقیه نمی‌شود؛ خروج نهایی غیرصفر است تا مانیتورینگ متوجه شود. log فقط شناسه حساب، هش نسخه و تعداد نوشتن‌ها را دارد.
+The current release alternatively provides `docker compose --profile backup up -d --build backup-scheduler`, documented in DEPLOY.md. Choose a scheduling method rather than adding duplicate schedules.
 
-اجرای بدون Docker: وابستگی‌های `backend/requirements-sheets.txt` را نصب کنید؛ با `DATABASE_URL` محیط موردنظر، از backend فرمان زیر را اجرا کنید:
+All active accounts are processed. For one account: `docker compose --profile backup run --rm personal-backup --user USERNAME`. A failed account does not prevent backups for the others; the final exit status is nonzero for monitoring. Logs contain account IDs, revision hashes and write counts only.
+
+Without Docker, install backend/requirements-sheets.txt, set DATABASE_URL for the intended environment, and run from backend:
 
 ```sh
 python -m app.cli backup-users --output /private/backups/personal --user USERNAME
 ```
 
-اختیار پوشه پشتیبان، کلید، زمان‌بندی و خواندن خروجی job با مدیر سرور است. این تغییرات مهاجرت دیتابیس یا تغییر داده واقعی لازم ندارند.
+The server operator owns backup-directory permissions, credentials, scheduling and job monitoring. The personal-backup feature itself required no database migration or modification of real source data.
 
-## بررسی انجام‌شده
+## Verification
 
-تست‌های فایل واقعی ثابت‌بودن نسخه روی اجرای مجدد، حفظ فایل قبلی پس از ویرایش، جداسازی حساب‌ها و تشخیص JSON خراب را بررسی می‌کنند. شیت با درگاه شبیه‌سازی‌شدهٔ دارای حالت برای افزودن، ویرایش، حذف، ویرایش دستی مقصد، جابه‌جایی ردیف، شکست شبکه و مالکیت تست می‌شود؛ قرارداد HTTP نیز ایجاد اتمیک مالکیت، افزایش ظرفیت و `RAW` بودن مقادیر را بررسی می‌کند. اطلاعات Google واقعی یا کلید سرویس‌اکانت در محیط تست موجود نیست؛ ارسال واقعی به Google و اجرای cron روی سرور در این محیط تأیید نشده‌اند.
+Real-file tests cover repeat-run revision stability, preservation of earlier files after edits, account isolation and corrupted JSON detection. A stateful fake Sheets gateway tests add/edit/delete, manual destination edits, row movement, network failures and ownership. HTTP contract tests cover atomic ownership creation, capacity growth and RAW values. No real Google credentials were present, so actual Google delivery and server cron were not verified in that feature's tests. Later local scheduler smoke results are recorded in the release report.
 
-مستندات رسمی: [نوشتن مقادیر](https://developers.google.com/workspace/sheets/api/reference/rest/v4/spreadsheets.values/batchUpdate)، [batchUpdate](https://developers.google.com/workspace/sheets/api/reference/rest/v4/spreadsheets/batchUpdate)، [احراز هویت سرویس‌اکانت](https://google-auth.readthedocs.io/en/latest/user-guide.html#service-account-private-key-files).
+Official references: [Write values](https://developers.google.com/workspace/sheets/api/reference/rest/v4/spreadsheets.values/batchUpdate), [batchUpdate](https://developers.google.com/workspace/sheets/api/reference/rest/v4/spreadsheets/batchUpdate), [Service-account authentication](https://google-auth.readthedocs.io/en/latest/user-guide.html#service-account-private-key-files).
