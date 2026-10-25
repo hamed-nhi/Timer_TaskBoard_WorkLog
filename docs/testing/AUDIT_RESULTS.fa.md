@@ -85,6 +85,6 @@
 - شواهد محلی و گزارش HTML/ZIP در `artifacts/audit` و `artifacts/TIME-LOG-QA-2026-10-25.zip` قرار می‌گیرند و در Git نیستند.
 - JUnit، coverage، JSON بار/امنیت، تصاویر حساب‌های آزمایشی و مقایسهٔ اثرانگشت نگهداری شده‌اند؛ dump، کلید، کوکی و رمز تولیدشده در بستهٔ تحویلی قرار ندارند.
 - README انگلیسی، عنوان TIME LOG و راهنمای قالب‌های Excel/CSV به‌روزرسانی شده‌اند. ساختار لایه‌ها و entrypointهای قبلی حفظ شده‌اند؛ import مایگریشن تازه‌ای نیاز ندارد.
-- هیچ push یا انتشار تولیدی انجام نشده است. تغییر تاریخچهٔ GitHub نیاز به تأیید جداگانهٔ انتشار دارد.
+- انتشار نسخه و تاریخچهٔ اصلاح‌شده در GitHub با تأیید صریح صاحب مخزن مجاز شده است؛ استقرار تولید و اجرای GitHub Actions جزو این نتیجه نیست.
 
 منابع ارزیابی باز: [Debian دربارهٔ libxml2](https://security-tracker.debian.org/tracker/CVE-2026-6653)، [اعلان Go دربارهٔ openpgp](https://pkg.go.dev/vuln/GO-2026-5932)، [محدودهٔ API Scan در ZAP](https://www.zaproxy.org/docs/docker/api-scan/).
