@@ -123,7 +123,7 @@ function SegmentsDialog({ task, onClose }: { task: Task; onClose: () => void }) 
       {segs === null && <div className="empty-hint">در حال بارگذاری...</div>}
       {segs && !segs.length && <div className="empty-hint">لاگی برای این تسک ثبت نشده است</div>}
       {segs && task.status === "done" && task.duration_minutes != null && Math.abs(sum - task.duration_minutes) > 1 && (
-        <div className="hint" style={{ color: "#b45309", marginBottom: 8 }}>
+        <div className="hint" style={{ color: "var(--warning-text)", marginBottom: 8 }}>
           مجموع بازه‌های زیر {fmtDuration(sum)} است ولی مدت ثبت‌شده {fmtDuration(task.duration_minutes)} است؛ احتمالاً ساعت این تسک را دستی ویرایش کرده‌اید. مدت ثبت‌شده معتبر است.
         </div>
       )}

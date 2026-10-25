@@ -36,7 +36,7 @@ export default function PlannedPage() {
   }
 
   return (
-    <>
+    <div className="planned-workspace">
       <div className="card">
         <h2>افزودن تسک برنامه‌ریزی‌شده</h2>
         <form className="stack" onSubmit={add}>
@@ -60,6 +60,6 @@ export default function PlannedPage() {
           {items?.length ? items.map((p) => <PlannedRow key={p.id} p={p} />) : <div className="empty-hint">هنوز تسکی برنامه‌ریزی نکرده‌اید</div>}
         </div>
       </div>
-    </>
+    </div>
   );
 }

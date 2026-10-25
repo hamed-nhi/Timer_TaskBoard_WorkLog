@@ -7,6 +7,7 @@ import { refreshAll, useCatalog, useTasks, useToday } from "@/lib/data";
 import { DayRef, takeDaylogDay } from "@/features/daylog/navigation";
 import { Catalog, EntryReportRow, FillSuggestion, Task } from "@/lib/types";
 import { useTaskDialogs } from "@/features/tasks/components";
+import { PresenceAlerts } from "@/features/presence/alerts";
 import { useFill } from "@/features/fill/components";
 import { useUi } from "@/shared/ui";
 
@@ -91,6 +92,7 @@ export default function DaylogPage() {
 
   return (
     <>
+      <PresenceAlerts date={day.gregorian} />
       <div className="card">
         <div className="daylog-nav">
           <button className="btn btn-outline" onClick={() => shift(-1)}>◀ روز قبل</button>

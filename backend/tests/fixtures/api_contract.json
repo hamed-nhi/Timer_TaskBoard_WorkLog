@@ -1327,5 +1327,27 @@
   },
   "/api/me/backup": {
     "get": {}
+  },
+  "/api/presence/alerts": {
+    "get": {
+      "parameters": [
+        {
+          "name": "date",
+          "in": "query",
+          "required": false,
+          "schema": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Date"
+          }
+        }
+      ]
+    }
   }
 }

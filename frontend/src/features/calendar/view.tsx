@@ -50,7 +50,7 @@ export default function CalendarPage() {
   const shown = expanded ? eventRows : eventRows.slice(0, PREVIEW);
 
   return (
-    <>
+    <div className="calendar-workspace">
       <div className="card">
         <div className="cal-head">
           <button className="btn btn-outline" onClick={() => shift(-1)}>◀ ماه قبل</button>
@@ -159,6 +159,6 @@ export default function CalendarPage() {
           </button>
         )}
       </div>
-    </>
+    </div>
   );
 }

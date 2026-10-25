@@ -17,6 +17,11 @@ def presence_history(db: DbDep, user: UserDep, days: int = Query(31)):
     return service.presence_history(db=db, user=user, days=days)
 
 
+@router.get("/presence/alerts")
+def presence_alerts(db: DbDep, user: UserDep, date_: str | None = Query(None, alias="date")):
+    return service.presence_alerts(db=db, user=user, date_=date_)
+
+
 @router.post("/presence/start")
 def presence_start(db: DbDep, user: UserDep):
     return service.presence_start(db=db, user=user)

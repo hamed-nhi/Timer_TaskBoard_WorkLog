@@ -3,7 +3,7 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import useSWR from "swr";
 import { del, errorText, fetcher, post, put } from "@/lib/api";
-import { fa, fmtDuration } from "@/lib/format";
+import { fa, fmtDuration, gregorianLabel } from "@/lib/format";
 import { refreshAll, useClock, usePresence, useToday } from "@/lib/data";
 import { Presence, PresenceSegment } from "@/lib/types";
 import { Modal, TimeInput, useUi } from "@/shared/ui";
@@ -165,7 +165,7 @@ export function PresenceCard() {
         <summary>حضور روزهای قبل</summary>
         {showHistory && <History today={today?.gregorian} />}
       </details>
-      <div className="hint">ورود و خروج فقط با دکمه‌های خودتان ثبت می‌شود (در نسخه‌ی وب ورود خودکار وجود ندارد). «خروج برای ناهار» و «بازگشت» ساعت‌ها را ثبت می‌کنند؛ «پایان کار» خروج کامل است. مدت حضور جدا از تسک‌هاست و به آن‌ها دست نمی‌زند.</div>
+      <details className="how-to presence-help"><summary>راهنمای ثبت حضور</summary><div className="hint">ورود و خروج فقط با دکمه‌های خودتان ثبت می‌شود (در نسخه‌ی وب ورود خودکار وجود ندارد). «خروج برای ناهار» و «بازگشت» ساعت‌ها را ثبت می‌کنند؛ «پایان کار» خروج کامل است. مدت حضور جدا از تسک‌هاست و به آن‌ها دست نمی‌زند.</div></details>
 
       {leaveOpen && <LeaveDialog onPick={leave} onClose={() => setLeaveOpen(false)} />}
       {edit && <SegmentDialog seg={edit === "new" ? null : edit} onClose={() => setEdit(null)} onSaved={async (np) => { await mutate(np, { revalidate: false }); await refreshAll(); }} />}
@@ -209,8 +209,10 @@ function LeaveDialog({ onPick, onClose }: { onPick: (reason: string) => void; on
   );
 }
 
-function SegmentDialog({ seg, onClose, onSaved }: { seg: PresenceSegment | null; onClose: () => void; onSaved: (p: Presence) => Promise<void> }) {
+export function SegmentDialog({ seg, date, onClose, onSaved }: { seg: PresenceSegment | null; date?: string; onClose: () => void; onSaved: (p: Presence) => Promise<void> }) {
   const { confirm } = useUi();
+  const { data: today } = useToday();
+  const past = Boolean(date && today && date < today.gregorian);
   const [start, setStart] = useState(seg?.start || "");
   const [end, setEnd] = useState(seg?.end || "");
   const [error, setError] = useState("");
@@ -221,7 +223,7 @@ function SegmentDialog({ seg, onClose, onSaved }: { seg: PresenceSegment | null;
     if (!start) return setError("ساعت ورود را وارد کنید");
     try {
       const p = seg ? await put(`/api/presence/${seg.id}`, { start_time: start, end_time: end || null })
-        : await post("/api/presence", { start_time: start, end_time: end || null });
+        : await post("/api/presence", { start_time: start, end_time: end || null, ...(date ? { date } : {}) });
       await onSaved(p);
       onClose();
     } catch (e) { setError(errorText(e)); }
@@ -235,9 +237,10 @@ function SegmentDialog({ seg, onClose, onSaved }: { seg: PresenceSegment | null;
   return (
     <Modal onClose={onClose}>
       <h2>{seg ? "ویرایش بازه‌ی حضور" : "افزودن بازه‌ی حضور"}</h2>
+      {date && <div className="hint">تاریخ میلادی: <bdi dir="ltr">{gregorianLabel(date)}</bdi> · برای روز گذشته ساعت خروج را هم وارد کنید.</div>}
       <div className="row2">
-        <div><label className="lbl">ساعت ورود</label><TimeInput label="ساعت ورود" value={start} onChange={setStart} placeholder="۰۸:۰۰" onInvalid={setBad} /></div>
-        <div><label className="lbl">ساعت خروج (خالی = هنوز در شرکت)</label><TimeInput label="ساعت خروج" value={end} onChange={setEnd} placeholder="۱۲:۳۰" onInvalid={setBad} /></div>
+        <div><label className="lbl">ساعت ورود</label><TimeInput label="ساعت ورود" allowNow={!past} value={start} onChange={setStart} placeholder="۰۸:۰۰" onInvalid={setBad} /></div>
+        <div><label className="lbl">{past ? "ساعت خروج (الزامی)" : "ساعت خروج (خالی = هنوز در شرکت)"}</label><TimeInput label="ساعت خروج" allowNow={!past} value={end} onChange={setEnd} placeholder="۱۲:۳۰" onInvalid={setBad} /></div>
       </div>
       <div className="form-error">{error}</div>
       <div className="modal-actions">

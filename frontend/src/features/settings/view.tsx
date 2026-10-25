@@ -4,6 +4,7 @@ import { errorText, post } from "@/lib/api";
 import { useSettings } from "@/lib/data";
 import { refreshAll } from "@/lib/data";
 import { useTagActions } from "@/features/tags/components";
+import { ThemeSettings } from "@/shared/theme";
 import { NumInput, useUi } from "@/shared/ui";
 
 export default function SettingsPage() {
@@ -41,7 +42,8 @@ export default function SettingsPage() {
   }
 
   return (
-    <>
+    <div className="settings-grid">
+      <ThemeSettings />
       <div className="card">
         <h2>هدف ساعت کاری</h2>
         <div className="hint" style={{ marginBottom: 10 }}>هدف روزانه و هفتگی که نوار پیشرفت صفحهٔ «امروز» و خط هدف نمودار روزانهٔ داشبورد از آن استفاده می‌کنند.</div>
@@ -80,6 +82,6 @@ export default function SettingsPage() {
           <button className="btn btn-outline" onClick={changePassword} disabled={!oldPw || newPw.length < 8}>تغییر رمز</button>
         </div>
       </div>
-    </>
+    </div>
   );
 }

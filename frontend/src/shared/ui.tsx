@@ -1,5 +1,6 @@
 "use client";
-import { createContext, ReactNode, useCallback, useContext, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { createContext, ReactNode, useCallback, useContext, useEffect, useLayoutEffect, useRef, useState, useId } from "react";
+import { createPortal } from "react-dom";
 import { fa, latin, MONTHS, parseTimeText } from "@/lib/format";
 import { serverClock } from "@/lib/data";
 import { get } from "@/lib/api";
@@ -60,20 +61,32 @@ export function UiProvider({ children }: { children: ReactNode }) {
 /* ---------------- modal ---------------- */
 
 export function Modal({ children, onClose, className = "" }: { children: ReactNode; onClose: () => void; className?: string }) {
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") {
-        e.stopPropagation();
-        onClose();
-      }
-    };
-    document.addEventListener("keydown", onKey);
-    return () => document.removeEventListener("keydown", onKey);
-  }, [onClose]);
-  return (
+  const root = useRef<HTMLDivElement>(null);
+  const titleId = useId();
+  const [previousFocus] = useState<HTMLElement | null>(() => typeof document === "undefined" ? null : document.activeElement as HTMLElement);
+  useLayoutEffect(() => {
+    const dialog = root.current;
+    if (!dialog) return;
+    const title = dialog.querySelector("h2, p");
+    if (title) title.id = titleId;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const first = dialog.querySelector<HTMLElement>("input:not([disabled]), select:not([disabled]), textarea:not([disabled]), button:not([disabled]), [href]");
+    (first || dialog).focus();
+    return () => { document.body.style.overflow = previousOverflow; if (previousFocus?.isConnected) previousFocus.focus(); };
+  }, [titleId, previousFocus]);
+  if (typeof document === "undefined") return null;
+  return createPortal(
     <div className="modal-overlay" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
-      <div className={"modal " + className} role="dialog" aria-modal="true">{children}</div>
-    </div>
+      <div ref={root} className={"modal " + className} role="dialog" aria-modal="true" aria-labelledby={titleId} tabIndex={-1} onKeyDown={(e) => {
+        if (e.key === "Escape") { e.preventDefault(); e.stopPropagation(); onClose(); return; }
+        if (e.key !== "Tab") return;
+        const nodes = Array.from(root.current?.querySelectorAll<HTMLElement>("button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), a[href], [tabindex='0']") || []).filter((n) => n.getClientRects().length);
+        if (!nodes.length) { e.preventDefault(); root.current?.focus(); return; }
+        if (e.shiftKey && (document.activeElement === nodes[0] || document.activeElement === root.current)) { e.preventDefault(); nodes[nodes.length - 1].focus(); }
+        else if (!e.shiftKey && document.activeElement === nodes[nodes.length - 1]) { e.preventDefault(); nodes[0].focus(); }
+      }}>{children}</div>
+    </div>, document.body
   );
 }
 
@@ -95,10 +108,11 @@ export function MoreMenu({ items }: { items: MenuItem[] }) {
     if (!open || !btn.current || !menu.current) return;
     const r = btn.current.getBoundingClientRect();
     const w = menu.current.offsetWidth, h = menu.current.offsetHeight;
-    const left = Math.min(Math.max(8, r.left), window.innerWidth - w - 8);
+    const left = Math.min(Math.max(8, r.left), document.documentElement.clientWidth - w - 8);
     let top = r.bottom + 4;
     if (top + h > window.innerHeight - 8) top = Math.max(8, r.top - h - 4);
     setPos({ left, top });
+    menu.current.querySelector<HTMLButtonElement>("button")?.focus();
   }, [open]);
 
   useEffect(() => {
@@ -123,13 +137,21 @@ export function MoreMenu({ items }: { items: MenuItem[] }) {
         onClick={(e) => { e.stopPropagation(); setOpen(!open); }}>
         <svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true"><circle cx="12" cy="5" r="2.2" /><circle cx="12" cy="12" r="2.2" /><circle cx="12" cy="19" r="2.2" /></svg>
       </button>
-      {open && (
-        <div ref={menu} className="row-menu" role="menu" style={{ left: pos.left, top: pos.top }} onClick={(e) => e.stopPropagation()}>
+      {open && createPortal(
+        <div ref={menu} className="row-menu" role="menu" style={{ left: pos.left, top: pos.top }} onKeyDown={(e) => {
+          if (e.key === "Escape") { e.preventDefault(); setOpen(false); btn.current?.focus(); }
+          if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+            e.preventDefault();
+            const options = Array.from(menu.current?.querySelectorAll<HTMLButtonElement>("button") || []);
+            const index = options.indexOf(document.activeElement as HTMLButtonElement);
+            options[(index + (e.key === "ArrowDown" ? 1 : -1) + options.length) % options.length]?.focus();
+          }
+        }} onClick={(e) => e.stopPropagation()}>
           {items.map((it) => (
             <button key={it.label} type="button" role="menuitem" className={"row-menu-item" + (it.danger ? " danger" : "")}
               onClick={async () => { setOpen(false); await it.run(); }}>{it.label}</button>
           ))}
-        </div>
+        </div>, document.body
       )}
     </>
   );
@@ -138,9 +160,9 @@ export function MoreMenu({ items }: { items: MenuItem[] }) {
 /* ---------------- inputs ---------------- */
 
 /** HH:MM field with Persian digits, automatic colon and an "اکنون" button. `value` is "HH:MM" or "". */
-export function TimeInput({ value, onChange, disabled, placeholder = "۰۹:۳۰", label, onInvalid }: {
+export function TimeInput({ value, onChange, disabled, placeholder = "۰۹:۳۰", label, onInvalid, allowNow = true }: {
   value: string; onChange: (v: string) => void; disabled?: boolean; placeholder?: string; label: string;
-  onInvalid?: (bad: boolean) => void;
+  onInvalid?: (bad: boolean) => void; allowNow?: boolean;
 }) {
   const [text, setText] = useState(fa(value));
   const [bad, setBad] = useState(false);
@@ -171,7 +193,7 @@ export function TimeInput({ value, onChange, disabled, placeholder = "۰۹:۳۰"
       <input type="text" inputMode="numeric" dir="ltr" autoComplete="off" maxLength={5} aria-label={label} placeholder={disabled ? "" : placeholder}
         className={bad ? "invalid" : ""} value={text} disabled={disabled} onChange={(e) => apply(e.target.value)}
         onBlur={() => { const p = parseTimeText(text); if (p.state === "ok") setText(fa(p.value)); }} />
-      <button type="button" className="time-now-btn" tabIndex={-1} disabled={disabled} onClick={() => apply(serverClock())}>اکنون</button>
+      {allowNow && <button type="button" className="time-now-btn" tabIndex={-1} disabled={disabled} onClick={() => apply(serverClock())}>اکنون</button>}
     </div>
   );
 }

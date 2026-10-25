@@ -5,7 +5,8 @@ import { mutate } from "swr";
 import useSWR from "swr";
 import { errorText, fetcher, post } from "@/lib/api";
 import { fa, fmtDuration, fmtHM, gregorianLabel, weekdayOf } from "@/lib/format";
-import { refreshAll, serverClock, serverNow, useClock, useGoals, usePlanned, useSettings, useTags, useTasks, useToday } from "@/lib/data";
+import { refreshAll, serverClock, serverNow, useClock, useGoals, usePlanned, usePresence, useSettings, useTags, useTasks, useToday } from "@/lib/data";
+import { PresenceAlerts } from "@/features/presence/alerts";
 import { PresenceCard } from "@/features/presence/components";
 import { PlannedRow, TaskRow, useConfirmLongSpan } from "@/features/tasks/components";
 import { TagSelect } from "@/features/tags/components";
@@ -32,11 +33,9 @@ export default function TodayPage() {
   const clock = serverNow(now).toLocaleTimeString("fa-IR", { hour12: false });
 
   return (
-    <>
-      <PresenceCard />
-      <GoalsCard />
-      <PlanReminder />
-
+    <div className="today-workspace">
+      <div className="today-primary">
+      <PresenceAlerts />
       <div className="card card-now">
         <span className="section-pill"><span className="live-dot" /> همین الان</span>
         <div className="today-date">
@@ -46,6 +45,7 @@ export default function TodayPage() {
           </div>
           <div className="clock">{clock}</div>
         </div>
+        <QuickCheckIn />
         <QuickStart />
       </div>
 
@@ -57,13 +57,23 @@ export default function TodayPage() {
       </div>
 
       <div className="card card-done">
-        <h2>تسک‌های امروز</h2>
+        <div className="section-head"><h2>تسک‌های امروز</h2><span className="count-chip">{fa(done.length)} تسک</span></div>
         <div className="task-list">
           {done.length ? done.map((t) => <TaskRow key={t.id} task={t} reopenable />) : <div className="empty-hint">هنوز تسکی برای امروز ثبت نشده</div>}
         </div>
       </div>
-    </>
+      </div>
+      <aside className="today-secondary" aria-label="حضور و برنامه روز"><PresenceCard /><GoalsCard /><PlanReminder /></aside>
+    </div>
   );
+}
+
+function QuickCheckIn() {
+  const { data: presence } = usePresence();
+  const { toast } = useUi();
+  const [busy, setBusy] = useState(false);
+  if (presence?.status !== "none") return null;
+  return <div className="quick-checkin"><span>امروز هنوز ورودتان را ثبت نکرده‌اید.</span><button type="button" className="btn btn-outline btn-sm" disabled={busy} onClick={async () => { setBusy(true); try { await post("/api/presence/start"); await refreshAll(); toast("ورود ثبت شد"); } catch (e) { toast(errorText(e)); } finally { setBusy(false); } }}>ثبت ورود</button></div>;
 }
 
 /* ---------- goals ---------- */
@@ -197,7 +207,7 @@ function QuickStart() {
 
   return (
     <form className="stack" onSubmit={submit}>
-      <input type="text" list="yesterdayTitles" aria-label="شرح فعالیت" placeholder="شرح فعالیت... (مثلا: جلسه تیم، توسعه فلان قابلیت)" required
+      <input type="text" list="yesterdayTitles" aria-label="شرح فعالیت" placeholder="چه کاری انجام می‌دهید؟" required
         value={title} onChange={(e) => setTitle(e.target.value)} />
       <datalist id="yesterdayTitles">{titles.map((t) => <option key={t} value={t} />)}</datalist>
       <div>
@@ -215,7 +225,7 @@ function QuickStart() {
         زمان سفارشی {advanced ? "▴" : "▾"}
       </button>
       {advanced && (
-        <div className="stack" style={{ background: "#f8f9fd", borderRadius: 10, padding: 12 }}>
+        <div className="stack" style={{ background: "var(--surface-2)", borderRadius: 10, padding: 12 }}>
           <div className="row2">
             <div>
               <label className="lbl">ساعت شروع</label>

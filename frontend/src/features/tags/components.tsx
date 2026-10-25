@@ -14,13 +14,15 @@ const MANAGE = "__manage__";
 
 interface TagsCtx {
   openManager: () => void;
-  askNewTag: () => Promise<Tag | null>;
+  askNewTag: (story?: { id: number; name: string }) => Promise<Tag | null>;
 }
 const Ctx = createContext<TagsCtx>({ openManager: () => {}, askNewTag: async () => null });
 export const useTagActions = () => useContext(Ctx);
 
 export function TagSelect({ value, onChange, id }: { value: number | null; onChange: (v: number | null) => void; id?: string }) {
   const { data: tags = [] } = useTags();
+  const { data: catalog } = useCatalog();
+  const unlinked = catalog?.projects.map((project) => ({ ...project, stories: project.stories.filter((story) => !tags.some((tag) => tag.story_id === story.id)) })).filter((project) => project.stories.length) || [];
   const { askNewTag, openManager } = useTagActions();
   const groups = new Map<string, Tag[]>();
   tags.forEach((t) => {
@@ -31,6 +33,11 @@ export function TagSelect({ value, onChange, id }: { value: number | null; onCha
 
   async function change(v: string) {
     if (v === MANAGE) return openManager();
+    if (v.startsWith("story:")) {
+      const story = unlinked.flatMap((project) => project.stories).find((item) => item.id === Number(v.slice(6)));
+      if (story) { const created = await askNewTag(story); if (created) onChange(created.id); }
+      return;
+    }
     if (v === NEW) {
       const created = await askNewTag();
       if (created) onChange(created.id);
@@ -47,6 +54,7 @@ export function TagSelect({ value, onChange, id }: { value: number | null; onCha
           {groups.get(k)!.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
         </optgroup>
       ))}
+      {unlinked.map((project) => <optgroup key={"catalog-" + project.id} label={project.name + " · استوری‌های جدید"}>{project.stories.map((story) => <option key={story.id} value={"story:" + story.id}>{story.name}</option>)}</optgroup>)}
       <option value={NEW}>+ افزودن استوری جدید...</option>
       <option value={MANAGE}>✎ ویرایش استوری‌ها...</option>
     </select>
@@ -57,16 +65,16 @@ export function TagSelect({ value, onChange, id }: { value: number | null; onCha
 
 export function TagsProvider({ children }: { children: ReactNode }) {
   const [manager, setManager] = useState(false);
-  const [newTag, setNewTag] = useState<{ resolve: (t: Tag | null) => void } | null>(null);
+  const [newTag, setNewTag] = useState<{ resolve: (t: Tag | null) => void; story?: { id: number; name: string } } | null>(null);
 
   const ctx: TagsCtx = {
     openManager: () => setManager(true),
-    askNewTag: () => new Promise((resolve) => setNewTag({ resolve })),
+    askNewTag: (story) => new Promise((resolve) => setNewTag({ resolve, story })),
   };
   return (
     <Ctx.Provider value={ctx}>
       {children}
-      {newTag && <NewTagDialog onDone={(t) => { newTag.resolve(t); setNewTag(null); }} />}
+      {newTag && <NewTagDialog initialStory={newTag.story} onDone={(t) => { newTag.resolve(t); setNewTag(null); }} />}
       {manager && <TagManager onClose={() => setManager(false)} />}
     </Ctx.Provider>
   );
@@ -87,11 +95,11 @@ function StoryPicker({ catalog, value, onChange }: { catalog?: Catalog; value: n
   );
 }
 
-function NewTagDialog({ onDone }: { onDone: (t: Tag | null) => void }) {
+function NewTagDialog({ onDone, initialStory }: { onDone: (t: Tag | null) => void; initialStory?: { id: number; name: string } }) {
   const { data: catalog } = useCatalog();
-  const [name, setName] = useState("");
+  const [name, setName] = useState(initialStory?.name.slice(0, 60) || "");
   const [budget, setBudget] = useState("");
-  const [story, setStory] = useState<number | null>(null);
+  const [story, setStory] = useState<number | null>(initialStory?.id || null);
   const [type, setType] = useState("");
   const [error, setError] = useState("");
 
@@ -109,9 +117,9 @@ function NewTagDialog({ onDone }: { onDone: (t: Tag | null) => void }) {
 
   return (
     <Modal onClose={() => onDone(null)}>
-      <h2>تگ جدید (عنوان استوری)</h2>
+      <h2>{initialStory ? "افزودن استوری به تسک‌ها" : "تگ جدید (عنوان استوری)"}</h2>
       <label className="lbl">نام تگ</label>
-      <input type="text" maxLength={60} autoFocus value={name} onChange={(e) => setName(e.target.value)} onKeyDown={(e) => e.key === "Enter" && create()} />
+      <input aria-label="نام تگ" type="text" maxLength={60} autoFocus value={name} onChange={(e) => setName(e.target.value)} onKeyDown={(e) => e.key === "Enter" && create()} />
       <label className="lbl">استوری در سامانه‌ی اصلی <span className="optional">— اختیاری</span></label>
       <StoryPicker catalog={catalog} value={story} onChange={(id, n) => { setStory(id); if (id && !name.trim()) setName(n.slice(0, 60)); }} />
       <label className="lbl">نوع گزارش <span className="optional">— اختیاری</span></label>
@@ -120,12 +128,12 @@ function NewTagDialog({ onDone }: { onDone: (t: Tag | null) => void }) {
         {catalog?.types.filter((t) => t.id).map((t) => <option key={t.id} value={t.id!}>{t.name}</option>)}
       </select>
       <label className="lbl">بودجه‌ی زمانی کل (ساعت) <span className="optional">— اختیاری</span></label>
-      <input type="number" min={0} step={0.5} inputMode="decimal" placeholder="مثلاً ۲۰۰" value={budget} onChange={(e) => setBudget(e.target.value)} />
+      <input aria-label="بودجه زمانی کل" type="number" min={0} step={0.5} inputMode="decimal" placeholder="مثلاً ۲۰۰" value={budget} onChange={(e) => setBudget(e.target.value)} />
       <div className="form-error">{error}</div>
       <div className="modal-actions">
         <div className="spacer" />
         <button className="btn btn-outline" onClick={() => onDone(null)}>انصراف</button>
-        <button className="btn btn-primary" onClick={create}>ساخت تگ</button>
+        <button className="btn btn-primary" onClick={create}>{initialStory ? "تأیید استوری" : "ساخت تگ"}</button>
       </div>
     </Modal>
   );

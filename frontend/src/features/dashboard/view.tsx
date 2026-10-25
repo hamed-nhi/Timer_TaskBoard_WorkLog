@@ -107,7 +107,7 @@ export default function DashboardPage() {
 
   return (
     <>
-      <div className="card">
+      <div className="card period-toolbar">
         <div className="filters" style={{ marginBottom: 6 }}>
           <select aria-label="سال" value={y} onChange={(e) => setYear(Number(e.target.value))}>{[cur - 2, cur - 1, cur, cur + 1].map((v) => <option key={v} value={v}>{fa(v)}</option>)}</select>
           <select aria-label="ماه" value={month} onChange={(e) => setMonth(e.target.value ? Number(e.target.value) : "")}>
@@ -275,7 +275,7 @@ function TagSummaryView({ tag, range, year, month }: { tag: string; range: strin
           {data.recent.map((t, i) => <div className="tag-title-row" key={i}><span>{fa(t.date)}  {t.title}</span><span className="tag-title-time">{fmtDuration(t.minutes)}</span></div>)}
         </>
       )}
-      {data.open_count > 0 && <div className="hint" style={{ color: "#92400e", marginTop: 12 }}>{fa(data.open_count)} تسک این تگ هنوز باز است (تا الان {fmtDuration(data.open_minutes)}) و تا وقتی تمام نشود در جمع بالا حساب نمی‌شود.</div>}
+      {data.open_count > 0 && <div className="hint" style={{ color: "var(--warning-text)", marginTop: 12 }}>{fa(data.open_count)} تسک این تگ هنوز باز است (تا الان {fmtDuration(data.open_minutes)}) و تا وقتی تمام نشود در جمع بالا حساب نمی‌شود.</div>}
     </div>
   );
 }

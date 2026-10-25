@@ -6,6 +6,8 @@ import { post, get } from "@/lib/api";
 import { fmtDuration } from "@/lib/format";
 import { ClockProvider, liveMinutes, refreshAll, useClock, useMe, useTasks, useToday } from "@/lib/data";
 import { Task } from "@/lib/types";
+import { Icon } from "@/shared/icon";
+import { ThemeToggle } from "@/shared/theme";
 import { BrandMark } from "@/shared/brand";
 import { FillProvider } from "@/features/fill/components";
 import { PresenceChip } from "@/features/presence/components";
@@ -77,6 +79,13 @@ function Frame({ children }: { children: ReactNode }) {
 
   const more = MORE.filter((i) => !i.admin || me.is_admin);
   const moreActive = more.find((i) => same(path, i.href));
+  const current = [...PRIMARY, ...MORE].find((i) => same(path, i.href));
+  const iconName = (i: NavItem) => i.href === "/" ? "today" : i.href.split("/")[1];
+  const navGroups = [
+    { label: "کارهای روزانه", items: [PRIMARY[0], PRIMARY[1], MORE[2]] },
+    { label: "گزارش و تحلیل", items: [MORE[3], PRIMARY[2], MORE[0], MORE[1]] },
+    { label: "حساب من", items: [MORE[5], MORE[4]] },
+  ];
 
   async function logout() {
     await post("/api/auth/logout");
@@ -85,12 +94,22 @@ function Frame({ children }: { children: ReactNode }) {
 
   return (
     <div className="app">
+      <a className="skip-link" href="#main-content">رفتن به محتوای صفحه</a>
+      <aside className="sidebar">
+        <Link href="/" className="brand sidebar-brand"><BrandMark /><div><h1>تایم‌لاگ</h1><span className="brand-sub">زمانت، روشن و مرتب</span></div></Link>
+        <nav aria-label="ناوبری اصلی" className="side-nav">
+          {navGroups.map((group) => <div className="nav-group" key={group.label}><div className="nav-group-label">{group.label}</div>{group.items.map((i) => <Link key={i.href} href={i.href} aria-current={same(path, i.href) ? "page" : undefined} className={"side-link" + (same(path, i.href) ? " active" : "")}><Icon name={iconName(i)} /><span>{i.label}</span></Link>)}</div>)}
+        </nav>
+        <div className="sidebar-foot"><button type="button" className="side-link" onClick={() => setResume(true)}><Icon name="today" />ادامه سریع<span className="key-hint">Alt R</span></button><button type="button" className="side-link" onClick={logout}><Icon name="logout" />خروج از حساب</button></div>
+      </aside>
       <header className="topbar">
-        <Link href="/" className="brand">
+        <Link href="/" className="brand mobile-brand">
           <BrandMark />
           <div><h1>تایم‌لاگ</h1><div className="brand-sub">ثبت ساعت کار روزانه</div></div>
         </Link>
+        <div className="page-heading"><div className="eyebrow">فضای کار شخصی</div><h2>{current?.label || "تایم‌لاگ"}</h2></div>
         <div className="topbar-end">
+          <ThemeToggle />
           <PresenceChip />
           <span className="user-chip" title={me.username}>{me.display_name || me.username}</span>
         </div>
@@ -113,25 +132,25 @@ function Frame({ children }: { children: ReactNode }) {
         </div>
       </nav>
 
-      <main>{children}</main>
+      <main id="main-content" className="app-main" tabIndex={-1}>{children}</main>
 
       <RunningBar />
       <button type="button" className="fab" title="ادامه سریع (Alt+R)" onClick={() => setResume(true)}>▶</button>
 
       <nav className="bottom-nav" aria-label="ناوبری">
         {PHONE.map((i) => (
-          <Link key={i.href} href={i.href} className={same(path, i.href) ? "active" : ""}>
-            <span className="ico" aria-hidden="true">{i.icon}</span>{i.label}
+          <Link key={i.href} href={i.href} aria-current={same(path, i.href) ? "page" : undefined} className={same(path, i.href) ? "active" : ""}>
+            <span className="ico" aria-hidden="true"><Icon name={iconName(i)} /></span>{i.label}
           </Link>
         ))}
-        <button type="button" className={moreActive && !PHONE.includes(moreActive) ? "active" : ""} onClick={() => setSheet(!sheet)}>
-          <span className="ico" aria-hidden="true">☰</span>بیشتر
+        <button type="button" aria-expanded={sheet} aria-controls="mobile-more" className={moreActive && !PHONE.includes(moreActive) ? "active" : ""} onClick={() => setSheet(!sheet)}>
+          <span className="ico" aria-hidden="true"><Icon name="more" /></span>بیشتر
         </button>
       </nav>
       {sheet && (
-        <div className="sheet-menu" onClick={() => setSheet(false)}>
+        <div id="mobile-more" className="sheet-menu" onClick={() => setSheet(false)}>
           <div onClick={(e) => e.stopPropagation()}>
-            {more.map((i) => <Link key={i.href} href={i.href} className={same(path, i.href) ? "active" : ""}>{i.icon} {i.label}</Link>)}
+            {more.map((i) => <Link key={i.href} href={i.href} aria-current={same(path, i.href) ? "page" : undefined} className={same(path, i.href) ? "active" : ""}>{i.icon} {i.label}</Link>)}
             <button onClick={() => { setSheet(false); setResume(true); }}>▶ ادامه سریع</button>
             <button onClick={logout}>خروج از حساب</button>
           </div>
@@ -155,8 +174,8 @@ function RunningBar() {
       <span className="live-dot" />
       <span className="rb-title">{running.title}</span>
       <span className="rb-time">{fmtDuration(liveMinutes(running, now))}</span>
-      <button className="act-btn pause-btn" onClick={act("pause")}>⏸</button>
-      <button className="act-btn stop-btn" onClick={act("stop")}>⏹</button>
+      <button aria-label="مکث تسک فعال" className="act-btn pause-btn" onClick={act("pause")}>⏸</button>
+      <button aria-label="پایان تسک فعال" className="act-btn stop-btn" onClick={act("stop")}>⏹</button>
     </div>
   );
 }
