@@ -8,6 +8,7 @@
 import argparse
 import getpass
 import json
+import os
 import sys
 
 from .core.security import hash_password
@@ -72,6 +73,51 @@ def cmd_import_desktop(args):
         print("  warning:", w)
 
 
+def cmd_backup_users(args):
+    from sqlalchemy.orm import Session
+    from .db.session import engine
+    from .services.personal_backup import backup_user
+    from .services.google_sheets import GoogleSheet
+
+    with SessionLocal() as session:
+        db = Db(session)
+        if args.user:
+            users = db.execute("SELECT id FROM users WHERE username = ? AND is_active = true",
+                               (args.user.strip().lower(),)).fetchall()
+            if not users:
+                sys.exit("No active user")
+        else:
+            users = db.execute("SELECT id FROM users WHERE is_active = true ORDER BY id").fetchall()
+    failed = False
+    for item in users:
+        uid = item["id"]
+        # Keep a dedicated connection while holding this session-level job lock.
+        # Acquire BEFORE the repeatable-read snapshot; API writes are not blocked.
+        with engine.connect() as connection:
+            connection.exec_driver_sql("SELECT pg_advisory_lock(%s, %s)", (731905, uid))
+            connection.commit()
+            try:
+                with Session(bind=connection) as session:
+                    db = Db(session)
+                    db.execute("SET TRANSACTION ISOLATION LEVEL REPEATABLE READ")
+                    user = db.execute("SELECT id, username, display_name FROM users WHERE id = ? AND is_active = true",
+                                      (uid,)).fetchone()
+                    if user:
+                        factory = (lambda sid: GoogleSheet(sid, args.sheets_credentials)) if args.sheets_credentials else None
+                        result = backup_user(db, user, args.output, factory)
+                        print(f"user={uid} revision={result['revision']} new={result['created']} sheet_updates={result['sheet_updates']}")
+            except Exception as exc:
+                failed = True
+                # No private payload, credential path or Google response body in logs.
+                print(f"Backup failed for user={uid}: {type(exc).__name__}", file=sys.stderr)
+            finally:
+                connection.rollback()
+                connection.exec_driver_sql("SELECT pg_advisory_unlock(%s, %s)", (731905, uid))
+                connection.commit()
+    if failed:
+        sys.exit(1)
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(prog="python -m app.cli", description=__doc__,
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -93,6 +139,11 @@ def main(argv=None):
     p.add_argument("--user", required=True)
     p.add_argument("--dry-run", action="store_true")
     p.set_defaults(func=cmd_import_desktop)
+    p = sub.add_parser("backup-users", help="Versioned personal JSON/Excel and optional source-change-only Sheets sync")
+    p.add_argument("--output", required=True)
+    p.add_argument("--user")
+    p.add_argument("--sheets-credentials", default=os.environ.get("GOOGLE_APPLICATION_CREDENTIALS") or None)
+    p.set_defaults(func=cmd_backup_users)
     args = parser.parse_args(argv)
     try:
         args.func(args)

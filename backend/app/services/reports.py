@@ -6,6 +6,7 @@ import jdatetime
 
 from . import calendar_events
 from ..core.errors import ApiError
+from ..core.backup import fingerprint
 from ..core.time import JALALI_MONTHS, PERSIAN_WEEKDAYS, g2j, j2g, jalali_month_length, now_local, today_jalali, today_local, week_start_of
 from ..db.session import Db
 from .tags import budget_info
@@ -309,12 +310,11 @@ def export_excel(db: Db, user: dict, year: int | None):
     uid = user["id"]
     if year:
         rows = db.execute(TASK_SELECT + " WHERE tasks.user_id = ? AND tasks.jalali_year = ? "
-                          "ORDER BY tasks.jalali_month, tasks.jalali_day, tasks.start_time", (uid, year)).fetchall()
+                          "ORDER BY tasks.jalali_month, tasks.jalali_day, tasks.start_time, tasks.id", (uid, year)).fetchall()
     else:
         rows = db.execute(TASK_SELECT + " WHERE tasks.user_id = ? ORDER BY tasks.jalali_year, tasks.jalali_month, "
-                          "tasks.jalali_day, tasks.start_time", (uid,)).fetchall()
-    buf = build_workbook(rows)
-    return buf
+                          "tasks.jalali_day, tasks.start_time, tasks.id", (uid,)).fetchall()
+    return build_workbook(rows), f"timelog_u{uid}_{year or 'all'}_{fingerprint(rows)}.xlsx"
 
 
 def build_workbook(rows) -> io.BytesIO:

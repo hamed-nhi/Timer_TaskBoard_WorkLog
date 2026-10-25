@@ -40,7 +40,7 @@ export function fmtPercent(p: number): string {
 
 export function gregorianLabel(iso: string): string {
   const [y, m, d] = iso.slice(0, 10).split("-").map(Number);
-  return `${fa(d)} ${GREGORIAN_MONTHS[m - 1]} ${fa(y)}`;
+  return fa(`${pad2(d)} / ${pad2(m)} / ${y}`);
 }
 
 /** Weekday name (Saturday-first list) of a Gregorian ISO date. */

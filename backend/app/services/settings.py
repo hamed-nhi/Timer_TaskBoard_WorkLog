@@ -2,6 +2,7 @@
 
 
 from ..core.errors import ApiError
+from ..core.backup import sheet_id
 from ..core.time import jalali_week_range, now_local, today_local
 from ..db.session import Db
 from .catalog_helpers import catalog_payload
@@ -9,7 +10,11 @@ from .timecalc import effective_minutes
 from .user_settings import get_goals, get_setting, set_setting
 
 
-SHEET_URL_PREFIX = "https://docs.google.com/spreadsheets/"
+def sheet_reserved(db, uid, sid):
+    # A reservation lookup returns no other account's URL or personal data.
+    return db.execute("SELECT 1 FROM user_settings WHERE key = ? AND user_id <> ? "
+                      "AND split_part(split_part(split_part(value, '/', 6), ?, 1), '#', 1) = ? LIMIT 1",
+                      ("google_sheet_url", uid, "?", sid)).fetchone() is not None
 
 
 def settings_payload(db, uid):
@@ -36,8 +41,13 @@ def update_settings(db: Db, user: dict, data: dict):
             updates[key] = value
     if "google_sheet_url" in data:
         url = str(data["google_sheet_url"] or "").strip()
-        if url and not url.startswith(SHEET_URL_PREFIX):
-            raise ApiError("لینک باید یک Google Sheet باشد")
+        if url:
+            sid = sheet_id(url)
+            # Serialize reservations across accounts, including different URL spellings.
+            db.lock_user(-731905)
+            if sheet_reserved(db, uid, sid):
+                raise ApiError("این شیت قبلاً برای حساب دیگری ثبت شده؛ یک شیت جدا بسازید")
+            url = f"https://docs.google.com/spreadsheets/d/{sid}/edit"
         updates["google_sheet_url"] = url
     for key, value in updates.items():
         set_setting(db, uid, key, value)

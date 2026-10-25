@@ -35,6 +35,6 @@ def entry_report(db: DbDep, user: UserDep, year: int | None = None, month: int |
 
 @router.get("/export")
 def export_excel(db: DbDep, user: UserDep, year: int | None = None):
-    content = service.export_excel(db=db, user=user, year=year)
+    content, filename = service.export_excel(db=db, user=user, year=year)
     return StreamingResponse(content, media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                             headers={"Content-Disposition": f'attachment; filename="task_log_{year or "all"}.xlsx"'})
+                             headers={"Content-Disposition": f'attachment; filename="{filename}"'})

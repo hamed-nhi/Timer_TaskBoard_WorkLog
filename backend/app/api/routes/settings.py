@@ -5,6 +5,7 @@ import json
 
 from ..dependencies import DbDep, UserDep
 from ...services import settings as service
+from ...core.backup import backup_revision
 
 router = APIRouter(prefix="/api")
 
@@ -28,4 +29,4 @@ def goal_progress(db: DbDep, user: UserDep):
 def my_backup(db: DbDep, user: UserDep):
     data = service.my_backup(db=db, user=user)
     return Response(json.dumps(data, ensure_ascii=False, default=str), media_type="application/json",
-                    headers={"Content-Disposition": f'attachment; filename="timelog_{user["username"]}.json"'})
+                    headers={"Content-Disposition": f'attachment; filename="timelog_u{user["id"]}_{backup_revision(data)}.json"'})

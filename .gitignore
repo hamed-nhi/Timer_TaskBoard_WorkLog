@@ -16,3 +16,6 @@ out/
 artifacts/
 .coverage
 .coverage.*
+
+# Service account credentials are supplied locally, never tracked.
+secrets/

@@ -191,7 +191,7 @@ def test_goals_and_progress(client):
     assert client.post("/api/settings", json={"google_sheet_url": "https://evil.example/x"}).status_code == 400
     s = client.post("/api/settings", json={"daily_goal_minutes": 300, "weekly_goal_minutes": 1500,
                                            "google_sheet_url": "https://docs.google.com/spreadsheets/d/abc"}).get_json()
-    assert s["daily_goal_minutes"] == 300 and s["google_sheet_url"].endswith("abc")
+    assert s["daily_goal_minutes"] == 300 and s["google_sheet_url"] == "https://docs.google.com/spreadsheets/d/abc/edit"
     j_ = client.get("/api/today").get_json()
     done(client, 60, j_["jalali_year"], j_["jalali_month"], j_["jalali_day"])
     p = client.get("/api/goal-progress").get_json()

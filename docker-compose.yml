@@ -26,6 +26,23 @@ services:
       db:
         condition: service_healthy
 
+  personal-backup:
+    profiles: ["backup"]
+    build:
+      context: ./backend
+      dockerfile: Dockerfile.backup
+      args:
+        PIP_INDEX_URL: ${PIP_INDEX_URL:-https://pypi.org/simple}
+    environment:
+      DATABASE_URL: postgresql+psycopg://timelog:${DB_PASSWORD}@db:5432/timelog
+      GOOGLE_APPLICATION_CREDENTIALS: ${GOOGLE_APPLICATION_CREDENTIALS:-}
+    volumes:
+      - ./backups:/backups
+      - ./secrets:/run/secrets:ro
+    depends_on:
+      db:
+        condition: service_healthy
+
   web:
     build:
       context: ./frontend

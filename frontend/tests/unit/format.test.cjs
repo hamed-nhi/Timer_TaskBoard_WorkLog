@@ -31,3 +31,7 @@ test("unknown tag and no tag have stable colors", () => {
   assert.equal(f.tagColor(null, []), f.NO_TAG_COLOR);
   assert.equal(f.tagColor(7, [7, 3]), f.tagColor(7, [3, 7]));
 });
+
+for (const [iso, expected] of [["2026-10-25", "۲۵ / ۱۰ / ۲۰۲۶"], ["2024-02-29", "۲۹ / ۰۲ / ۲۰۲۴"], ["2026-01-01", "۰۱ / ۰۱ / ۲۰۲۶"]]) {
+  test("numeric Gregorian date: " + iso, () => assert.equal(f.gregorianLabel(iso), expected));
+}

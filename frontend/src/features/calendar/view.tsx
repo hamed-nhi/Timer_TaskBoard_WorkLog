@@ -3,7 +3,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import useSWR from "swr";
 import { fetcher } from "@/lib/api";
-import { fa, fmtDuration, GREGORIAN_MONTHS, latin, MONTHS, WEEKDAYS, WEEKDAYS_SHORT } from "@/lib/format";
+import { fa, fmtDuration, gregorianLabel, latin, MONTHS, WEEKDAYS, WEEKDAYS_SHORT } from "@/lib/format";
 import { setDaylogDay } from "@/features/daylog/navigation";
 import { useToday } from "@/lib/data";
 import { CalendarDay, CalendarEvent, CalendarMonth } from "@/lib/types";
@@ -44,7 +44,6 @@ export default function CalendarPage() {
   const sel = data.days.find((d) => d.day === Math.min(selected, data.days_in_month)) || data.days[0];
   const isThisMonth = data.jalali_year === today.jalali_year && data.jalali_month === today.jalali_month;
   const approx = data.days.some((d) => !d.hijri.exact || d.events.some((e) => e.approx));
-  const [gy, gm, gd] = sel.gregorian.split("-").map(Number);
 
   const eventRows: { day: CalendarDay; e: CalendarEvent }[] = [];
   data.days.forEach((d) => visible(d).forEach((e) => eventRows.push({ day: d, e })));
@@ -57,7 +56,7 @@ export default function CalendarPage() {
           <button className="btn btn-outline" onClick={() => shift(-1)}>◀ ماه قبل</button>
           <div className="cal-title">
             <div className="jalali-big">{fa(sel.day)} {data.month_name} {fa(data.jalali_year)}</div>
-            <div className="gregorian-line">{WEEKDAYS[sel.weekday]} · {fa(gd)} {GREGORIAN_MONTHS[gm - 1]} {fa(gy)}</div>
+            <div className="gregorian-line">{WEEKDAYS[sel.weekday]} · <bdi dir="ltr">{gregorianLabel(sel.gregorian)}</bdi></div>
             <div className="gregorian-line">قمری: {fa(sel.hijri.day)} {sel.hijri.month_name} {fa(sel.hijri.year)}{sel.hijri.exact ? "" : " (تقریبی)"}</div>
           </div>
           <button className="btn btn-outline" onClick={() => shift(1)}>ماه بعد ▶</button>
@@ -85,7 +84,7 @@ export default function CalendarPage() {
               <button key={d.day} type="button" role="gridcell" className={cls} onClick={() => setSelected(d.day)}
                 title={[`${WEEKDAYS[d.weekday]} ${fa(d.day)} ${data.month_name}`, ...ev.slice(0, 3).map((e) => e.title)].join("\n")}>
                 <span className="cal-day">{fa(d.day)}</span>
-                <span className="cal-g" dir="rtl">{g[2] === 1 ? `${fa(1)} ${GREGORIAN_MONTHS[g[1] - 1]}` : fa(g[2])}</span>
+                <span className="cal-g" dir="rtl">{g[2] === 1 ? `${fa(1)} / ${fa(g[1])}` : fa(g[2])}</span>
                 <span className="cal-h">{d.hijri.day === 1 ? `${fa(1)} ${d.hijri.month_name}` : fa(d.hijri.day)}</span>
                 <span className="cal-dots">
                   {ev.some((e) => e.holiday) && <i className="dot dot-holiday" />}
@@ -108,7 +107,7 @@ export default function CalendarPage() {
 
       <div className="card">
         <div className="cal-detail-title">{WEEKDAYS[sel.weekday]} {fa(sel.day)} {data.month_name} {fa(data.jalali_year)}</div>
-        <div className="cal-detail-sub">میلادی: {fa(gd)} {GREGORIAN_MONTHS[gm - 1]} {fa(gy)}</div>
+        <div className="cal-detail-sub">میلادی: <bdi dir="ltr">{gregorianLabel(sel.gregorian)}</bdi></div>
         <div className="cal-detail-sub">قمری: {fa(sel.hijri.day)} {sel.hijri.month_name} {fa(sel.hijri.year)}{sel.hijri.exact ? "" : " (تقریبی)"}</div>
         <div className="cal-detail-events">
           {sel.weekday === 6 && <div className="cal-event holiday"><span className="cal-event-tag">تعطیل</span>جمعه (تعطیل هفتگی)</div>}
@@ -149,7 +148,7 @@ export default function CalendarPage() {
               <button key={i} type="button" className={"cal-event-row" + (e.holiday ? " holiday" : "")} onClick={() => setSelected(day.day)}>
                 <span className="cal-event-date">{fa(day.day)}</span>
                 <span className="cal-event-text">{e.title}{e.approx ? " (تقریبی)" : ""}</span>
-                {e.kind === "world" && <span className="cal-event-note">{fa(g[2])} {GREGORIAN_MONTHS[g[1] - 1]}</span>}
+                {e.kind === "world" && <span className="cal-event-note"><bdi dir="ltr">{fa(g[2])} / {fa(g[1])}</bdi></span>}
               </button>
             );
           })}

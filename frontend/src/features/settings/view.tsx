@@ -60,14 +60,14 @@ export default function SettingsPage() {
 
       <div className="card">
         <h2>داده‌های من</h2>
-        <div className="hint" style={{ marginBottom: 10 }}>هر شب از داده‌های همه‌ی کاربران روی سرور نسخه‌ی پشتیبان گرفته می‌شود. اگر خواستید، نسخه‌ی شخصی خودتان را هم دانلود کنید.</div>
+        <div className="hint" style={{ marginBottom: 10 }}>این خروجی‌ها فقط شامل داده‌های حساب شما هستند. نام فایل با تغییر داده‌های اصلی عوض می‌شود؛ نسخه‌های قبلی پشتیبان خودکار حفظ می‌شوند و دادهٔ بدون تغییر دوباره ذخیره نمی‌شود.</div>
         <div className="shortcuts">
           <a className="btn btn-outline" href="/api/export" style={{ textDecoration: "none", textAlign: "center" }}>دانلود همه‌ی تسک‌ها (اکسل) ⬇</a>
           <a className="btn btn-outline" href="/api/me/backup" style={{ textDecoration: "none", textAlign: "center" }}>دانلود کامل داده (JSON) ⬇</a>
         </div>
         <label className="lbl" style={{ marginTop: 14 }}>لینک Google Sheet برای پشتیبان روزانه <span className="optional">— اختیاری</span></label>
-        <input type="url" dir="ltr" placeholder="https://docs.google.com/spreadsheets/d/..." value={sheet} onChange={(e) => setSheet(e.target.value)} />
-        <div className="hint">شیت را با ایمیل سرویس‌اکانتی که مدیر به شما می‌دهد «ویرایشگر» کنید. هر شب تسک‌هایتان در آن نوشته می‌شود.</div>
+        <input aria-label="لینک شیت شخصی" type="url" dir="ltr" placeholder="https://docs.google.com/spreadsheets/d/..." value={sheet} onChange={(e) => setSheet(e.target.value)} />
+        <div className="hint">برای حساب خودتان یک شیت جدا بسازید و آن را با ایمیل سرویس‌اکانت مدیر «ویرایشگر» کنید. پس از فعال‌سازی پشتیبان خودکار، فقط تسک‌های جدید یا تغییرکرده در منبع به‌روزرسانی می‌شوند؛ ردیف‌های بدون تغییر بازنویسی نمی‌شوند. یادداشت‌های شخصی را بیرون از ستون‌های TimeLog بنویسید.</div>
         <button className="btn btn-outline" style={{ marginTop: 8 }} onClick={saveSheet}>ذخیره‌ی لینک</button>
       </div>
 
