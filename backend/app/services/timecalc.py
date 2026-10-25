@@ -3,6 +3,7 @@ from datetime import date, datetime, timedelta
 
 from ..core.constants import MEETING_REPORT_TYPE
 from ..core.errors import ApiError
+from ..core.backup import fingerprint
 from ..core.time import JALALI_MONTHS, now_local, parse_time, to_date, to_dt
 
 # tasks joined with everything the UI shows: tag, the tag's company fields and the task's own report type
@@ -25,8 +26,16 @@ def company_type(d):
     return d.get("tag_report_type")
 
 
+def task_revision(row):
+    fields = ("id", "title", "jalali_year", "jalali_month", "jalali_day", "start_time", "end_time",
+              "duration_minutes", "accumulated_minutes", "segment_started_at", "status", "tag_id",
+              "adjust_minutes", "fill_minutes", "report_type_id", "planned_flag", "outside_company", "entered_main_system")
+    return fingerprint({key: row.get(key) for key in fields})
+
+
 def row_to_dict(row):
     d = dict(row)
+    d["revision"] = task_revision(row)
     d["jalali_date_str"] = f"{d['jalali_year']}/{d['jalali_month']:02d}/{d['jalali_day']:02d}"
     d["month_name"] = JALALI_MONTHS[d["jalali_month"] - 1]
     d["company_type"] = company_type(d)

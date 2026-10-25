@@ -3,7 +3,8 @@ ARG PIP_INDEX_URL=https://pypi.org/simple
 ENV PIP_INDEX_URL=$PIP_INDEX_URL PYTHONUNBUFFERED=1
 WORKDIR /srv
 COPY requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt && pip uninstall -y pip \
+    && python -c "import shutil, sysconfig; shutil.rmtree(sysconfig.get_path('stdlib') + '/ensurepip')"
 COPY alembic.ini .
 COPY alembic ./alembic
 COPY app ./app

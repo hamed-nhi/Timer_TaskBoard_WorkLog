@@ -10,7 +10,7 @@ from .core.errors import ApiError
 
 
 def create_app() -> FastAPI:
-    application = FastAPI(title="TimeLog", docs_url=None, redoc_url=None, openapi_url=None)
+    application = FastAPI(title="TIME LOG", docs_url=None, redoc_url=None, openapi_url=None)
     application.add_exception_handler(ApiError, api_error)
     application.add_exception_handler(RequestValidationError, validation_error)
     application.add_exception_handler(StarletteHTTPException, http_error)

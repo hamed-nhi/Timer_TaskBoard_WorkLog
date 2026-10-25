@@ -1,24 +1,25 @@
 """Real PostgreSQL fixtures, scoped to integration tests only."""
 from pathlib import Path
+import os
 
 import pytest
 from alembic import command
 from alembic.config import Config
 from sqlalchemy import text
-from sqlalchemy.engine import make_url
 
 from app.core.config import settings
 from app.db.session import engine
 from tests.support import Client, login_as, make_user
+from tests.database_safety import disposable_database
 
 BACKEND = Path(__file__).resolve().parents[2]
 
 @pytest.fixture(scope="session", autouse=True)
 def schema():
     """Build the schema with the real migrations, so they are what gets tested."""
-    database = make_url(settings.database_url).database or ""
-    if not database.endswith("_test"):
-        raise RuntimeError("Refusing destructive test setup: database name must end with _test")
+    disposable_database(os.environ.get("TEST_DATABASE_URL"))
+    if settings.database_url != os.environ["TEST_DATABASE_URL"]:
+        raise RuntimeError("Application/test database configuration differs; refusing schema reset")
     with engine.begin() as conn:
         conn.execute(text("DROP SCHEMA public CASCADE"))
         conn.execute(text("CREATE SCHEMA public"))

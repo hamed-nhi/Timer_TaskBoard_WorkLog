@@ -7,7 +7,7 @@ import jdatetime
 from ..core.errors import ApiError
 from ..core.time import JALALI_MONTHS, g2j, j2g, now_local, parse_time, today_jalali, today_local
 from ..db.session import Db
-from .timecalc import TASK_SELECT, assert_no_overlap, close_open_segment, compute_duration, duration_from_segments, effective_minutes, get_own_task, get_task_row, open_segment, parse_adjust, row_to_dict, window_dt
+from .timecalc import TASK_SELECT, assert_no_overlap, close_open_segment, compute_duration, duration_from_segments, effective_minutes, get_own_task, get_task_row, open_segment, parse_adjust, row_to_dict, task_revision, window_dt
 from .validation import clean_jalali, clean_tag_id, clean_time, clean_title
 
 
@@ -81,9 +81,9 @@ def create_task(db: Db, user: dict, data: dict):
     today_j = today_jalali()
     now = now_local()
     year, month, day = clean_jalali(
-        data.get("jalali_year") or today_j.year,
-        data.get("jalali_month") or today_j.month,
-        data.get("jalali_day") or today_j.day,
+        data.get("jalali_year", today_j.year),
+        data.get("jalali_month", today_j.month),
+        data.get("jalali_day", today_j.day),
     )
     start_time = clean_time(data.get("start_time")) or now.strftime("%H:%M")
     end_time = clean_time(data.get("end_time"))
@@ -271,6 +271,8 @@ def update_task(task_id: int, db: Db, user: dict, data: dict):
     uid = user["id"]
     db.lock_user(uid)
     row = get_own_task(db, uid, task_id)
+    if "_revision" in data and data["_revision"] != task_revision(row):
+        raise ApiError("این تسک در دستگاه یا پنجرهٔ دیگری تغییر کرده است؛ متن شما حفظ شد. پنجره را ببندید و نسخهٔ جدید را باز کنید", 409)
 
     year, month, day = clean_jalali(
         data.get("jalali_year", row["jalali_year"]),
@@ -296,17 +298,18 @@ def update_task(task_id: int, db: Db, user: dict, data: dict):
     adjust_total = row["adjust_minutes"] or 0
 
     if status == "done":
-        if not end_time:
-            raise ApiError("برای تسک تمام‌شده، ساعت پایان را خالی نگذارید")
+        if bool(start_time) != bool(end_time):
+            raise ApiError("ساعت شروع و پایان را هر دو وارد کنید یا هر دو را خالی بگذارید")
         repair = False
-        if not (start_changed or end_changed) and row["duration_minutes"] is not None:
+        tracked = db.execute("SELECT 1 FROM task_segments WHERE task_id=? LIMIT 1", (task_id,)).fetchone()
+        if tracked and not (start_changed or end_changed) and row["duration_minutes"] is not None:
             # saving a never-paused task whose recorded total disagrees with its own start/end repairs it
             span = compute_duration(start_time, end_time)
             # work can never exceed the clock span, and a task that lasted minutes is never 0:
             # only those two impossible cases are repaired (a smaller total may be a real pause)
             repair = span is not None and (row["duration_minutes"] > span + max(adjust_total, 0) + 0.5
                                            or (row["duration_minutes"] < 0.5 and span >= 1))
-        if start_changed or end_changed or gdate != row["gregorian_date"]:
+        if start_time and end_time and (start_changed or end_changed or gdate != row["gregorian_date"]):
             new_s, new_e = window_dt(gdate, start_time, end_time)
             n_segs = db.execute("SELECT COUNT(*) c FROM task_segments WHERE task_id = ?", (task_id,)).fetchone()["c"]
             if n_segs <= 1 or gdate != row["gregorian_date"]:
@@ -396,7 +399,7 @@ def update_task(task_id: int, db: Db, user: dict, data: dict):
            title=?, start_time=?, end_time=?, duration_minutes=?, status=?,
            accumulated_minutes=?, segment_started_at=?, tag_id=?, adjust_minutes=? WHERE id=?""",
         (year, month, day, gdate, title, start_time, end_time, duration, status,
-         round(accumulated, 2), segment_started_at, tag_id, adjust_total, task_id))
+         accumulated, segment_started_at, tag_id, adjust_total, task_id))
     db.commit()
     return row_to_dict(get_task_row(db, uid, task_id))
 

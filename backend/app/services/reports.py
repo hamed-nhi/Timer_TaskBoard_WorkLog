@@ -349,7 +349,9 @@ def build_workbook(rows) -> io.BytesIO:
                       d["company_type"] or "", d["company_project"] or "", d["company_story"] or "",
                       r["fill_minutes"] or 0, "✓" if r["planned_flag"] else "", "✓" if r["outside_company"] else ""]
             for col, value in enumerate(values, start=1):
-                ws.cell(row=i, column=col, value=value)
+                cell = ws.cell(row=i, column=col, value=value)
+                if isinstance(value, str):
+                    cell.data_type = "s"
             for c in ws[i]:
                 c.font = cell_font
                 c.alignment = Alignment(horizontal="center")

@@ -4,7 +4,7 @@ export function BrandMark() {
   const id = useId();
   const bg = `mark-bg-${id}`, arc = `mark-arc-${id}`;
   return (
-    <svg className="brand-mark" viewBox="0 0 100 100" role="img" aria-label="تایم‌لاگ">
+    <svg className="brand-mark" viewBox="0 0 100 100" role="img" aria-label="TIME LOG">
       <defs>
         <linearGradient id={bg} x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor="#4f46e5" /><stop offset="1" stopColor="#7c3aed" /></linearGradient>
         <linearGradient id={arc} x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor="#fde047" /><stop offset="1" stopColor="#f97316" /></linearGradient>

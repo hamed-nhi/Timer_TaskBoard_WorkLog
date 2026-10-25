@@ -1,6 +1,7 @@
 """Gap fill: spread the presence-minus-tasks gap over the day's tasks (report only - the recorded
 time of a task is never touched)."""
 from datetime import date
+import math
 import json
 
 from ..core.constants import MEETING_REPORT_TYPE
@@ -25,7 +26,7 @@ FILL_DAY_OFF = 4                # Friday (date.weekday)
 def parse_day(value):
     try:
         return date.fromisoformat(value or "")
-    except ValueError:
+    except (ValueError, TypeError):
         raise ApiError("تاریخ نامعتبر است")
 
 
@@ -80,7 +81,20 @@ def suggest_fill(items, needed):
         if not capped:
             break
         active = [i for i in active if i not in capped]
-    return {k: int(round(v / FILL_STEP)) * FILL_STEP for k, v in share.items()}
+    # Round down first, then assign remaining whole steps by largest deficit.
+    # Independent nearest rounding can exceed either a short task's cap or the
+    # day's allowance. Ties follow input order for deterministic previews.
+    rounded = {key: math.floor(value / FILL_STEP) * FILL_STEP for key, value in share.items()}
+    budget = math.floor(max(0.0, needed) / FILL_STEP) * FILL_STEP
+    caps = {i["id"]: math.floor(i["minutes"] * FILL_CAP_RATIO / FILL_STEP) * FILL_STEP
+            for i in items if i["weight"] > 0 and i["minutes"] > 0}
+    while sum(rounded.values()) + FILL_STEP <= budget:
+        eligible = [i for i in items if rounded[i["id"]] + FILL_STEP <= caps.get(i["id"], 0)]
+        if not eligible:
+            break
+        chosen = max(eligible, key=lambda i: share[i["id"]] - rounded[i["id"]])
+        rounded[chosen["id"]] += FILL_STEP
+    return rounded
 
 
 def fill_target_percent(db, uid, value=None):
@@ -157,10 +171,10 @@ def apply_fill(db: Db, user: dict, data: dict):
     now = now_local()
     rows = db.execute(TASK_SELECT + " WHERE tasks.user_id = ? AND tasks.gregorian_date = ?", (uid, day)).fetchall()
     real_total = sum(effective_minutes(r, now) for r in rows)
-    presence, _, _ = presence_sanity(db, uid, day, presence_minutes_on(db, uid, day), real_total)
-    allowed = max(0.0, presence * pct / 100 - real_total)
+    presence, _, blocked = presence_sanity(db, uid, day, presence_minutes_on(db, uid, day), real_total)
+    allowed = round(max(0.0, presence * pct / 100 - real_total), 1)
     filled = sum((r["fill_minutes"] or 0) for r in rows)
-    if filled > allowed + 1:
+    if (blocked and filled > 0) or filled > allowed + 1e-9:
         db.rollback()
         raise ApiError(f"حداکثر {int(allowed)} دقیقه تکمیلی مجاز است (گزارش نباید از {int(pct)}٪ حضور بیشتر شود)")
     db.commit()

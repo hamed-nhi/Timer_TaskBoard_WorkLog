@@ -1,0 +1,13 @@
+ARG POSTGRES_IMAGE=postgres:18@sha256:edb0c08dc33befd0262ab3b5cf1c4f3f8cfd8b09e88c05b45adee29d6761ddb6
+FROM caddy:builder-alpine@sha256:ef9b65adf9a224770c6d5f6d1ae1bf99bc3caaa78d8c4bae3ea949ee6984f301 AS helper-build
+WORKDIR /src
+ADD --checksum=sha256:33d7537d588ea49458b9509bcf4554bdf5ceacc66da71e5caa1058ea3b689c3b https://codeload.github.com/tianon/gosu/tar.gz/6456aaa0f3c854d199d0f037f068eb97515b7513 /tmp/gosu.tar.gz
+RUN tar -xzf /tmp/gosu.tar.gz --strip-components=1 -C /src
+RUN --mount=type=cache,target=/go/pkg/mod --mount=type=cache,target=/root/.cache/go-build \
+    go mod edit -require=github.com/moby/sys/user@v0.4.1 -require=golang.org/x/sys@v0.44.0 \
+    && go mod tidy && CGO_ENABLED=0 go build -trimpath -ldflags '-s -w' -o /usr/local/bin/gosu .
+
+# Preserve PostgreSQL and its data layout; only replace its privilege-drop helper.
+FROM ${POSTGRES_IMAGE}
+COPY --from=helper-build /usr/local/bin/gosu /usr/local/bin/gosu
+RUN gosu nobody true

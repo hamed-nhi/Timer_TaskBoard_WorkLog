@@ -57,7 +57,6 @@ sh /tmp/qa/deploy/check.sh
     return result
 
 
-@pytest.mark.xfail(strict=True, reason="QA-004: pg_dump failure is masked by a successful gpg pipeline")
 def test_backup_fails_when_database_dump_fails():
     result = run_script("backup.sh", "dump", "no")
     assert result.returncode != 0, result.stdout
@@ -67,7 +66,6 @@ def test_backup_fails_when_encryption_fails():
     assert run_script("backup.sh", "none", "yes").returncode != 0
 
 
-@pytest.mark.xfail(strict=True, reason="QA-005: decryption failure is masked by successful pg_restore")
 def test_restore_fails_when_decryption_fails():
     result = run_script("restore_test.sh", "none", "yes")
     assert result.returncode != 0, result.stdout
@@ -75,3 +73,8 @@ def test_restore_fails_when_decryption_fails():
 
 def test_restore_fails_when_database_restore_fails():
     assert run_script("restore_test.sh", "restore", "no").returncode != 0
+
+
+def test_successful_backup_and_restore_exit_successfully():
+    assert run_script("backup.sh", "none", "no").returncode == 0
+    assert run_script("restore_test.sh", "none", "no").returncode == 0

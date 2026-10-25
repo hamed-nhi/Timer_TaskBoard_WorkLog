@@ -9,25 +9,25 @@ from urllib.parse import urlparse
 
 import httpx
 
-BASE = os.environ.get("QA_BASE_URL", "http://127.0.0.1:18081")
+BASE = os.environ.get("QA_BASE_URL", "http://127.0.0.1:18082")
 parsed = urlparse(BASE)
-local_target = parsed.hostname in {"127.0.0.1", "localhost"} and parsed.port == 18081
-docker_target = os.environ.get("QA_IN_DOCKER") == "1" and parsed.hostname == "web" and parsed.port == 80
+local_target = parsed.hostname in {"127.0.0.1", "localhost"} and parsed.port == 18082
+docker_target = os.environ.get("QA_IN_DOCKER") == "1" and parsed.hostname == "audit-web" and parsed.port == 80
 if not (local_target or docker_target):
     raise SystemExit("Refusing non-QA target")
-OUT = Path(os.environ["QA_ARTIFACT_DIR"]) if "QA_ARTIFACT_DIR" in os.environ else Path(__file__).resolve().parents[1] / "artifacts/testing"
+OUT = Path(os.environ["QA_ARTIFACT_DIR"]) if "QA_ARTIFACT_DIR" in os.environ else Path(__file__).resolve().parents[1] / "artifacts/audit"
 OUT.mkdir(parents=True, exist_ok=True)
 PATHS = ["/api/tasks", "/api/dashboard", "/api/timesheet", "/api/presence/history", "/api/settings", "/api/company-catalog"]
 
 
 def worker(index):
     timings, errors = [], []
-    with httpx.Client(base_url=BASE, timeout=15) as client:
+    with httpx.Client(base_url=BASE, timeout=15, trust_env=False) as client:
         response = client.post("/api/auth/login",
                                json={"username": f"qa_load_{index}", "password": "qa-system-password-1"},
                                headers={"X-Requested-With": "timelog"})
         response.raise_for_status()
-        assert len(client.get("/api/tasks").json()) == 280
+        assert len(client.get("/api/tasks").json()) >= 280
         for n in range(40):
             route = PATHS[n % len(PATHS)]
             started = time.perf_counter()

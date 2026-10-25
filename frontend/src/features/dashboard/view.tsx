@@ -24,7 +24,7 @@ function ColumnChart({ items, goal, minCol = 20, showValues, onClick }: { items:
   const g = goal && goal <= max * 2 ? goal : null;
   if (g) max = Math.max(max, g);
   return (
-    <div className="cc-scroll">
+    <div className="cc-scroll" role="region" aria-label="نمودار ساعت کار" tabIndex={0}>
       <div style={{ minWidth: items.length * minCol }}>
         <div className="cc-plot">
           {g && <div className="cc-goal" style={{ bottom: `${(g / max) * 100}%` }}><span>هدف روزانه</span></div>}
@@ -32,7 +32,7 @@ function ColumnChart({ items, goal, minCol = 20, showValues, onClick }: { items:
             const Tag: any = onClick ? "button" : "div";
             const title = `${c.title}: ${fmtDuration(c.value)}`;
             return (
-              <Tag key={i} type={onClick ? "button" : undefined} className={"cc-col" + (c.active ? " active" : "") + (c.value === 0 ? " empty" : "")} title={title} aria-label={title}
+              <Tag key={i} type={onClick ? "button" : undefined} className={"cc-col" + (c.active ? " active" : "") + (c.value === 0 ? " empty" : "")} title={title} role={onClick ? undefined : "img"} aria-label={showValues && c.value ? `${fmtHM(c.value)}، ${title}` : title}
                 onClick={onClick ? () => onClick(c) : undefined}>
                 <span className="cc-bar" style={{ height: `${c.value ? Math.max((c.value / max) * 100, 2) : 0}%` }}>
                   {showValues && c.value ? <span className="cc-v">{fmtHM(c.value)}</span> : null}

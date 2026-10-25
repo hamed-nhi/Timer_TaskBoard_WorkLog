@@ -49,13 +49,29 @@ def test_fill_never_mutates_recorded_items_and_skips_zero_weight():
     assert items == before
 
 
-@pytest.mark.xfail(strict=True, reason="QA-001: rounding a 50% cap to 5 minutes can exceed the cap")
 def test_fill_suggestion_respects_cap_for_short_tasks():
     assert suggest_fill([{"id": 1, "minutes": 6, "weight": 1}], 100)[1] <= 3
 
 
-@pytest.mark.xfail(strict=True, reason="QA-002: independent rounding can exceed the total allowed gap")
 def test_fill_suggestion_does_not_exceed_total_allowance():
     values = suggest_fill([{"id": 1, "minutes": 60, "weight": 1},
                            {"id": 2, "minutes": 60, "weight": 1}], 8)
-    assert sum(values.values()) <= 9
+    assert sum(values.values()) <= 8
+
+
+def test_fill_quantization_invariants_over_random_weights_and_short_tasks():
+    import random
+    rng = random.Random(20261025)
+    for _ in range(2000):
+        items = [{"id": n, "minutes": rng.uniform(0, 600), "weight": rng.choice([0, .1, 1, 2, 10])}
+                 for n in range(rng.randrange(1, 15))]
+        needed = rng.uniform(0, 2000)
+        before = deepcopy(items)
+        result = suggest_fill(items, needed)
+        assert sum(result.values()) <= needed + 1e-7
+        assert items == before
+        for item in items:
+            value = result[item["id"]]
+            assert 0 <= value <= item["minutes"] * .5 + 1e-7 and value % 5 == 0
+            if item["weight"] == 0:
+                assert value == 0

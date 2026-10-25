@@ -52,9 +52,9 @@ def create_planned(db: Db, user: dict, data: dict):
     title = clean_title(data.get("title"))
     today_j = today_jalali()
     year, month, day = clean_jalali(
-        data.get("jalali_year") or today_j.year,
-        data.get("jalali_month") or today_j.month,
-        data.get("jalali_day") or today_j.day,
+        data.get("jalali_year", today_j.year),
+        data.get("jalali_month", today_j.month),
+        data.get("jalali_day", today_j.day),
     )
     tag_id = clean_tag_id(db, uid, data.get("tag_id"))
     new_id = db.insert(

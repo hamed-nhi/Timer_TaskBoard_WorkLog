@@ -1,89 +1,209 @@
-# تایم‌لاگ (نسخه وب)
+# TIME LOG
 
-ثبت ساعت کار روزانه برای چند کاربر. هر کاربر نام‌کاربری و رمز خودش را دارد و فقط داده‌ی خودش را می‌بیند.
-بک‌اند FastAPI + PostgreSQL 18، فرانت Next.js (خروجی استاتیک)، تقویم جلالی، رابط فارسی و موبایل‌پسند.
-نسخه دسکتاپ (Flask/pywebview) جداست و دست‌نخورده می‌ماند. جزئیات طراحی در `docs/PLAN.md`.
+A self-hosted, multi-user work-time tracker with a Persian RTL interface and Jalali calendar. Track tasks, attendance, plans and reports from a desktop browser or phone.
 
-## اجرای محلی (توسعه)
+**Stack:** FastAPI · PostgreSQL 18 · Next.js 15 / React 19 · Caddy · Docker Compose.
 
-```bash
-docker compose -f docker-compose.dev.yml up -d          # فقط Postgres روی پورت 5442
+## Features
+
+- Start, pause, resume and finish tasks; edit recorded times and view work segments.
+- Record attendance separately from task time, with warnings for past days whose task totals exceed attendance.
+- Keep personal tags, report types, projects and stories. Administrators manage accounts; personal records and catalogs remain private to their owners.
+- View daily, monthly and weekly reports, a Jalali calendar and Excel exports.
+- Use a responsive interface with light, dark and device-based themes.
+- Stay signed in across browser restarts using renewable, HttpOnly sessions. Use the same account on multiple devices.
+- Preview and import completed task history from Excel (`.xlsx`) or CSV. Download templates and conversion instructions from **Settings**.
+- Download personal JSON backups. Optional backup jobs retain immutable versions and synchronize source changes to a private Google Sheet.
+
+TIME LOG requires a network connection. Its installable web manifest does not provide offline storage or background synchronization.
+
+## Quick start with Docker
+
+Install Docker Engine or Docker Desktop with Docker Compose v2. Then:
+
+```sh
+git clone https://github.com/hamed-nhi/workload.git
+cd workload
+cp .env.example .env
+```
+
+On Windows PowerShell, use `Copy-Item .env.example .env` instead of `cp`.
+
+Edit `.env` before starting:
+
+| Variable | Purpose |
+| --- | --- |
+| `DB_PASSWORD` | A strong, unique PostgreSQL password. Use a URL-safe value. |
+| `BACKUP_PASSPHRASE` | A separate encryption passphrase. Keep a recovery copy securely outside the server. |
+| `SITE_ADDRESS` | `:80` for local HTTP, or your domain name for automatic HTTPS. |
+| `HTTP_PORT` | Local HTTP port; defaults to `80`. |
+| `COOKIE_SECURE` | Leave empty to follow the request scheme; use `true` when HTTPS terminates upstream. |
+
+Start the services and create the first administrator:
+
+```sh
+docker compose up -d --build
+docker compose exec api python -m app.cli create-user admin --admin
+```
+
+The command prompts for a password; there is **no default administrator password**. Open `http://localhost` for local use, or your configured HTTPS domain. For automatic HTTPS, point the domain at the server and make ports 80 and 443 reachable.
+
+The administrator can create accounts in **Management**. Every signed-in user has a separate Management section for their own report types, projects and stories.
+
+PostgreSQL data persists in the `pgdata` named volume. Caddy certificate state persists in `caddy_data`. Do not remove those volumes when upgrading.
+
+## Import existing task history
+
+Open **Settings → Import history from Excel or CSV**.
+
+1. Download the Excel/CSV template. A separate text guide can be given to a model or used to convert another application's export.
+2. Replace the example row with your actual records. Keep the source file unchanged as a reference.
+3. Select the file and preview it. For different column names, adjust the column mapping and preview again.
+4. Resolve every row error, review the totals and confirm the import.
+
+Dates accept full Jalali `1405/08/03` or Gregorian `2026-10-25` values. Persian digits are supported. Times use `HH:MM`; durations are **minutes**, including fractional minutes. A duration may differ from the start/end interval, for example when the original task included pauses; the recorded duration is preserved.
+
+Native TIME LOG workbooks are recognized automatically, including their year-bearing worksheet names. For month/day-only dates in another file, supply the Jalali year explicitly. Files may contain up to 5 MB and 5,000 data rows. Convert legacy `.xls` files to `.xlsx`, and replace formulas with their values first.
+
+Imports are private to the signed-in account and transactional: a file with row errors imports nothing. Exact duplicates are skipped, and existing records are never overwritten. Uploading a changed record adds a separate record; it does not replace the original. The preview must still match the file and account state when confirmed.
+
+This format transfers **completed tasks**, their recorded durations, separate report-only extra minutes, tags and catalog labels. It does not reconstruct attendance, pause segments or future plans that are absent from a task export. Do not treat a task spreadsheet as a full database backup.
+
+### Full desktop database migration
+
+The administrator can also migrate a **copy** of the original desktop SQLite database into an empty account. The original desktop source and live database must remain untouched.
+
+```sh
+# Create desktop_copy.db outside the live desktop application first.
+docker compose cp desktop_copy.db api:/tmp/desktop_copy.db
+docker compose exec api python -m app.cli import-desktop /tmp/desktop_copy.db --user alice --dry-run
+# Review record counts and minute totals; then run again without --dry-run.
+```
+
+The importer reads the copy in read-only mode and verifies counts and sums before committing. The destination account must be empty. No desktop database is included in this repository.
+
+## Multiple devices and sessions
+
+Sign in to the same server URL on your phone and computer. Each browser has its own server-side session; signing in on one device does not sign out another. Active pages periodically refresh server data, and refocus/reconnection triggers refreshes. An open page is not an offline copy.
+
+A session cookie lasts 90 days and renews with activity, at most once an hour. Passwords are not saved by the application in browser storage. Logout revokes the current session; changing a password revokes the other sessions. Clearing cookies, expiry or administrator revocation requires signing in again.
+
+A phone's `localhost` refers to the phone itself. Use the server's reachable domain or LAN address on both devices, with HTTPS for deployment.
+
+## Backups and recovery
+
+### Encrypted database backups
+
+Run `deploy/backup.sh` from a scheduled job on the Linux host. It validates `pg_dump`, encrypts it with GPG/AES256 and only then publishes the archive. It retains 14 daily and 8 weekly copies. GPG must be installed on that host.
+
+```sh
+./deploy/backup.sh
+./deploy/restore_test.sh
+```
+
+The restore check decrypts the latest archive, restores it into a newly created temporary database, verifies it and removes that temporary database. A failed dump, decryption or restore returns a nonzero exit status. Regularly test recovery and keep an encrypted copy outside the server. `deploy/pull_backup.ps1` can retrieve backups to a Windows backup location.
+
+### Versioned personal backups and optional Sheets sync
+
+```sh
+docker compose --profile backup build personal-backup
+docker compose --profile backup run --rm personal-backup
+```
+
+Schedule this job externally if daily runs are required; Compose does not install a scheduler. It writes private per-user JSON/Excel snapshots under `backups/personal`. Unchanged source data creates no new snapshot; changed source data creates a new version and preserves the previous one.
+
+Google Sheets sync is optional. Create a separate sheet for each account, share it with the service account as an editor, mount its credentials read-only under `secrets/`, set `GOOGLE_APPLICATION_CREDENTIALS=/run/secrets/google-sheets.json`, and save the personal sheet URL in Settings. The job updates only source-changed tasks; unchanged source records do not overwrite manual sheet edits. Source deletions are marked while retaining the old backup row. Do not share one destination between accounts.
+
+Never commit `.env`, credentials, backup files or database dumps.
+
+## Local development
+
+Requirements: Python 3.13+, Node.js 22+, Docker and PostgreSQL 18.
+
+```sh
+docker compose -f docker-compose.dev.yml up -d
+python -m venv venv
+# Activate venv: source venv/bin/activate (POSIX), or .\venv\Scripts\Activate.ps1 (PowerShell)
+python -m pip install -r backend/requirements-dev.txt
+```
+
+Set the backend environment for the development database:
+
+```sh
+# POSIX shell
+export DATABASE_URL='postgresql+psycopg://timelog:timelog@127.0.0.1:5442/timelog'
+export COOKIE_SECURE=false
+```
+
+```powershell
+# PowerShell
+$env:DATABASE_URL='postgresql+psycopg://timelog:timelog@127.0.0.1:5442/timelog'
+$env:COOKIE_SECURE='false'
+```
+
+```sh
 cd backend
-python -m venv ../venv && ../venv/Scripts/pip install -r requirements-dev.txt
-export DATABASE_URL=postgresql+psycopg://timelog:timelog@localhost:5442/timelog COOKIE_SECURE=false
 alembic upgrade head
-python -m app.cli create-user hamed --admin             # رمز را می‌پرسد
+python -m app.cli create-user admin --admin
 uvicorn app.main:app --port 8000
-# ترمینال دوم
-cd frontend && npm ci && npm run dev                    # http://localhost:3000
 ```
 
-تست‌ها (روی دیتابیس جدا `timelog_test`، باید یک‌بار ساخته شود):
+In another terminal:
 
-```bash
-cd backend && pytest -q
+```sh
+cd frontend
+npm ci
+npm run dev
 ```
 
-## استقرار روی سرور لینوکس
+Open `http://localhost:3000`. Next.js proxies `/api` to the local backend during development; production serves the static export through Caddy. On PowerShell use `npm.cmd` if script execution policy blocks `npm.ps1`.
 
-1. Docker و Docker Compose نصب باشد. در ایران اگر دسترسی نیست در `.env` مقدار `DOCKER_REGISTRY=docker.arvancloud.ir/` و میرور `NPM_REGISTRY` و `PIP_INDEX_URL` را بگذارید.
-2. `cp .env.example .env` و `DB_PASSWORD`، `BACKUP_PASSPHRASE` و `SITE_ADDRESS` (دامنه برای https خودکار) را پر کنید. فایل `.env` هرگز commit نمی‌شود.
-3. `docker compose up -d --build` (مایگریشن‌ها خودکار اجرا می‌شوند؛ فقط افزایشی هستند).
-4. ساخت ادمین: `docker compose exec api python -m app.cli create-user <نام> --admin`
-5. هر کاربر در صفحه «مدیریت» نوع گزارش، پروژه و استوری‌های حساب خودش را می‌سازد و ویرایش می‌کند. کاتالوگ، تسک‌ها، تگ‌ها و خروجی‌های هر حساب خصوصی‌اند؛ حتی ادمین به کاتالوگ و فعالیت دیگران دسترسی ندارد. بخش ساخت و مدیریت حساب‌ها فقط برای ادمین نمایش داده می‌شود.
+The PostgreSQL base-image mirror, npm registry and Python index can be configured through `DOCKER_REGISTRY`, `NPM_REGISTRY` and `PIP_INDEX_URL` when required. Other pinned build images must remain reachable through your Docker registry configuration. Use trusted mirrors; the default build uses the public upstream registries.
 
-## انتقال داده‌ی دسکتاپ (فقط برای صاحب داده)
+## Tests
 
-همیشه روی **کپی** دیتابیس کار کنید، نه فایل اصلی:
+Fast tests require no database:
 
-```bash
-copy tasklog.db desktop_copy.db
-docker compose exec api python -m app.cli import-desktop /tmp/desktop_copy.db --user hamed --dry-run
-# اگر شمارش‌ها (تسک، دقیقه، سگمنت، حضور) درست بود، بدون --dry-run
+```sh
+cd backend
+python -m pytest -q tests/unit
 ```
 
-داده فقط به حساب همان کاربر وصل می‌شود.
+Integration tests **recreate the public schema**. Create and explicitly select a disposable database whose name ends in `_test`; never use a development, audit-browser or production database.
 
-## بک‌آپ
+```sh
+docker compose -f docker-compose.dev.yml exec db createdb -U timelog timelog_test
+```
 
-- `deploy/backup.sh` هر شب (cron: `0 3 * * * /opt/timelog/deploy/backup.sh`): `pg_dump` رمزگذاری‌شده، ۱۴ نسخه روزانه و ۸ هفتگی.
-- `deploy/restore_test.sh`: آخرین بک‌آپ را در دیتابیس موقت بازیابی می‌کند و تعداد تسک‌ها را نشان می‌دهد. ماهی یک‌بار اجرا کنید؛ بک‌آپ بازیابی‌نشده بک‌آپ نیست.
-- `deploy/pull_backup.ps1` روی ویندوز خودتان (Task Scheduler): بک‌آپ‌ها را به `D:\My Drive\TimeLogBackups\web` می‌آورد، که با Google Drive همگام می‌شود.
-- هر کاربر در تنظیمات می‌تواند خروجی کامل داده‌ی خودش را دانلود کند.
+Set `TEST_DATABASE_URL=postgresql+psycopg://timelog:timelog@127.0.0.1:5442/timelog_test` in your shell, then:
 
-## وضعیت
+```sh
+cd backend
+python -m pytest -q tests/integration
+python -m pytest -q tests/operational  # Requires Docker for fault-injected backup-script tests.
+```
 
-- همه‌ی قابلیت‌های دسکتاپ پورت شده‌اند، با جداسازی کامل داده‌ی کاربران.
-- ورود: حداکثر ۳ تلاش ناموفق در ۲۰ دقیقه برای هر نام‌کاربری.
-- هنوز نیست: همگام‌سازی روزانه با Google Sheet (لینک در تنظیمات ذخیره می‌شود ولی ارسالی انجام نمی‌شود؛ منوط به دسترسی سرور به Google)، اسکرپ استوری‌ها از سامانه‌ی اصلی، حالت آفلاین (عمداً).
+Frontend checks:
 
-## کاتالوگ شخصی و ارتقای نسخه
+```sh
+cd frontend
+npm run lint
+npm run build
+```
 
-- مدیریت کاتالوگ از مسیر `/api/catalog` برای همهٔ کاربران واردشده در دسترس است؛ مدیریت حساب‌ها همچنان زیر `/api/admin/users` و مخصوص ادمین است.
-- واردکردن کاتالوگ JSON باید حساب مقصد را مشخص کند: `python -m app.cli import-catalog catalog.json --user <username>`.
-- مایگریشن جدید `0002` باید قبل از اجرای این نسخه اعمال شود. ابتدا از دیتابیس مقصد بک‌آپ معتبر بگیرید؛ سپس از پوشهٔ `backend`، `alembic upgrade head` را اجرا کنید. Docker همین ارتقا را هنگام راه‌اندازی انجام می‌دهد.
-- مایگریشن برای کاتالوگ‌های مرتبط با تگ‌ها، تسک‌ها و آرشیو هر نفر نسخهٔ شخصی می‌سازد و شناسه‌های ارتباطی را به آن وصل می‌کند. مدت‌ها، بازه‌های کار، حضور و تگ‌های موجود حفظ می‌شوند.
-- رکوردهای مشترک قدیمی حذف نمی‌شوند و بدون مالک نگه داشته می‌شوند، ولی در API حساب‌ها دیده نمی‌شوند. موارد قدیمیِ بدون ارتباط، چون مالک مشخصی ندارند، خودکار به هیچ حسابی نسبت داده نمی‌شوند.
-- خروجی JSON هر نفر کاتالوگ شخصی او را هم دارد.
-- دیتابیس تست باید نامی با پسوند `_test` داشته باشد؛ تست‌ها روی دیتابیس واقعی اجرا نشوند.
+The isolated browser/recovery/load environment uses the `audit` profile in `docker-compose.test.yml`, web port **18082**, database port **5544**, and its own persistent volume. Its seed/reset tools refuse to reset the existing demo on port 18081. See [the QA runbook](docs/testing/AUDIT_RUNBOOK.md) for exact commands, role fixtures, evidence locations and limitations. Failed, skipped and unexecuted checks are reported separately.
 
-## ماندگاری ورود
+## Architecture and upgrades
 
-بعد از ورود، کوکی HttpOnly با اعتبار ۹۰ روز در مرورگر ذخیره می‌شود. با استفادهٔ کاربر، اعتبار سشن و کوکی حداکثر هر یک ساعت تمدید می‌شود؛ بستن و بازکردن مرورگر نیاز به ورود دوباره ندارد. بازکردن صفحهٔ ورود با سشن معتبر، کاربر را به برنامه برمی‌گرداند.
-رمز عبور در مرورگر ذخیره نمی‌شود. خروج از حساب، حذف کوکی‌ها، پایان اعتبار سشن یا لغو دسترسی باعث نیاز به ورود دوباره می‌شود.
-مقدار خالی `COOKIE_SECURE` به‌صورت خودکار روی HTTPS کوکی Secure و روی HTTP کوکی معمولی می‌سازد. مقدار صریح true یا false اولویت دارد. برای اعمال تغییر تنظیمات، سرویس API باید دوباره راه‌اندازی شود.
+- `backend/app/api`: HTTP contracts, authentication dependencies and serialization.
+- `backend/app/services`: business rules, ownership checks and transactions.
+- `backend/app/db`: schema and PostgreSQL adapter.
+- `backend/app/core`: configuration, security and time primitives.
+- `frontend/src/features`: feature views and dialogs; `shared` and `lib` hold independent reusable code.
+- `deploy`, `tools`, `docs`: operations, QA utilities and documentation.
 
-## ساختار و توسعهٔ پروژه
+See [Architecture](docs/ARCHITECTURE.md), [operational handoff](docs/HANDOFF.md) and [contribution rules](AGENTS.md). Existing detailed design documents are primarily in Persian.
 
-راهنمای ساختار فعلی در [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) و قواعد توسعه در [AGENTS.md](AGENTS.md) است.
-بک‌اند به api، services، core و db تقسیم شده است. کد فرانت در frontend/src است؛ routeها سبک‌اند و رفتار هر قابلیت در features قرار دارد.
-تست سریع بدون دیتابیس: از backend، `python -m pytest -q tests/unit`.
-تست API و ذخیره‌سازی: `python -m pytest -q tests/integration` فقط با TEST_DATABASE_URL اختصاصی و نام پایان‌یافته به `_test`.
-فرمان‌های اجرا، آدرس‌ها و ساختار دیتابیس در این بازآرایی ثابت مانده‌اند.
+Before upgrading a real database, create and verify a backup. Add migrations instead of rewriting existing migrations. Docker applies migrations when starting the API. Migration `0002` separates previously shared catalogs by owner while preserving recorded times and legacy rows.
 
-## آزمون سیستم و گزارش
-
-طرح آزمون در [docs/testing/TEST_PLAN.fa.md](docs/testing/TEST_PLAN.fa.md)، هفتاد سناریوی استفاده در [docs/testing/SCENARIOS.fa.md](docs/testing/SCENARIOS.fa.md) و آخرین نتیجهٔ محلی در [docs/testing/RESULTS.fa.md](docs/testing/RESULTS.fa.md) ثبت شده است.
-تست‌های واحد فرانت: `npm run test:unit`. تست مرورگر واقعی روی استک QA جدا: `npm run test:e2e`.
-فایل `docker-compose.test.yml` فقط محیط آزمایش با دادهٔ ساختگی، پورت‌های ۵۵۴۳ و ۱۸۰۸۱ و PostgreSQL موقت است؛ برای تولید استفاده نشود.
-تست‌های xfail ایرادهای باز را نشان می‌دهند و قبولی محسوب نمی‌شوند. گزارش اجرایی محلی، تصاویر و فایل پوشش در `artifacts/testing` تولید می‌شوند و در Git نمی‌روند. workflow `system-qa` اجرای دستی Docker/مرورگر/بار/بازیابی را فراهم می‌کند.
+Security and performance test results describe the tested environment; they are not a production capacity or security certification. Real Google Sheets, HTTPS deployment and physical-device compatibility require their own configured environments.

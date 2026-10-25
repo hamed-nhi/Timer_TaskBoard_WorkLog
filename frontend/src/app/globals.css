@@ -11,8 +11,8 @@
   --text: #1f2430;
   --muted: #596579;
   --border: #e5e7eb;
-  --success: #16a34a;
-  --danger: #dc2626;
+  --success: #15803d;
+  --danger: #b91c1c;
   --running: #f59e0b;
   --radius: 14px;
   --holiday-bg: #fef2f2;
@@ -191,7 +191,7 @@ input[type=checkbox] { width: 18px; height: 18px; accent-color: var(--primary); 
 .act-btn { border: none; padding: 8px 14px; border-radius: 8px; font-size: 13px; cursor: pointer; font-weight: 600; white-space: nowrap; min-height: 40px; }
 .stop-btn { background: var(--success); color: #fff; }
 .pause-btn { background: var(--surface-3); color: var(--muted); }
-.resume-btn { background: var(--running); color: #fff; }
+.resume-btn { background: var(--running); color: #422006; }
 .start-planned-btn { background: var(--primary); color: #fff; }
 .date-group-header { display: flex; justify-content: space-between; align-items: center; padding: 8px 4px; margin-top: 6px; font-size: 12px; font-weight: 700; color: var(--muted); border-bottom: 1px solid var(--border); }
 .date-group-total { color: var(--primary); }
@@ -609,7 +609,7 @@ input::placeholder, textarea::placeholder { color: var(--muted); opacity: .8; }
 @container (min-width: 900px) {
   .today-workspace { grid-template-columns: minmax(0, 1.55fr) minmax(300px, 1fr); }
   .settings-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .settings-grid > .card:nth-child(4) { grid-column: 1 / -1; }
+  .settings-grid > .data-card, .settings-grid > .import-card { grid-column: 1 / -1; }
   .calendar-workspace { grid-template-columns: minmax(0, 1.6fr) minmax(290px, 1fr); }
   .calendar-workspace > .card:first-child { grid-row: span 2; }
   .planned-workspace { grid-template-columns: minmax(300px, .7fr) minmax(0, 1.3fr); }
@@ -720,3 +720,21 @@ input::placeholder, textarea::placeholder { color: var(--muted); opacity: .8; }
   .period-toolbar { flex-direction: column; align-items: stretch; gap: 12px; }
   .period-toolbar .filters select { flex: 1; min-width: 0; }
 }
+
+.act-btn:disabled { opacity: .5; cursor: wait; }
+
+/* Action labels remain readable when the dark theme uses a pale accent. */
+.start-planned-btn { color: var(--on-primary); }
+.import-card { min-width: 0; }
+.import-samples { margin-block: 12px; }
+.import-mapping { display: grid; grid-template-columns: repeat(auto-fit,minmax(180px,1fr)); gap: 12px; }
+.import-review { margin-top: 18px; }
+.import-review h3 { font-size: 15px; }
+.import-issues { max-height: 220px; overflow-y: auto; padding-inline-start: 22px; font-size: 13px; overflow-wrap: anywhere; }
+.import-table { width: 100%; min-width: 550px; border-collapse: collapse; margin-block: 12px; font-size: 12px; }
+.import-table th, .import-table td { padding: 10px; border-bottom: 1px solid var(--border); text-align: start; }
+.import-table td:nth-child(2) { max-width: 250px; overflow-wrap: anywhere; }
+.import-card input[type=file] { max-width: 100%; font-size: 12px; }
+.import-review > button { margin-top: 12px; }
+
+.cal-day-button { appearance: none; border: 0; padding: 0; background: transparent; color: inherit; font-family: inherit; cursor: pointer; min-width: 24px; min-height: 24px; }

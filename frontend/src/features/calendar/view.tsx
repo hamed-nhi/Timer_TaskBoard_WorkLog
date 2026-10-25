@@ -72,8 +72,8 @@ export default function CalendarPage() {
             try { localStorage.setItem("calWorld", e.target.checked ? "1" : "0"); } catch { /* ignore */ }
           }} /> مناسبت‌های جهانی</label>
         </div>
-        <div className="cal-grid" role="grid" aria-label="تقویم ماه">
-          {WEEKDAYS_SHORT.map((w, i) => <div key={w} className={"cal-wd" + (i === 6 ? " friday" : "")} title={WEEKDAYS[i]} role="columnheader">{w}</div>)}
+        <div className="cal-grid" role="group" aria-label="تقویم ماه">
+          {WEEKDAYS_SHORT.map((w, i) => <div key={w} className={"cal-wd" + (i === 6 ? " friday" : "")} title={WEEKDAYS[i]}>{w}</div>)}
           {Array.from({ length: data.first_weekday }, (_, i) => <div key={"p" + i} />)}
           {data.days.map((d) => {
             const ev = visible(d);
@@ -81,18 +81,18 @@ export default function CalendarPage() {
             const holiday = d.holiday || d.weekday === 6;
             const cls = "cal-cell" + (holiday ? " holiday" : "") + (isThisMonth && d.day === today.jalali_day ? " today" : "") + (d.day === sel.day ? " selected" : "");
             return (
-              <button key={d.day} type="button" role="gridcell" className={cls} onClick={() => setSelected(d.day)}
+              <div key={d.day} className={cls} onClick={() => setSelected(d.day)}
                 title={[`${WEEKDAYS[d.weekday]} ${fa(d.day)} ${data.month_name}`, ...ev.slice(0, 3).map((e) => e.title)].join("\n")}>
-                <span className="cal-day">{fa(d.day)}</span>
-                <span className="cal-g" dir="rtl">{g[2] === 1 ? `${fa(1)} / ${fa(g[1])}` : fa(g[2])}</span>
-                <span className="cal-h">{d.hijri.day === 1 ? `${fa(1)} ${d.hijri.month_name}` : fa(d.hijri.day)}</span>
+                <button type="button" className="cal-day cal-day-button" aria-pressed={d.day === sel.day} aria-label={`${WEEKDAYS[d.weekday]} ${fa(d.day)} ${data.month_name} ${fa(data.jalali_year)}؛ میلادی ${fa(g[2])}/${fa(g[1])}/${fa(g[0])}؛ قمری ${fa(d.hijri.day)} ${d.hijri.month_name}`}>{fa(d.day)}</button>
+                <span className="cal-g" dir="rtl" aria-hidden="true">{g[2] === 1 ? `${fa(1)} / ${fa(g[1])}` : fa(g[2])}</span>
+                <span className="cal-h" aria-hidden="true">{d.hijri.day === 1 ? `${fa(1)} ${d.hijri.month_name}` : fa(d.hijri.day)}</span>
                 <span className="cal-dots">
                   {ev.some((e) => e.holiday) && <i className="dot dot-holiday" />}
                   {ev.some((e) => !e.holiday) && <i className="dot dot-event" />}
                   {d.task_count > 0 && <i className="dot dot-work" />}
                   {d.planned_count > 0 && <i className="dot dot-plan" />}
                 </span>
-              </button>
+              </div>
             );
           })}
         </div>

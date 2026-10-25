@@ -1,4 +1,6 @@
 .env
+.env.*
+!.env.example
 *.db
 *.dump
 *.dump.gpg
@@ -19,3 +21,6 @@ artifacts/
 
 # Service account credentials are supplied locally, never tracked.
 secrets/
+
+# Static-build CSP is regenerated with each export.
+frontend/security-headers.caddy

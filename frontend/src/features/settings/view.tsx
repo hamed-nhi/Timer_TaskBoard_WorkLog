@@ -5,6 +5,7 @@ import { useSettings } from "@/lib/data";
 import { refreshAll } from "@/lib/data";
 import { useTagActions } from "@/features/tags/components";
 import { ThemeSettings } from "@/shared/theme";
+import { ImportHistory } from "./import-history";
 import { NumInput, useUi } from "@/shared/ui";
 
 export default function SettingsPage() {
@@ -44,6 +45,7 @@ export default function SettingsPage() {
   return (
     <div className="settings-grid">
       <ThemeSettings />
+      <ImportHistory />
       <div className="card">
         <h2>هدف ساعت کاری</h2>
         <div className="hint" style={{ marginBottom: 10 }}>هدف روزانه و هفتگی که نوار پیشرفت صفحهٔ «امروز» و خط هدف نمودار روزانهٔ داشبورد از آن استفاده می‌کنند.</div>
@@ -60,7 +62,7 @@ export default function SettingsPage() {
         <button className="btn btn-outline" onClick={openManager}>ویرایش تگ‌ها ✎</button>
       </div>
 
-      <div className="card">
+      <div className="card data-card">
         <h2>داده‌های من</h2>
         <div className="hint" style={{ marginBottom: 10 }}>این خروجی‌ها فقط شامل داده‌های حساب شما هستند. نام فایل با تغییر داده‌های اصلی عوض می‌شود؛ نسخه‌های قبلی پشتیبان خودکار حفظ می‌شوند و دادهٔ بدون تغییر دوباره ذخیره نمی‌شود.</div>
         <div className="shortcuts">

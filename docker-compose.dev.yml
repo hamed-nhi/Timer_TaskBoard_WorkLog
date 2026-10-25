@@ -1,13 +1,13 @@
 # Postgres only, for local development and the test suite.
 services:
   db:
-    image: docker.arvancloud.ir/library/postgres:18
+    image: ${DOCKER_REGISTRY:-}postgres:18
     environment:
       POSTGRES_USER: timelog
       POSTGRES_PASSWORD: timelog
       POSTGRES_DB: timelog
     ports:
-      - "5442:5432"
+      - "127.0.0.1:5442:5432"
     volumes:
       - devdata:/var/lib/postgresql
 volumes:

@@ -73,7 +73,15 @@ export function TaskRow({ task: t, reopenable, deletable = true }: { task: Task;
   const color = useTagColor();
   const active = t.status === "running" || t.status === "paused";
   const now = useClock();
-  const act = (fn: () => Promise<unknown>) => async (e: React.MouseEvent) => { e.stopPropagation(); await fn(); await refreshAll(); };
+  const [busy, setBusy] = useState(false);
+  const { toast } = useUi();
+  const act = (fn: () => Promise<unknown>) => async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (busy) return;
+    setBusy(true);
+    try { await fn(); await refreshAll(); } catch (error) { toast(errorText(error)); }
+    finally { setBusy(false); }
+  };
 
   const menu = [
     ...(!active && reopenable ? [{ label: "ادامه مجدد ▶", run: async () => { await post(`/api/tasks/${t.id}/reopen`); await refreshAll(); } }] : []),
@@ -83,7 +91,7 @@ export function TaskRow({ task: t, reopenable, deletable = true }: { task: Task;
   ];
 
   return (
-    <div className={"task-row" + (t.status === "running" ? " running" : "") + (t.status === "paused" ? " paused" : "")} onClick={() => openEdit(t)}>
+    <div aria-busy={busy} className={"task-row" + (t.status === "running" ? " running" : "") + (t.status === "paused" ? " paused" : "")} onClick={() => openEdit(t)}>
       <div className="task-main">
         <div className="task-title">
           {t.tag_name && <><span className="task-tag-chip"><i className="tag-dot" style={{ background: color(t.tag_id) }} />{t.tag_name}</span><span className="task-tag-sep"> | </span></>}
@@ -96,9 +104,9 @@ export function TaskRow({ task: t, reopenable, deletable = true }: { task: Task;
         <div className={"task-duration " + (t.status === "running" ? "running-badge" : "paused-badge")}>{fmtDuration(liveMinutes(t, now))}</div>
       ) : null}
       <div className="row-actions">
-        {t.status === "running" && <button className="act-btn pause-btn" onClick={act(() => post(`/api/tasks/${t.id}/pause`))}>مکث ⏸</button>}
-        {t.status === "paused" && <button className="act-btn resume-btn" onClick={act(() => post(`/api/tasks/${t.id}/resume`))}>ادامه ▶</button>}
-        {active && <button className="act-btn stop-btn" onClick={act(() => post(`/api/tasks/${t.id}/stop`))}>پایان ⏹</button>}
+        {t.status === "running" && <button className="act-btn pause-btn" disabled={busy} onClick={act(() => post(`/api/tasks/${t.id}/pause`))}>مکث ⏸</button>}
+        {t.status === "paused" && <button className="act-btn resume-btn" disabled={busy} onClick={act(() => post(`/api/tasks/${t.id}/resume`))}>ادامه ▶</button>}
+        {active && <button className="act-btn stop-btn" disabled={busy} onClick={act(() => post(`/api/tasks/${t.id}/stop`))}>پایان ⏹</button>}
         {!active && (
           <div className="task-duration">
             {t.duration_minutes !== null ? <>{fmtDuration(t.duration_minutes)}<span className="duration-minutes-badge">{fa(Math.round(t.duration_minutes))} دقیقه</span></> : "--"}
@@ -227,12 +235,13 @@ export function EditTaskDialog({ task, preset, onClose }: { task: Task | null; p
     if (bad.start || bad.end) return setError("ساعت نامعتبر است (فرمت درست مثل ۰۹:۳۰)");
     if (!title.trim()) return setError("لطفاً شرح فعالیت را وارد کنید");
     if (!date.year) return setError("لطفاً سال را وارد کنید");
-    if (task && task.status === "done" && !end) return setError("برای تسک تمام‌شده، ساعت پایان را خالی نگذارید");
+    if (task && task.status === "done" && Boolean(start) !== Boolean(end)) return setError("ساعت شروع و پایان را هر دو وارد کنید یا هر دو را خالی بگذارید");
     if (Number.isNaN(adjust)) return setError("مقدار تعدیل مدت را درست وارد کنید (فقط عدد)");
 
     const payload: Record<string, unknown> = {
       title: title.trim(), jalali_year: date.year, jalali_month: date.month, jalali_day: date.day, tag_id: tag,
     };
+    if (task) payload._revision = task.revision;
     if (task && adjust) payload.adjust_minutes = adjust;
     if (!task) {
       payload.start_time = start || null;
@@ -284,7 +293,7 @@ export function EditTaskDialog({ task, preset, onClose }: { task: Task | null; p
       <h2>{task ? "ویرایش تسک" : "افزودن تسک برای هر تاریخی"}</h2>
       <form onSubmit={submit}>
         <label className="lbl">شرح فعالیت</label>
-        <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} required />
+        <input type="text" aria-label="شرح فعالیت" value={title} onChange={(e) => setTitle(e.target.value)} required />
         <label className="lbl">عنوان استوری</label>
         <TagSelect value={tag} onChange={setTag} />
         <label className="lbl">تاریخ</label>
@@ -413,7 +422,7 @@ function PlannedEditDialog({ planned: p, onClose }: { planned: Planned; onClose:
       <h2>ویرایش تسک برنامه‌ریزی‌شده</h2>
       <form onSubmit={save}>
         <label className="lbl">شرح فعالیت</label>
-        <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} required />
+        <input type="text" aria-label="شرح فعالیت" value={title} onChange={(e) => setTitle(e.target.value)} required />
         <label className="lbl">عنوان استوری</label>
         <TagSelect value={tag} onChange={setTag} />
         <label className="lbl">تاریخ</label>

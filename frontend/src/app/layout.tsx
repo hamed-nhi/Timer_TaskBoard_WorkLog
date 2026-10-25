@@ -3,11 +3,11 @@ import "./globals.css";
 import { ThemeProvider } from "@/shared/theme";
 
 export const metadata: Metadata = {
-  title: "تایم‌لاگ",
+  title: "TIME LOG",
   description: "ثبت ساعت کار روزانه",
   manifest: "/manifest.webmanifest",
   icons: { icon: "/favicon.png", apple: "/icons/apple-touch-icon.png" },
-  appleWebApp: { capable: true, title: "تایم‌لاگ", statusBarStyle: "default" },
+  appleWebApp: { capable: true, title: "TIME LOG", statusBarStyle: "default" },
 };
 
 export const viewport: Viewport = {

@@ -136,7 +136,7 @@ export default function DaylogPage() {
                       <Copyable text={String(real ?? "")} show={fa(real ?? "--")} />
                       <Copyable text={String(fillMin)} className="daylog-fill" show={fillMin ? "+" + fa(fillMin) : "—"} />
                       <Copyable text={String(total ?? "")}><span className="daylog-minutes-box">{fa(total ?? "--")} دقیقه</span></Copyable>
-                      <td><input type="checkbox" checked={t.entered_main_system} onChange={(e) => entered(t.id, e.target.checked)} /></td>
+                      <td><input type="checkbox" aria-label={`ثبت شد در سامانه: ${t.title}`} checked={t.entered_main_system} onChange={(e) => entered(t.id, e.target.checked)} /></td>
                       <td><button className="icon-edit-btn" title="ویرایش این تسک" aria-label="ویرایش این تسک" onClick={() => openEdit(t)}>✎</button></td>
                     </tr>
                   ))}
@@ -162,7 +162,7 @@ export default function DaylogPage() {
                   <div className="dl-checks">
                     <label><input type="checkbox" checked={t.planned_flag} onChange={(e) => save(t.id, { planned_flag: e.target.checked })} /> پلن شده</label>
                     <label><input type="checkbox" checked={t.outside_company} onChange={(e) => save(t.id, { outside_company: e.target.checked })} /> خارج از شرکت</label>
-                    <label><input type="checkbox" checked={t.entered_main_system} onChange={(e) => entered(t.id, e.target.checked)} /> ثبت شد در سامانه</label>
+                    <label><input type="checkbox" aria-label={`ثبت شد در سامانه: ${t.title}`} checked={t.entered_main_system} onChange={(e) => entered(t.id, e.target.checked)} /> ثبت شد در سامانه</label>
                   </div>
                   <button className="btn btn-outline btn-sm" onClick={() => openEdit(t)}>ویرایش ✎</button>
                 </div>

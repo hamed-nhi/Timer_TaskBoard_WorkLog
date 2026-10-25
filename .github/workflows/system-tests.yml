@@ -4,9 +4,9 @@ on:
 jobs:
   docker-browser-recovery:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 45
     env:
-      QA_DATABASE_URL: postgresql+psycopg://timelog:qa-password-only@127.0.0.1:5543/timelog_system_test
+      QA_DATABASE_URL: postgresql+psycopg://auditor:audit-password-only@127.0.0.1:5544/timelog_audit_test
       QA_BROWSER_CHANNEL: chromium
     steps:
       - uses: actions/checkout@v4
@@ -20,19 +20,28 @@ jobs:
       - run: npx playwright install --with-deps chromium
         working-directory: frontend
       - name: Build and start isolated QA stack
-        run: docker compose -p timelog-qa -f docker-compose.test.yml up -d --build
+        run: docker compose -p timelog-qa -f docker-compose.test.yml --profile audit up -d --build audit-db audit-api audit-web
       - name: Wait for API
         run: |
           for attempt in $(seq 1 60); do
-            if curl -fsS http://127.0.0.1:18081/api/health; then exit 0; fi
+            if curl -fsS http://127.0.0.1:18082/api/health; then exit 0; fi
             sleep 2
           done
           exit 1
       - run: python tools/qa_seed.py --load --reset-ui
       - run: npm run test:e2e
         working-directory: frontend
-      - run: python tools/qa_load.py
-      - run: python tools/qa_recovery.py
+      - run: npm ci --prefix tools/qa-browser
+      - run: node tests/e2e/audit-ui.cjs
+        working-directory: frontend
+      - run: node tests/e2e/import-devices.cjs
+        working-directory: frontend
+      - run: python tools/audit_http_security.py
+      - run: python tools/audit_load.py --name load-windows-direct
+      - run: python tools/audit_load.py --seconds 900 --name soak-release-15min
+      - run: docker build -t timelog-qa-personal-backup -f backend/Dockerfile.backup backend
+      - run: python tools/audit_personal_pipeline.py
+      - run: python tools/audit_recovery.py
       - run: python tools/qa_crypto.py
       - name: Upload sanitized QA evidence
         if: always()
@@ -40,9 +49,9 @@ jobs:
         with:
           name: system-qa-evidence
           path: |
-            artifacts/testing/*.json
-            artifacts/testing/*.xml
-            artifacts/testing/*.png
+            artifacts/audit/**/*.json
+            artifacts/audit/**/*.xml
+            artifacts/audit/**/*.png
       - name: Remove only the disposable QA stack
         if: always()
-        run: docker compose -p timelog-qa -f docker-compose.test.yml down --volumes
+        run: docker compose -p timelog-qa -f docker-compose.test.yml --profile audit rm -s -f audit-web audit-api audit-db

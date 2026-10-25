@@ -73,7 +73,7 @@ export function Modal({ children, onClose, className = "" }: { children: ReactNo
     document.body.style.overflow = "hidden";
     const first = dialog.querySelector<HTMLElement>("input:not([disabled]), select:not([disabled]), textarea:not([disabled]), button:not([disabled]), [href]");
     (first || dialog).focus();
-    return () => { document.body.style.overflow = previousOverflow; if (previousFocus?.isConnected) previousFocus.focus(); };
+    return () => { document.body.style.overflow = previousOverflow; if (previousFocus?.isConnected) previousFocus.focus(); else document.querySelector<HTMLElement>("main")?.focus(); };
   }, [titleId, previousFocus]);
   if (typeof document === "undefined") return null;
   return createPortal(
@@ -112,22 +112,25 @@ export function MoreMenu({ items }: { items: MenuItem[] }) {
     let top = r.bottom + 4;
     if (top + h > window.innerHeight - 8) top = Math.max(8, r.top - h - 4);
     setPos({ left, top });
-    menu.current.querySelector<HTMLButtonElement>("button")?.focus();
+    menu.current.querySelector<HTMLButtonElement>("button")?.focus({ preventScroll: true });
   }, [open]);
 
   useEffect(() => {
     if (!open) return;
     const close = (e: Event) => {
-      if (e.type === "mousedown" && menu.current?.contains(e.target as Node)) return;
+      if (e.type === "mousedown" && (menu.current?.contains(e.target as Node) || btn.current?.contains(e.target as Node))) return;
       setOpen(false);
+      btn.current?.focus({ preventScroll: true });
     };
     document.addEventListener("mousedown", close);
     window.addEventListener("resize", close);
-    window.addEventListener("scroll", close, true);
+    window.addEventListener("wheel", close, { capture: true, passive: true });
+    window.addEventListener("touchmove", close, { capture: true, passive: true });
     return () => {
       document.removeEventListener("mousedown", close);
       window.removeEventListener("resize", close);
-      window.removeEventListener("scroll", close, true);
+      window.removeEventListener("wheel", close, true);
+      window.removeEventListener("touchmove", close, true);
     };
   }, [open]);
 
@@ -140,16 +143,18 @@ export function MoreMenu({ items }: { items: MenuItem[] }) {
       {open && createPortal(
         <div ref={menu} className="row-menu" role="menu" style={{ left: pos.left, top: pos.top }} onKeyDown={(e) => {
           if (e.key === "Escape") { e.preventDefault(); setOpen(false); btn.current?.focus(); }
-          if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+          if (e.key === "Tab" || e.key === "PageDown" || e.key === "PageUp") { setOpen(false); btn.current?.focus({ preventScroll: true }); }
+          if (["ArrowDown", "ArrowUp", "Home", "End"].includes(e.key)) {
             e.preventDefault();
             const options = Array.from(menu.current?.querySelectorAll<HTMLButtonElement>("button") || []);
             const index = options.indexOf(document.activeElement as HTMLButtonElement);
-            options[(index + (e.key === "ArrowDown" ? 1 : -1) + options.length) % options.length]?.focus();
+            const next = e.key === "Home" ? 0 : e.key === "End" ? options.length - 1 : (index + (e.key === "ArrowDown" ? 1 : -1) + options.length) % options.length;
+            options[next]?.focus({ preventScroll: true });
           }
         }} onClick={(e) => e.stopPropagation()}>
           {items.map((it) => (
             <button key={it.label} type="button" role="menuitem" className={"row-menu-item" + (it.danger ? " danger" : "")}
-              onClick={async () => { setOpen(false); await it.run(); }}>{it.label}</button>
+              onClick={async () => { setOpen(false); btn.current?.focus(); await it.run(); if (!btn.current?.isConnected) document.querySelector<HTMLElement>("main")?.focus(); }}>{it.label}</button>
           ))}
         </div>, document.body
       )}

@@ -1,16 +1,31 @@
 #!/bin/sh
-# Nightly: encrypted pg_dump, keep 14 daily + 8 weekly. Cron: 0 3 * * * /opt/timelog/deploy/backup.sh
+# Nightly encrypted backup. Each producer must succeed before publishing anything.
 set -eu
+umask 077
 cd "$(dirname "$0")/.."
 . ./.env
 OUT=${BACKUP_DIR:-./backups}
 mkdir -p "$OUT/daily" "$OUT/weekly"
-ts=$(date +%Y%m%d_%H%M%S)
-f="$OUT/daily/timelog_$ts.dump.gpg"
-docker compose exec -T db pg_dump -U timelog -Fc timelog \
-  | gpg --batch --yes --symmetric --cipher-algo AES256 --passphrase "$BACKUP_PASSPHRASE" -o "$f"
-[ -s "$f" ] || { echo "empty backup" >&2; rm -f "$f"; exit 1; }
-[ "$(date +%u)" = 7 ] && cp "$f" "$OUT/weekly/"
-ls -1t "$OUT"/daily/*.gpg | tail -n +15 | xargs -r rm --
-ls -1t "$OUT"/weekly/*.gpg | tail -n +9 | xargs -r rm --
+tmp=$(mktemp -d "$OUT/.backup.XXXXXX")
+cleanup() {
+  rm -f -- "$tmp/source.dump" "$tmp/encrypted.gpg" "$tmp/passphrase"
+  rmdir "$tmp"
+}
+trap cleanup EXIT
+trap 'exit 1' HUP INT TERM
+printf '%s' "$BACKUP_PASSPHRASE" > "$tmp/passphrase"
+docker compose exec -T db pg_dump -U timelog -Fc timelog > "$tmp/source.dump"
+[ -s "$tmp/source.dump" ]
+docker compose exec -T db pg_restore --list < "$tmp/source.dump" > /dev/null
+gpg --batch --pinentry-mode loopback --symmetric --cipher-algo AES256   --passphrase-file "$tmp/passphrase" -o "$tmp/encrypted.gpg" "$tmp/source.dump"
+[ -s "$tmp/encrypted.gpg" ]
+ts=$(date -u +%Y%m%dT%H%M%SZ)
+f="$OUT/daily/timelog_${ts}_$(basename "$tmp").dump.gpg"
+# Exclusive publication; never overwrite an older backup even in the same second.
+ln "$tmp/encrypted.gpg" "$f"
+if [ "$(date +%u)" = 7 ]; then ln "$f" "$OUT/weekly/$(basename "$f")"; fi
+ls -1t "$OUT"/daily/*.gpg | tail -n +15 | while IFS= read -r old; do rm -f -- "$old"; done
+if ls "$OUT"/weekly/*.gpg >/dev/null 2>&1; then
+  ls -1t "$OUT"/weekly/*.gpg | tail -n +9 | while IFS= read -r old; do rm -f -- "$old"; done
+fi
 echo "ok $f"

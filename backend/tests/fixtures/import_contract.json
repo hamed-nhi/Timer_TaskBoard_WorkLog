@@ -1,0 +1,102 @@
+{
+  "paths": {
+    "/api/me/import/preview": {
+      "post": {
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_import_preview_api_me_import_preview_post"
+              }
+            }
+          },
+          "required": true
+        }
+      }
+    },
+    "/api/me/import/commit": {
+      "post": {
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_import_commit_api_me_import_commit_post"
+              }
+            }
+          },
+          "required": true
+        }
+      }
+    },
+    "/api/me/import/template/{format_}": {
+      "get": {
+        "parameters": [
+          {
+            "name": "format_",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Format "
+            }
+          }
+        ]
+      }
+    }
+  },
+  "schemas": {
+    "Body_import_preview_api_me_import_preview_post": {
+      "properties": {
+        "file": {
+          "type": "string",
+          "contentMediaType": "application/octet-stream",
+          "title": "File"
+        },
+        "mapping": {
+          "type": "string",
+          "title": "Mapping",
+          "default": "{}"
+        },
+        "year": {
+          "type": "string",
+          "title": "Year",
+          "default": ""
+        }
+      },
+      "type": "object",
+      "required": [
+        "file"
+      ],
+      "title": "Body_import_preview_api_me_import_preview_post"
+    },
+    "Body_import_commit_api_me_import_commit_post": {
+      "properties": {
+        "file": {
+          "type": "string",
+          "contentMediaType": "application/octet-stream",
+          "title": "File"
+        },
+        "mapping": {
+          "type": "string",
+          "title": "Mapping",
+          "default": "{}"
+        },
+        "year": {
+          "type": "string",
+          "title": "Year",
+          "default": ""
+        },
+        "revision": {
+          "type": "string",
+          "title": "Revision"
+        }
+      },
+      "type": "object",
+      "required": [
+        "file",
+        "revision"
+      ],
+      "title": "Body_import_commit_api_me_import_commit_post"
+    }
+  }
+}

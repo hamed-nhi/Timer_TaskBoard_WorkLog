@@ -15,6 +15,7 @@ export interface Today {
 }
 
 export interface Task {
+  revision: string;
   id: number;
   title: string;
   jalali_year: number;

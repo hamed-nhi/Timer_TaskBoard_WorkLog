@@ -2,7 +2,10 @@
 {$SITE_ADDRESS::80} {
 	encode gzip
 	handle /api/* {
-		reverse_proxy api:8000
+		request_body {
+			max_size 8MB
+		}
+		reverse_proxy {$API_UPSTREAM:api:8000}
 	}
 	handle {
 		root * /srv
@@ -10,6 +13,9 @@
 		file_server
 	}
 	header {
+		import /etc/caddy/security-headers.caddy
+		-Server
+		Permissions-Policy "camera=(), microphone=(), geolocation=()"
 		X-Content-Type-Options nosniff
 		Referrer-Policy same-origin
 		X-Frame-Options DENY

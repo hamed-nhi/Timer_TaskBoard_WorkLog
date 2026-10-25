@@ -30,3 +30,43 @@ services:
       - "127.0.0.1:18081:80"
     depends_on:
       - api
+
+  audit-db:
+    profiles: [audit]
+    build:
+      context: ./deploy
+      dockerfile: Dockerfile.postgres
+    environment:
+      POSTGRES_USER: auditor
+      POSTGRES_PASSWORD: audit-password-only
+      POSTGRES_DB: timelog_audit_test
+    ports: ["127.0.0.1:5544:5432"]
+    volumes: ["audit_pgdata:/var/lib/postgresql"]
+    networks: [audit]
+    healthcheck:
+      test: [CMD-SHELL, "pg_isready -U auditor -d timelog_audit_test"]
+      interval: 2s
+      retries: 20
+  audit-api:
+    profiles: [audit]
+    build: ./backend
+    environment:
+      DATABASE_URL: postgresql+psycopg://auditor:audit-password-only@audit-db:5432/timelog_audit_test
+      COOKIE_SECURE: "false"
+    networks: [audit]
+    depends_on:
+      audit-db: {condition: service_healthy}
+  audit-web:
+    profiles: [audit]
+    build: ./frontend
+    environment:
+      SITE_ADDRESS: ":80"
+      API_UPSTREAM: audit-api:8000
+    ports: ["127.0.0.1:18082:80"]
+    networks: [audit]
+    depends_on: [audit-api]
+
+volumes:
+  audit_pgdata:
+networks:
+  audit:

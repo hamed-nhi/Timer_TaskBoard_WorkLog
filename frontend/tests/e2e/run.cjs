@@ -5,9 +5,9 @@ const path = require("node:path");
 const os = require("node:os");
 const { chromium } = require("playwright");
 
-const BASE = process.env.QA_BASE_URL || "http://127.0.0.1:18081";
-if (!/^http:\/\/(127\.0\.0\.1|localhost):18081$/.test(BASE)) throw new Error("Refusing non-QA target");
-const OUT = path.resolve(__dirname, "../../../artifacts/testing");
+const BASE = process.env.QA_BASE_URL || "http://127.0.0.1:18082";
+if (!/^http:\/\/(127\.0\.0\.1|localhost):18082$/.test(BASE)) throw new Error("Refusing non-QA target");
+const OUT = process.env.QA_ARTIFACT_DIR || path.resolve(__dirname, "../../../artifacts/audit/browser");
 fs.mkdirSync(OUT, { recursive: true });
 const results = [];
 const errors = [];
@@ -36,7 +36,7 @@ async function signedPage(browser, username, viewport = { width: 1280, height: 9
   await page.getByLabel("رمز عبور", { exact: true }).fill("qa-system-password-1");
   await page.getByRole("button", { name: "ورود", exact: true }).click();
   await page.waitForURL(BASE + "/", { timeout: 20000 });
-  await page.getByRole("heading", { name: "تایم‌لاگ", exact: true }).waitFor();
+  await page.getByRole("heading", { name: "TIME LOG", exact: true }).waitFor();
   return { context, page };
 }
 async function data(context, url) {
@@ -105,11 +105,12 @@ async function checkRowStatus(context, title, status) {
       await p.getByLabel("شرح فعالیت", { exact: true }).fill("کار مرورگر QA");
       await mutation(p, "/api/tasks", () => p.getByRole("button", { name: "ثبت تسک ▶", exact: true }).click());
       const row = p.locator(".task-row").filter({ hasText: "کار مرورگر QA" });
-      await row.getByRole("button", { name: "مکث ⏸", exact: true }).click();
+      const task = (await data(a.context, "/api/tasks")).find(t => t.title === "کار مرورگر QA");
+      await mutation(p, `/api/tasks/${task.id}/pause`, () => row.getByRole("button", { name: "مکث ⏸", exact: true }).click());
       await row.getByRole("button", { name: "ادامه ▶", exact: true }).waitFor();
-      await row.getByRole("button", { name: "ادامه ▶", exact: true }).click();
+      await mutation(p, `/api/tasks/${task.id}/resume`, () => row.getByRole("button", { name: "ادامه ▶", exact: true }).click());
       await row.getByRole("button", { name: "پایان ⏹", exact: true }).waitFor();
-      await row.getByRole("button", { name: "پایان ⏹", exact: true }).click();
+      await mutation(p, `/api/tasks/${task.id}/stop`, () => row.getByRole("button", { name: "پایان ⏹", exact: true }).click());
       await row.getByText("در حال انجام", { exact: true }).waitFor({ state: "hidden" });
       await checkRowStatus(a.context, "کار مرورگر QA", "done");
     });
@@ -237,9 +238,10 @@ async function checkRowStatus(context, title, status) {
         await p.getByLabel("شرح فعالیت", { exact: true }).fill("کار لمسی QA");
         await mutation(p, "/api/tasks", () => p.getByRole("button", { name: "ثبت تسک ▶", exact: true }).tap());
         const row = p.locator(".task-row").filter({ hasText: "کار لمسی QA" });
-        await row.getByRole("button", { name: "مکث ⏸", exact: true }).tap();
-        await row.getByRole("button", { name: "ادامه ▶", exact: true }).tap();
-        await row.getByRole("button", { name: "پایان ⏹", exact: true }).tap();
+        const task = (await data(a.context, "/api/tasks")).find(t => t.title === "کار لمسی QA");
+        await mutation(p, `/api/tasks/${task.id}/pause`, () => row.getByRole("button", { name: "مکث ⏸", exact: true }).tap());
+        await mutation(p, `/api/tasks/${task.id}/resume`, () => row.getByRole("button", { name: "ادامه ▶", exact: true }).tap());
+        await mutation(p, `/api/tasks/${task.id}/stop`, () => row.getByRole("button", { name: "پایان ⏹", exact: true }).tap());
         await row.getByText("در حال انجام", { exact: true }).waitFor({ state: "hidden" });
         await checkRowStatus(a.context, "کار لمسی QA", "done");
         await p.screenshot({ path: path.join(OUT, "mobile-touch.png"), fullPage: true });
@@ -277,6 +279,25 @@ async function checkRowStatus(context, title, status) {
       await mutation(a.page, "/api/fill/rollback", () => dialog.getByRole("button", { name: "بله، برگردان" }).click());
       assert.ok((await data(a.context, "/api/tasks")).every(t => t.fill_minutes === 0));
       await post(a.context, "/api/planned", { title: "برنامهٔ باقی‌مانده برای تست بازیابی" });
+    });
+    await scenario("E2E-57", "متن HTML اجرا نمی‌شود و CSP اسکریپت تزریق‌شده را مسدود می‌کند", async () => {
+      const title = '<img src=x onerror="window.__audit_xss=1">';
+      await post(a.context, "/api/tasks", { title, start_time: "01:01", end_time: "01:02" });
+      await a.page.goto(BASE + "/");
+      const row = a.page.locator(".task-row").filter({hasText:title});
+      await row.waitFor(); assert.equal(await row.locator("img").count(), 0);
+      await a.page.evaluate(() => { const script=document.createElement("script"); script.textContent="window.__audit_csp=1"; document.body.appendChild(script); });
+      assert.ok(await a.page.evaluate(() => !window.__audit_xss && !window.__audit_csp));
+    });
+    await scenario("E2E-58", "ورود کاربر غیرفعال رد می‌شود", async () => {
+      const context=await browser.newContext();
+      try {
+        const page=await context.newPage();await page.goto(BASE+"/login/");
+        await page.getByLabel("نام کاربری",{exact:true}).fill("qa_inactive");
+        await page.getByLabel("رمز عبور",{exact:true}).fill("qa-system-password-1");
+        const [response]=await Promise.all([page.waitForResponse(r=>new URL(r.url()).pathname==="/api/auth/login"),page.getByRole("button",{name:"ورود",exact:true}).click()]);
+        assert.equal(response.status(),401); assert.ok(page.url().includes("/login/"));
+      } finally {await context.close();}
     });
     await scenario("E2E-55", "نبود خطای JavaScript در مرور صفحه‌ها", async () => assert.deepEqual(errors, []));
   } finally {

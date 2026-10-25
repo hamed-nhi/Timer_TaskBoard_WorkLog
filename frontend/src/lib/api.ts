@@ -6,16 +6,17 @@ export class ApiError extends Error {
   }
 }
 
-type Body = Record<string, unknown> | unknown[] | undefined;
+type Body = Record<string, unknown> | unknown[] | FormData | undefined;
 
 /** Every call goes to the same origin; writes carry the header the server requires (CSRF guard). */
 export async function api<T = any>(path: string, method = "GET", body?: Body): Promise<T> {
   const headers: Record<string, string> = {};
   if (method !== "GET") headers["X-Requested-With"] = "timelog";
-  if (body !== undefined) headers["Content-Type"] = "application/json";
+  const multipart = typeof FormData !== "undefined" && body instanceof FormData;
+  if (body !== undefined && !multipart) headers["Content-Type"] = "application/json";
   let res: Response;
   try {
-    res = await fetch(path, { method, headers, credentials: "same-origin", body: body === undefined ? undefined : JSON.stringify(body) });
+    res = await fetch(path, { method, headers, credentials: "same-origin", body: body === undefined ? undefined : multipart ? body as FormData : JSON.stringify(body) });
   } catch {
     throw new ApiError("ارتباط با سرور برقرار نشد", 0);
   }

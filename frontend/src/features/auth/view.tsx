@@ -32,7 +32,7 @@ export default function LoginPage() {
       <form className="card login-card" onSubmit={submit}>
         <div className="brand">
           <BrandMark />
-          <div><h1>تایم‌لاگ</h1><div className="brand-sub">ثبت ساعت کار روزانه</div></div>
+          <div><h1>TIME LOG</h1><div className="brand-sub">ثبت ساعت کار روزانه</div></div>
         </div>
         <div className="stack">
           <div>

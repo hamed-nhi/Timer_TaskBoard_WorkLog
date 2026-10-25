@@ -116,7 +116,6 @@ def test_parallel_users_do_not_block_each_others_work(alice, bob):
 
 
 @pytest.mark.parametrize("value", [123, [1], {"invalid": "date"}])
-@pytest.mark.xfail(strict=True, reason="QA-003: invalid date types raise TypeError/500 instead of an API 400")
 def test_fill_rejects_invalid_date_types_without_server_error(alice, value):
     from fastapi.testclient import TestClient
     from app.main import app

@@ -2,6 +2,8 @@ name: ci
 on: [push, pull_request]
 jobs:
   backend:
+    env:
+      TEST_DATABASE_URL: postgresql+psycopg://timelog:timelog@127.0.0.1:5442/timelog_test
     runs-on: ubuntu-latest
     services:
       postgres:

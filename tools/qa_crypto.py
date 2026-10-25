@@ -8,17 +8,17 @@ import subprocess
 import tempfile
 
 ROOT = Path(__file__).resolve().parents[1]
-OUT = ROOT / "artifacts/testing"
+OUT = ROOT / "artifacts/audit"
 gpg = os.environ.get("QA_GPG") or shutil.which("gpg")
 if not gpg:
     candidate = Path(r"C:\Program Files\Git\usr\bin\gpg.exe")
     gpg = str(candidate) if candidate.exists() else None
 if not gpg:
     raise SystemExit("GPG is not installed; record this test as unexecuted, not passed")
-source = OUT / "qa-only.dump"
+source = OUT / "audit-only.dump"
 if not source.exists():
-    raise SystemExit("Run qa_recovery.py first")
-encrypted = OUT / "qa-only.dump.gpg"
+    raise SystemExit("Run audit_recovery.py first")
+encrypted = OUT / "audit-only.dump.gpg"
 def argument(value):
     value = Path(value).resolve().as_posix()
     if os.name == "nt" and "/Git/" in str(gpg).replace("\\", "/"):
@@ -44,7 +44,12 @@ with tempfile.TemporaryDirectory(prefix="timelog-qa-gpg-") as home:
                                         "--decrypt", argument(encrypted)],
                                input=b"wrong-qa-key\n", capture_output=True)
         assert wrong.returncode != 0
-        report = {"aes256_roundtrip": "passed", "sha256_equal": True,
+        corrupt = Path(home) / "truncated.gpg"
+        corrupt.write_bytes(encrypted.read_bytes()[:max(1, encrypted.stat().st_size // 2)])
+        damaged = subprocess.run(common + ["--passphrase-fd", "0", "--output", argument(Path(home) / "damaged.dump"),
+                                          "--decrypt", argument(corrupt)], input=b"synthetic-qa-key-only\n", capture_output=True)
+        assert damaged.returncode != 0
+        report = {"truncated_ciphertext_rejected": True,"aes256_roundtrip": "passed", "sha256_equal": True,
                   "wrong_passphrase_rejected": True, "encrypted_bytes": encrypted.stat().st_size}
         (OUT / "crypto.json").write_text(json.dumps(report, indent=2), encoding="utf-8")
         print(json.dumps(report))

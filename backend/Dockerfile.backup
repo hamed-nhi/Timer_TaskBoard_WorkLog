@@ -3,6 +3,7 @@ ARG PIP_INDEX_URL=https://pypi.org/simple
 ENV PIP_INDEX_URL=$PIP_INDEX_URL PYTHONUNBUFFERED=1
 WORKDIR /srv
 COPY requirements.txt requirements-sheets.txt ./
-RUN pip install --no-cache-dir -r requirements-sheets.txt
+RUN pip install --no-cache-dir -r requirements-sheets.txt && pip uninstall -y pip \
+    && python -c "import shutil, sysconfig; shutil.rmtree(sysconfig.get_path('stdlib') + '/ensurepip')"
 COPY app ./app
 ENTRYPOINT ["python", "-m", "app.cli", "backup-users", "--output", "/backups/personal"]

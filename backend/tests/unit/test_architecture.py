@@ -49,7 +49,12 @@ def test_public_paths_parameters_and_bodies_match_pre_refactor_contract():
                for method, operation in methods.items()}
         for path, methods in app.openapi()["paths"].items()
     }
-    assert actual == expected
+    extension = json.loads(baseline.with_name("import_contract.json").read_text(encoding="utf-8"))
+    additions = extension["paths"]
+    assert {name: app.openapi()["components"]["schemas"][name] for name in extension["schemas"]} == extension["schemas"]
+    assert set(actual) == set(expected) | set(additions)
+    assert {path: actual[path] for path in expected} == expected
+    assert {path: actual[path] for path in additions} == additions
 
 
 def test_application_factory_builds_independent_equivalent_apps():

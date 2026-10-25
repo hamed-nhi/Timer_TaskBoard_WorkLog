@@ -1,5 +1,6 @@
 "use client";
 import Link from "next/link";
+import { SWRConfig } from "swr";
 import { usePathname } from "next/navigation";
 import { ReactNode, useEffect, useState } from "react";
 import { post, get } from "@/lib/api";
@@ -36,6 +37,7 @@ const same = (path: string, href: string) => (href === "/" ? path === "/" : path
 
 export function AppShell({ children }: { children: ReactNode }) {
   return (
+    <SWRConfig value={{ refreshInterval: 15_000, revalidateOnFocus: true, revalidateOnReconnect: true }}>
     <UiProvider>
       <ClockProvider>
         <TagsProvider>
@@ -47,6 +49,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         </TagsProvider>
       </ClockProvider>
     </UiProvider>
+    </SWRConfig>
   );
 }
 
@@ -96,7 +99,7 @@ function Frame({ children }: { children: ReactNode }) {
     <div className="app">
       <a className="skip-link" href="#main-content">رفتن به محتوای صفحه</a>
       <aside className="sidebar">
-        <Link href="/" className="brand sidebar-brand"><BrandMark /><div><h1>تایم‌لاگ</h1><span className="brand-sub">زمانت، روشن و مرتب</span></div></Link>
+        <Link href="/" className="brand sidebar-brand"><BrandMark /><div><h1>TIME LOG</h1><span className="brand-sub">زمانت، روشن و مرتب</span></div></Link>
         <nav aria-label="ناوبری اصلی" className="side-nav">
           {navGroups.map((group) => <div className="nav-group" key={group.label}><div className="nav-group-label">{group.label}</div>{group.items.map((i) => <Link key={i.href} href={i.href} aria-current={same(path, i.href) ? "page" : undefined} className={"side-link" + (same(path, i.href) ? " active" : "")}><Icon name={iconName(i)} /><span>{i.label}</span></Link>)}</div>)}
         </nav>
@@ -105,9 +108,9 @@ function Frame({ children }: { children: ReactNode }) {
       <header className="topbar">
         <Link href="/" className="brand mobile-brand">
           <BrandMark />
-          <div><h1>تایم‌لاگ</h1><div className="brand-sub">ثبت ساعت کار روزانه</div></div>
+          <div><h1>TIME LOG</h1><div className="brand-sub">ثبت ساعت کار روزانه</div></div>
         </Link>
-        <div className="page-heading"><div className="eyebrow">فضای کار شخصی</div><h2>{current?.label || "تایم‌لاگ"}</h2></div>
+        <div className="page-heading"><div className="eyebrow">فضای کار شخصی</div><h2>{current?.label || "TIME LOG"}</h2></div>
         <div className="topbar-end">
           <ThemeToggle />
           <PresenceChip />
