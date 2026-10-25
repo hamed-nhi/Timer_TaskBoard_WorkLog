@@ -74,7 +74,8 @@ export default function DashboardPage() {
   const color = useTagColor();
   const { openManager } = useTagActions();
   const [year, setYear] = useState<number | null>(null);
-  const [month, setMonth] = useState<number | "">("");
+  const [selectedMonth, setMonth] = useState<number | "" | null>(null);
+  const month = selectedMonth ?? today?.jalali_month ?? "";
   const y = year ?? today?.jalali_year ?? 0;
   const { data } = useSWR<Dashboard>(today ? `/api/dashboard?year=${y}${month ? `&month=${month}` : ""}` : null, fetcher, { keepPreviousData: true });
   const [sumTag, setSumTag] = useState<string>("");
