@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useMe } from "@/lib/data";
+import { Icon } from "@/shared/icon";
 import { BrandMark } from "@/shared/brand";
 import { Captcha } from "./captcha";
 import { api, errorText } from "@/lib/api";
@@ -58,12 +59,16 @@ export default function LoginPage() {
               value={username} onChange={(e) => setUsername(e.target.value)} />
           </div>
           <div>
-            <div className="login-password-label">
-              <label className="lbl" htmlFor="p">رمز عبور</label>
-              <button className="btn btn-outline btn-sm" type="button" aria-controls="p" aria-pressed={showPassword}
-                disabled={busy} onClick={() => setShowPassword(value => !value)}>{showPassword ? "پنهان‌کردن رمز" : "نمایش رمز"}</button>
+            <label className="lbl" htmlFor="p">رمز عبور</label>
+            <div className="login-password-field">
+              <input id="p" name="password" type={showPassword ? "text" : "password"} dir="ltr" autoComplete="current-password"
+                spellCheck={false} autoCapitalize="none" autoCorrect="off" required value={password} onChange={(e) => setPassword(e.target.value)} />
+              <button className="password-visibility-toggle" type="button" aria-controls="p" aria-pressed={showPassword}
+                aria-label={showPassword ? "پنهان‌کردن رمز" : "نمایش رمز"} title={showPassword ? "پنهان‌کردن رمز" : "نمایش رمز"}
+                disabled={busy} onMouseDown={e => e.preventDefault()} onClick={() => setShowPassword(value => !value)}>
+                <Icon name={showPassword ? "eye" : "eyeOff"} size={20} />
+              </button>
             </div>
-            <input id="p" type={showPassword ? "text" : "password"} dir="ltr" autoComplete="current-password" required value={password} onChange={(e) => setPassword(e.target.value)} />
           </div>
           {config?.captcha_provider === "arcaptcha" && <>
             <Captcha key={captchaNonce} siteKey={config.site_key} onToken={setCaptchaToken} />

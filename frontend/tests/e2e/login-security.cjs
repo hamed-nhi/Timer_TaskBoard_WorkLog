@@ -26,6 +26,9 @@ async function pause(ms) { await new Promise(r => setTimeout(r, ms)); }
    if(await page.getByRole('button',{name:'فعلاً بدون شیت ادامه می‌دهم',exact:true}).isVisible())await page.getByRole('button',{name:'فعلاً بدون شیت ادامه می‌دهم',exact:true}).click();
    await page.goto(BASE + '/admin/');
    await page.getByRole('heading', { name: 'امنیت ورود و مسدودی‌ها', exact: true }).waitFor();
+   const releaseHeading = await page.getByRole('heading', { name: 'رفع مسدودی کاربر و IP', exact: true }).boundingBox();
+   const policyHeading = await page.getByRole('heading', { name: 'تنظیم سیاست ورود', exact: true }).boundingBox();
+   assert.ok(releaseHeading.y < policyHeading.y);
    const response = await ctx.request.get(BASE + '/api/admin/login-protection'); assert.equal(response.status(), 200); originalPolicy = (await response.json()).policy;
   });
   await test('Create ordinary account with chosen password from UI', async () => {

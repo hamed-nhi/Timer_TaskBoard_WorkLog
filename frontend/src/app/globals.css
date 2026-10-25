@@ -744,6 +744,9 @@ input::placeholder, textarea::placeholder { color: var(--muted); opacity: .8; }
 .backup-setup { width: 100%; max-width: 850px; margin-inline: auto; }
 .backup-setup li { margin-block: 10px; }
 
-.login-password-label { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
-.login-password-label .lbl { margin: 0; }
-.login-password-label button { min-height: 44px; }
+.login-password-field { position: relative; direction: ltr; }
+.login-password-field input { padding-right: 48px; }
+.password-visibility-toggle { position: absolute; right: 2px; top: 50%; transform: translateY(-50%); display: grid; place-items: center; width: 44px; height: 44px; padding: 0; border: 0; border-radius: 8px; background: transparent; color: var(--muted); cursor: pointer; }
+.password-visibility-toggle:hover { color: var(--text); }
+.password-visibility-toggle:focus-visible { outline: 2px solid var(--primary); outline-offset: -4px; }
+.password-visibility-toggle:disabled { cursor: default; opacity: .6; }
